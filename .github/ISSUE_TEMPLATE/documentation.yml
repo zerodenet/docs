@@ -1,0 +1,51 @@
+name: 文档问题
+description: 报告错误、缺失、过期或难以理解的公开文档
+title: "docs: "
+labels:
+  - documentation
+body:
+  - type: dropdown
+    id: project
+    attributes:
+      label: 涉及范围
+      options:
+        - Zero Core
+        - ZNet Sink
+        - 跨项目集成
+        - 公共资料
+        - 站点与导航
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: 页面地址
+      description: 请提供具体页面或章节地址。
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: 当前问题
+      description: 说明哪里错误、缺失、过期或容易产生歧义。
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 版本与证据
+      description: 如果问题与行为或兼容性有关，请提供项目版本、平台、日志或对应实现链接。
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望内容
+      description: 说明希望文档如何调整。
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: 敏感信息
+      options:
+        - label: 我已移除配置、订阅地址、凭据、Token 和其他敏感信息。
+          required: true

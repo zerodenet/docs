@@ -1,0 +1,30 @@
+[
+  {
+    "id": "znet-sink",
+    "name": "ZNet Sink",
+    "tagline": "安装、连接与日常代理管理",
+    "description": "面向桌面用户，提供配置、订阅、节点选择、连接状态和诊断功能。",
+    "kind": "application",
+    "status": "active",
+    "repository": "https://github.com/zerodenet/znet-sink",
+    "docsRoot": "/projects/znet-sink/",
+    "quickStart": "/projects/znet-sink/guides/installation",
+    "download": "https://github.com/zerodenet/znet-sink/releases/latest",
+    "platforms": ["Windows", "macOS", "Linux"],
+    "audiences": ["user", "contributor"]
+  },
+  {
+    "id": "core",
+    "name": "Zero Core",
+    "tagline": "协议、配置与控制面能力",
+    "description": "面向开发者和集成方，提供可裁剪的协议实现、运行时能力与控制接口。",
+    "kind": "kernel",
+    "status": "active",
+    "repository": "https://github.com/zerodenet/core",
+    "docsRoot": "/projects/core/",
+    "quickStart": "/projects/core/guides/quickstart",
+    "download": "https://github.com/zerodenet/core/releases/latest",
+    "platforms": ["Windows", "macOS", "Linux"],
+    "audiences": ["operator", "integrator", "contributor"]
+  }
+]

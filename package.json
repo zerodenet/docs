@@ -1,0 +1,23 @@
+{
+  "name": "@zerodenet/docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vitepress dev docs --host=0.0.0.0",
+    "build": "vitepress build docs",
+    "preview": "vitepress preview docs --host=0.0.0.0",
+    "create:project": "node scripts/create-project.mjs",
+    "migrate:core": "node scripts/migrate-core-docs.mjs",
+    "check": "node scripts/check-docs.mjs",
+    "check:build": "pnpm check && pnpm build && node scripts/check-docs.mjs --dist"
+  },
+  "devDependencies": {
+    "vitepress": "1.6.4",
+    "vue": "3.5.40"
+  }
+}

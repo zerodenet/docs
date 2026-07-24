@@ -1,0 +1,50 @@
+{
+  "schema_id": "zero.connector.production-upgrade-report.v1",
+  "evidence_grade": "release_candidate",
+  "completed_at": "2026-01-01T00:00:00Z",
+  "previous": {
+    "build_id": "PREVIOUS_VERSION",
+    "git_hash": "0000000",
+    "binary_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "candidate": {
+    "build_id": "CANDIDATE_VERSION",
+    "git_hash": "0000000",
+    "binary_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "production_gate": {
+    "passed": true
+  },
+  "checks": {
+    "previous_state_backup_created": true,
+    "previous_process_gracefully_stopped": true,
+    "candidate_started": true,
+    "candidate_state_compatible": true,
+    "node_revision_observed": true,
+    "user_revision_acknowledged": true,
+    "command_replay_verified": true,
+    "quota_checkpoint_verified": true,
+    "traffic_ack_verified": true,
+    "previous_read_candidate_state": true,
+    "rollback_completed": true,
+    "billing_reconciled": true
+  },
+  "artifacts": [
+    {
+      "name": "previous_binary",
+      "path": "previous-zero",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "previous_state_after_candidate",
+      "path": "previous-state-after-candidate.json",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "billing_reconciliation",
+      "path": "billing-reconciliation.json",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "notes": "Replace every placeholder and retain the referenced evidence artifacts."
+}

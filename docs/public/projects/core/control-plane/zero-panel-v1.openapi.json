@@ -1,0 +1,1167 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Zero Native Panel API",
+    "version": "1.0.0",
+    "description": "Versioned Zero-native control-plane contract implemented by zero-connector's built-in HTTP peer. All node routes require bearer authentication and are scoped by node_id."
+  },
+  "x-zero-contract-id": "zero.panel.v1",
+  "servers": [
+    {
+      "url": "https://panel.example.com"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/v1/nodes/{node_id}/register": {
+      "post": {
+        "operationId": "registerZeroNode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/NodeId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NodeRegistration"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Idempotent registration accepted"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{node_id}/sync": {
+      "post": {
+        "operationId": "syncZeroNode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/NodeId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectorSyncRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Short-lived Zero-native control exchange accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorSyncResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{node_id}/config": {
+      "get": {
+        "operationId": "getZeroNodeConfig",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/NodeId"
+          },
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Complete managed-inbound snapshot",
+            "headers": {
+              "ETag": {
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NodeConfigEnvelope"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "The previously acknowledged ETag is still current"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{node_id}/users": {
+      "get": {
+        "operationId": "getZeroNodeUsers",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/NodeId"
+          },
+          {
+            "name": "after_revision",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full or incremental user update",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserUpdate"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No revision newer than after_revision"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{node_id}/users/ack": {
+      "post": {
+        "operationId": "acknowledgeZeroNodeUsers",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/NodeId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRevisionAck"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Revision durably acknowledged"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{node_id}/traffic": {
+      "post": {
+        "operationId": "postZeroNodeTraffic",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/NodeId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrafficEnvelope"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact set of durably accepted event IDs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrafficAck"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{node_id}/alive": {
+      "post": {
+        "operationId": "replaceZeroNodeAliveSnapshot",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/NodeId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AliveEnvelope"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Complete alive snapshot replaced"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "parameters": {
+      "NodeId": {
+        "name": "node_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing, invalid, or unauthorized bearer credential"
+      }
+    },
+    "schemas": {
+      "NodeRegistration": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "node_id",
+          "build_id",
+          "command_pull",
+          "node_config_sync",
+          "user_sync",
+          "traffic_reporting",
+          "alive_reporting"
+        ],
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "build_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "command_pull": {
+            "type": "boolean"
+          },
+          "node_config_sync": {
+            "type": "boolean"
+          },
+          "user_sync": {
+            "type": "boolean"
+          },
+          "traffic_reporting": {
+            "type": "boolean"
+          },
+          "alive_reporting": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ConnectorSyncRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_id",
+          "node_id",
+          "build_id",
+          "observed",
+          "applied"
+        ],
+        "properties": {
+          "schema_id": {
+            "const": "zero.connector.sync.v1"
+          },
+          "node_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "build_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "observed": {
+            "$ref": "#/components/schemas/ConnectorNodeObservation"
+          },
+          "applied": {
+            "$ref": "#/components/schemas/ConnectorAppliedState"
+          }
+        }
+      },
+      "ConnectorNodeObservation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "uptime_seconds",
+          "active_flows",
+          "bytes_up",
+          "bytes_down"
+        ],
+        "properties": {
+          "uptime_seconds": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          },
+          "active_flows": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytes_up": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          },
+          "bytes_down": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          }
+        }
+      },
+      "ConnectorAppliedState": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "user_revision"
+        ],
+        "properties": {
+          "node_config_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "user_revision": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          }
+        }
+      },
+      "ConnectorSyncResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_id"
+        ],
+        "properties": {
+          "schema_id": {
+            "const": "zero.connector.sync.v1"
+          },
+          "commands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Command"
+            },
+            "default": []
+          },
+          "node_config_changed": {
+            "type": "boolean",
+            "default": false
+          },
+          "user_revision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint64",
+            "minimum": 0
+          }
+        }
+      },
+      "Command": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command_id",
+          "issued_at_unix_ms",
+          "expires_at_unix_ms",
+          "method"
+        ],
+        "properties": {
+          "command_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9_.:-]+$"
+          },
+          "issued_at_unix_ms": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          },
+          "expires_at_unix_ms": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "policies.select",
+              "policies.probe",
+              "mode.set",
+              "flows.close",
+              "tun.start",
+              "tun.stop",
+              "diagnostics.probe_target",
+              "diagnostics.dns_lookup",
+              "diagnostics.trace_route"
+            ]
+          },
+          "params": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      },
+      "NodeConfigEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_id",
+          "config"
+        ],
+        "properties": {
+          "schema_id": {
+            "const": "zero.panel.node-config.v1"
+          },
+          "config": {
+            "$ref": "#/components/schemas/NodeConfig"
+          }
+        }
+      },
+      "NodeConfig": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "protocol",
+          "listen_address",
+          "listen_port",
+          "transport",
+          "security"
+        ],
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "enum": [
+              "vless",
+              "vmess",
+              "trojan",
+              "shadowsocks",
+              "hysteria2"
+            ]
+          },
+          "listen_address": {
+            "type": "string",
+            "minLength": 1
+          },
+          "listen_port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "transport": {
+            "$ref": "#/components/schemas/NodeTransport"
+          },
+          "security": {
+            "$ref": "#/components/schemas/NodeSecurity"
+          },
+          "vless_flow": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "shadowsocks_cipher": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "shadowsocks_server_key": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hysteria2_up_bps": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint64",
+            "minimum": 0,
+            "description": "Aggregate client upload limit in bytes per second across TCP and UDP sessions sharing the same Zero principal policy; anonymous sessions are limited independently; null or 0 means unlimited."
+          },
+          "hysteria2_down_bps": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint64",
+            "minimum": 0,
+            "description": "Aggregate client download limit in bytes per second across TCP and UDP sessions sharing the same Zero principal policy; anonymous sessions are limited independently; null or 0 means unlimited."
+          }
+        }
+      },
+      "NodeTransport": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "tcp"
+              }
+            }
+          },
+          {
+            "$ref": "#/components/schemas/WebSocketTransport"
+          },
+          {
+            "$ref": "#/components/schemas/GrpcTransport"
+          },
+          {
+            "$ref": "#/components/schemas/H2Transport"
+          },
+          {
+            "$ref": "#/components/schemas/HttpUpgradeTransport"
+          },
+          {
+            "$ref": "#/components/schemas/SplitHttpTransport"
+          }
+        ]
+      },
+      "WebSocketTransport": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "settings"
+        ],
+        "properties": {
+          "type": {
+            "const": "websocket"
+          },
+          "settings": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "default": "/"
+              },
+              "headers": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "default": {}
+              }
+            }
+          }
+        }
+      },
+      "GrpcTransport": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "settings"
+        ],
+        "properties": {
+          "type": {
+            "const": "grpc"
+          },
+          "settings": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "service_names"
+            ],
+            "properties": {
+              "service_names": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "H2Transport": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "settings"
+        ],
+        "properties": {
+          "type": {
+            "const": "h2"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/HostPathSettings"
+          }
+        }
+      },
+      "HttpUpgradeTransport": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "settings"
+        ],
+        "properties": {
+          "type": {
+            "const": "http_upgrade"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/HostPathSettings"
+          }
+        }
+      },
+      "SplitHttpTransport": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "settings"
+        ],
+        "properties": {
+          "type": {
+            "const": "split_http"
+          },
+          "settings": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "host": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "default": "/"
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "auto",
+                  "stream-one",
+                  "packet-up",
+                  "stream-up"
+                ],
+                "default": "auto"
+              }
+            }
+          }
+        }
+      },
+      "HostPathSettings": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "host": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "default": "/"
+          }
+        }
+      },
+      "NodeSecurity": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "const": "none"
+              }
+            }
+          },
+          {
+            "$ref": "#/components/schemas/LocalTlsSecurity"
+          },
+          {
+            "$ref": "#/components/schemas/FileTlsSecurity"
+          },
+          {
+            "$ref": "#/components/schemas/RealitySecurity"
+          }
+        ]
+      },
+      "LocalTlsSecurity": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "settings"
+        ],
+        "properties": {
+          "type": {
+            "const": "local_tls"
+          },
+          "settings": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "server_name",
+              "alpn"
+            ],
+            "properties": {
+              "server_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "alpn": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "FileTlsSecurity": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "settings"
+        ],
+        "properties": {
+          "type": {
+            "const": "file_tls"
+          },
+          "settings": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "cert_path",
+              "key_path",
+              "server_name",
+              "alpn"
+            ],
+            "properties": {
+              "cert_path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "key_path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "server_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "alpn": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "RealitySecurity": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "settings"
+        ],
+        "properties": {
+          "type": {
+            "const": "reality"
+          },
+          "settings": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "private_key"
+            ],
+            "properties": {
+              "private_key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "short_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              },
+              "server_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "cipher_suites": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              }
+            }
+          }
+        }
+      },
+      "UserUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "revision",
+          "inbound_tag",
+          "changes"
+        ],
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          },
+          "inbound_tag": {
+            "type": "string",
+            "minLength": 1
+          },
+          "full": {
+            "type": "boolean",
+            "default": false
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserChange"
+            }
+          }
+        }
+      },
+      "UserChange": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/UserUpsert"
+          },
+          {
+            "$ref": "#/components/schemas/UserDelete"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "op"
+        }
+      },
+      "UserUpsert": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "op",
+          "credential_id",
+          "principal_key",
+          "id"
+        ],
+        "properties": {
+          "op": {
+            "const": "upsert"
+          },
+          "credential_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "principal_key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "flow": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "up_bps": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint64",
+            "minimum": 0,
+            "description": "Aggregate client upload limit in bytes per second across TCP and UDP sessions sharing the same Zero principal policy; null or 0 means unlimited."
+          },
+          "down_bps": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint64",
+            "minimum": 0,
+            "description": "Aggregate client download limit in bytes per second across TCP and UDP sessions sharing the same Zero principal policy; null or 0 means unlimited."
+          },
+          "device_limit": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint32",
+            "minimum": 0
+          },
+          "quota_remaining_bytes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "uint64",
+            "minimum": 0
+          }
+        }
+      },
+      "UserDelete": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "op",
+          "credential_id",
+          "principal_key"
+        ],
+        "properties": {
+          "op": {
+            "const": "delete"
+          },
+          "credential_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "principal_key": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "UserRevisionAck": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "revision"
+        ],
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 1
+          }
+        }
+      },
+      "TrafficEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_id",
+          "records"
+        ],
+        "properties": {
+          "schema_id": {
+            "const": "zero.panel.traffic.v1"
+          },
+          "records": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/TrafficRecord"
+            }
+          }
+        }
+      },
+      "TrafficRecord": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event_id",
+          "principal_key",
+          "bytes_up",
+          "bytes_down"
+        ],
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Opaque cross-restart idempotency key"
+          },
+          "principal_key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bytes_up": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          },
+          "bytes_down": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          }
+        }
+      },
+      "TrafficAck": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "accepted_event_ids"
+        ],
+        "properties": {
+          "accepted_event_ids": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "AliveEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_id",
+          "principals"
+        ],
+        "properties": {
+          "schema_id": {
+            "const": "zero.panel.alive.v1"
+          },
+          "principals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlivePrincipal"
+            }
+          }
+        }
+      },
+      "AlivePrincipal": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "principal_key",
+          "source_ips"
+        ],
+        "properties": {
+          "principal_key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_ips": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "format": "ip"
+            }
+          }
+        }
+      }
+    }
+  }
+}
