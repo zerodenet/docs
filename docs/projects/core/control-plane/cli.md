@@ -154,24 +154,6 @@ zero reload config.json
 需要重启后生效：
 - inbounds/outbounds 增删改
 
-### zero connector production-gate
-
-使用正在执行的 release 候选二进制聚合并交叉校验全部 Zero 原生生产证据：
-
-```bash
-zero connector production-gate \
-  --qualification connector-qualification.json \
-  --conformance reference-conformance.json \
-  --upgrade-preflight upgrade-preflight.json \
-  --live-upgrade production-upgrade-report.json \
-  --approval production-approval.json \
-  --json > production-gate.json
-```
-
-命令要求自身为 `release` profile，并具备 `status_api`、`event_dispatcher`、`panel_connector`、VLESS、VMess、Trojan、Shadowsocks 和 Hysteria2。五份证据中的候选 build ID、git commit、二进制 SHA-256 与原生合同哈希必须一致；长稳必须达到 10 万事件、10 次重启、1 万断供事件、至少 1 小时并处于获批 RSS 上限内；Reference conformance 的七项检查、正式双版本升级/回滚、账务对账和三方批准必须全部通过。
-
-该命令不接受 Xboard、XrayR、sing-box 或其他外部实现的兼容报告作为原生证据。失败时返回退出码 1，不生成“部分通过”的生产门禁报告。
-
 ### zero tun
 
 TUN 虚拟网卡管理：

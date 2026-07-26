@@ -11,7 +11,7 @@
 1. TLS 握手完成（必须）
 2. 读取 Trojan request：`[PASSWORD_HASH][CRLF][CMD][ATYP][ADDR][PORT][CRLF]`
 3. 验证 password hash
-4. 将命中的密码映射到稳定 `credential_id` / `principal_key` 和用户限速
+4. 将命中的密码映射到稳定 `principal_key` 和访问策略
 5. 返回协议内部 accept state，再投影为带 `SessionAuth` 的 session
 
 密码验证流程：
@@ -34,7 +34,6 @@ if sha224(password) != expected_password_hash {
     "type": "trojan",
     "users": [{
       "password": "your-password",
-      "credential_id": "credential:1001",
       "principal_key": "account:1001",
       "up_bps": 10000000,
       "down_bps": 50000000

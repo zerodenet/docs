@@ -82,8 +82,8 @@
 | `policies.probe` | `policy_tag` | 探测 url_test 组延迟（异步，结果经事件/查询取） |
 | `flows.close` | `flow_id` | 关闭指定流 |
 | `config.validate` | `config` (完整 JSON) | 验证配置 |
-| `config.apply` | `config` (完整 JSON) | 持久化并热加载配置 |
-| `config.apply_runtime` | `config` (完整 JSON) | 只应用运行时覆盖，不写回源文件 |
+| `config.apply` | `config` (完整 JSON) | 持久化并等待 proxy 与进程级服务热重建；失败回滚 |
+| `config.apply_runtime` | `config` (完整 JSON) | 不写回源文件，并等待 proxy 与进程级服务热重建；失败回滚 |
 | `mode.set` | `mode`, `outbound?` | 设置全局模式 |
 | `tun.start` | `name?`, `addr`, `mask?`, `mtu?`, `tag` | 启动 TUN |
 | `tun.stop` | — | 停止 TUN |

@@ -6,7 +6,7 @@ Zero 使用 Cargo features 来控制哪些能力子集被包含在编译后的�
 
 | 预设 | 包含内容 | 适用场景 |
 |--------|---------|----------|
-| `default` | `full` + `status_api` | 客户端本地使用 |
+| `default` | `full` + `status-api` | 客户端本地使用 |
 | `full` | 所有入站/出站协议 + DNS | 完整代理节点 |
 
 ```bash
@@ -14,7 +14,7 @@ Zero 使用 Cargo features 来控制哪些能力子集被包含在编译后的�
 cargo build --release
 
 # 等效命令
-cargo build --release --features full,status_api
+cargo build --release --features full,status-api
 ```
 
 ## 入站协议
@@ -38,7 +38,7 @@ cargo build --release --features full,status_api
 ```bash
 # 裁剪示例：仅 SOCKS5 + HTTP CONNECT
 cargo build --release --no-default-features \
-  --features socks5,http,status_api
+  --features socks5,http,status-api
 ```
 
 ## 出站协议
@@ -65,39 +65,39 @@ cargo build --release --no-default-features \
 
 ## 管控面（服务器部署）
 
-以下 features 用于将 Zero 部署为服务器/面板节点，**不在默认 `full` 预设中**。
+以下 features 用于为 Zero 节点启用可选控制与主动通信能力，**不在默认 `full` 预设中**。
 
 | Feature | 描述 | 隐含 |
 |---------|------|------|
-| `status_api` | 运行时控制端点和 selector 切换，包括 HTTP 状态 API | -- |
-| `grpc_api` | gRPC 管控面端点 | `dep:zero-grpc` |
-| `event_dispatcher` | 事件分发器：将 zero 事件投递到外部 sink 并暴露 sink 投递状态 | `dep:zero-connector` |
-| `sink_jsonl` | JSON Lines 文件 sink（事件持久化） | `event_dispatcher` |
-| `panel_connector` | Zero 原生管理 connector：`zero.panel.v1`、短周期同步、命令、配置/用户同步和节点上报 | `status_api` + `event_dispatcher` |
+| `status-api` | 运行时控制端点和 selector 切换，包括 HTTP 状态 API | -- |
+| `grpc-api` | gRPC 管控面端点 | `dep:zero-grpc` |
+| `event-dispatcher` | 事件分发器：将 zero 事件投递到外部 sink 并暴露 sink 投递状态 | `dep:zero-connector` |
+| `sink-jsonl` | JSON Lines 文件 sink（事件持久化） | `event-dispatcher` |
+| `connector` | 通用 Webhook 事件投递；完整 URL 和请求 headers 由注册方提供 | `event-dispatcher` |
 
 ```bash
-# 服务器构建（包含面板 connector）
-cargo build --release --features full,status_api,panel_connector
+# 服务器构建（包含可选 Connector）
+cargo build --release --features full,status-api,connector
 ```
 
-**`panel_connector` 依赖范围：**
+**`connector` 依赖范围：**
 
-- `status_api` -- HTTP 控制端点
-- `event_dispatcher` -- 事件投递基础设施和 sink 投递状态
-- `zero-connector` crate -- PushConnector（Zero 原生 `/sync` 控制交换）、EventDispatcher（事件分发）、Webhook sink
-- 不包含任何第三方面板方言；不愿实现 Zero API/gRPC 或原生 connector 合同的面板，需要在面板侧部署独立兼容桥
+- `event-dispatcher` -- 事件投递基础设施和 sink 投递状态
+- `zero-connector` crate -- EventDispatcher、Webhook sink、重试、outbox 和 dead letter
+- 不隐式启用 `status-api` 或 `grpc-api`；控制入口按部署需要单独选择
+- 不包含中心 API、节点注册或外部控制器方言；外部系统通过 Zero API/gRPC 管理节点
 
 ## 客户端 vs 服务器
 
 ```
-客户端场景：  full + status_api  （默认）
+客户端场景：  full + status-api  （默认）
                   - 入站/出站协议
                   - DNS
                   - HTTP 状态端点（本地调试）
 
-服务器场景：  + panel_connector
-                  - 事件分发（webhook / jsonl）
-                  - 面板心跳上报 + 远程命令
+服务器场景：  + connector
+                  - 中心通过 Zero API/gRPC 注册 Webhook
+                  - 节点按 zero.event.v1 主动投递事件
 ```
 
 ## 与协议实现的关系
@@ -189,8 +189,8 @@ cargo build --release --features full,status_api,panel_connector
 使用通用信元速率算法（GCRA）按字节整形 TCP 与 UDP 流量。
 
 - **配置**：`InboundProtocolConfig` 上的按入站 `up_bps` 和 `down_bps`（Hysteria2、Shadowsocks、Trojan）
-- **按用户**：认证结果通过 `SessionAuth` 注入按用户限制；VLESS、VMess、Trojan、Shadowsocks、Hysteria2 等协议统一复用该字段，按用户限制优先于按入站默认值
-- **内核集成**：TCP 与 UDP ingress 都会先应用认证策略，再为未设置按用户限制的会话填充入站默认值
+- **按主体**：认证结果通过 `SessionAuth` 注入主体限制；VLESS、VMess、Trojan、Shadowsocks、Hysteria2 等协议统一复用该字段，主体限制优先于入站默认值
+- **内核集成**：TCP 与 UDP ingress 都会先应用认证策略，再为未设置主体限制的会话填充入站默认值
 - **共享算法**：协议中立的 `transport/rate_limit.rs` 负责可共享的 GCRA 时间线；Proxy 生命周期内的主体策略注册表按 `principal_key`、`policy_revision` 和双向速率取得同一组句柄
 - **TCP 路径**：读取到的业务数据在写入前按共享上传/下载时间线准入；多个并发 TCP 会话共同消费同一主体策略带宽
 - **UDP 路径**：首包、已有 flow 转发及 direct/upstream/chain 响应均取得同一主体策略的双向 GCRA 时间线，并与 TCP 会话聚合

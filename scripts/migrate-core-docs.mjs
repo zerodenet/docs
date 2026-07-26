@@ -1,4 +1,12 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs'
 import { dirname, extname, join, posix, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -17,27 +25,23 @@ const selectedProjectDocs = new Map([
   ['project/features.md', 'projects/core/configuration/features.md'],
   ['project/architecture.md', 'projects/core/architecture/index.md'],
   ['project/lifecycle.md', 'projects/core/architecture/lifecycle.md'],
+  ['project/connector-architecture.md', 'projects/core/architecture/connector.md'],
+  ['project/managed-materials.md', 'projects/core/architecture/managed-materials.md'],
   ['project/protocol-capabilities.md', 'projects/core/reference/protocol-capabilities.md'],
   ['project/zero-rule-ir-v1.md', 'projects/core/reference/zero-rule-ir-v1.md'],
   ['project/zrs-0.1.md', 'projects/core/reference/zrs-0.1.md'],
   ['project/zrs-0.1-golden.md', 'projects/core/reference/zrs-0.1-golden.md'],
-  ['project/connector-production-report-template.md', 'projects/core/guides/connector-production-report-template.md'],
 ])
 
-const selectedStaticDocs = new Map([
-  [
-    'control-plane-api/zero-panel-v1.openapi.json',
-    'projects/core/control-plane/zero-panel-v1.openapi.json',
-  ],
-  [
-    'project/connector-production-approval.template.json',
-    'projects/core/guides/connector-production-approval.template.json',
-  ],
-  [
-    'project/connector-production-upgrade-report.template.json',
-    'projects/core/guides/connector-production-upgrade-report.template.json',
-  ],
-])
+const staleDestinationFiles = [
+  'projects/core/control-plane/push-connector.md',
+  'projects/core/guides/panel-integration.md',
+  'projects/core/guides/connector-operations.md',
+  'projects/core/guides/connector-production-report-template.md',
+  'public/projects/core/control-plane/zero-panel-v1.openapi.json',
+  'public/projects/core/guides/connector-production-approval.template.json',
+  'public/projects/core/guides/connector-production-upgrade-report.template.json',
+]
 
 const copiedFiles = []
 
@@ -63,9 +67,6 @@ function normalizeSourceTarget(sourceRelativePath, rawTarget) {
 }
 
 function mapSourceDocument(sourceRelativePath) {
-  const selectedStaticDoc = selectedStaticDocs.get(sourceRelativePath)
-  if (selectedStaticDoc) return selectedStaticDoc
-
   if (sourceRelativePath.startsWith('guides/')) {
     return `projects/core/${sourceRelativePath}`
   }
@@ -120,13 +121,6 @@ function transformMarkdown(sourceRelativePath, source) {
     .replaceAll('docs/project/zrs-0.1-golden.md', 'docs/projects/core/reference/zrs-0.1-golden.md')
     .replaceAll('#policyprobecompleted', '#policy-probe-completed')
     .replace(/\bcd zero\b/g, 'cd core')
-    .replaceAll('`adapter: "reference"`', 'Zero 原生 HTTP peer')
-    .replaceAll('Zero 原生 HTTP peer 是 Zero 自己的线协议', 'Zero 原生 HTTP peer 实现 Zero 自己的线协议')
-    .replaceAll('验收配置必须使用 Zero 原生 HTTP peer 并同时启用', '验收配置必须同时启用')
-
-  if (sourceRelativePath === 'guides/panel-integration.md') {
-    transformed = transformed.replace(/^[ \t]*"adapter": "reference",\r?\n/m, '')
-  }
 
   if (sourceRelativePath === 'project/config.md') {
     transformed = transformed.replace(
@@ -172,22 +166,6 @@ function copyMarkdown(sourceRelativePath, destinationRelativePath) {
   copiedFiles.push(destinationRelativePath)
 }
 
-function copyStaticDocument(sourceRelativePath, destinationRoutePath) {
-  const sourceFile = join(sourceDocsRoot, ...sourceRelativePath.split('/'))
-  const destinationFile = join(destinationDocsRoot, 'public', ...destinationRoutePath.split('/'))
-  const source = readFileSync(sourceFile, 'utf8')
-
-  mkdirSync(dirname(destinationFile), { recursive: true })
-  writeFileSync(
-    destinationFile,
-    source
-      .replaceAll('https://github.com/zerodenet/zero.git', 'https://github.com/zerodenet/core.git')
-      .replaceAll('https://github.com/zerodenet/zero', 'https://github.com/zerodenet/core'),
-    'utf8',
-  )
-  copiedFiles.push(`public/${destinationRoutePath}`)
-}
-
 function copyDirectory(sourceDirectory, destinationDirectory) {
   const sourceAbsolute = join(sourceDocsRoot, sourceDirectory)
   for (const entry of walkMarkdown(sourceAbsolute)) {
@@ -205,16 +183,16 @@ function walkMarkdown(directory) {
   })
 }
 
+for (const destinationRelativePath of staleDestinationFiles) {
+  rmSync(join(destinationDocsRoot, ...destinationRelativePath.split('/')), { force: true })
+}
+
 copyDirectory('guides', 'projects/core/guides')
 copyDirectory('protocols', 'projects/core/protocols')
 copyDirectory('control-plane-api', 'projects/core/control-plane')
 
 for (const [sourceRelativePath, destinationRelativePath] of selectedProjectDocs) {
   copyMarkdown(sourceRelativePath, destinationRelativePath)
-}
-
-for (const [sourceRelativePath, destinationRoutePath] of selectedStaticDocs) {
-  copyStaticDocument(sourceRelativePath, destinationRoutePath)
 }
 
 console.log(`Core 文档迁移完成：${copiedFiles.length} 个公开文档与静态资源。`)

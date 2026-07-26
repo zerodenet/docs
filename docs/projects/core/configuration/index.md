@@ -24,7 +24,6 @@ Zero 使用 JSON。当前顶层结构如下：
     "control": { "enabled": false },
     "hooks": []
   },
-  "push": {},
   "mode": { "type": "rule" },
   "route": {
     "rule_sets": [],
@@ -37,9 +36,7 @@ Zero 使用 JSON。当前顶层结构如下：
 
 这里仅记录当前已实现的配置。模式和节点组的长期设计见 [modes-and-groups.md](/projects/core/configuration/modes-and-groups)。
 
-> `push` 是顶层键（不在 `api` 下），用于节点主动向外部管理端点上报心跳与拉取远程命令。详见 [面板与节点对接](https://github.com/zerodenet/core/blob/develop/docs/project/panel-node-connector.md) 与 [配置模型参考](/projects/core/control-plane/configuration#push)。
-
-`push.sync_node_config` 是受限的面板配置所有权边界：面板只能更新 `node_config_inbound_tag` 指向的一个入站，且协议必须与 `node_config_protocol` 一致。本地 route、outbound、API、push 凭据、runtime 与其他入站不会被面板快照覆盖。应用端等待 proxy listener reconcile ACK；同 tag 的监听形态变化会重绑，绑定失败则恢复上一份配置并保留旧 ETag。
+> Connector Webhook 作为 `api.event_sinks` 配置，不存在独立顶层 `push`。外部控制器通过 Zero API/gRPC 的 `config.apply` 注册完整 URL。详见 [Connector 通信边界](/projects/core/architecture/connector) 与 [配置模型参考](/projects/core/control-plane/configuration#api-event-sinks)。
 
 ## runtime
 
@@ -136,24 +133,26 @@ Zero 使用 JSON。当前顶层结构如下：
 }
 ```
 
-面板 webhook：
+通用 Webhook：
 
 ```json
 {
-  "tag": "panel",
+  "tag": "central-events",
   "type": "webhook",
-  "url": "https://panel.example.com/api/zero/events",
+  "url": "https://central.example/receivers/zero/node-17",
   "events": ["flow.completed", "engine.warning"],
   "source_id": "edge-shanghai-01",
-  "api_key_env": "ZERO_PANEL_API_KEY"
+  "headers": {
+    "authorization": "Bearer receiver-defined-token"
+  }
 }
 ```
 
-`webhook` 使用 `Authorization: Bearer <api-key>`。推荐使用 `api_key_env`；`api_key` 也支持用于测试。`http://` webhook 需要显式 `allow_insecure: true`。
+`url` 是注册方提供的完整地址，Zero 不拼接路径。`headers` 是不透明字段，Zero 不规定认证方案。`http://` webhook 需要显式 `allow_insecure: true`。
 
-当 `event_dispatcher` feature 已编译且 `api.event_sinks` 不为空时，内核启动一个 dispatcher owner 负责投递生命周期，并向管控面暴露一个只读的 sink 状态视图。`GET /api/v1/sinks` 合并普通事件 sink 与 `panel-control`、`panel-traffic`、`panel-alive`，报告 `pending` 积压、投递计数器、最近成功/失败时间戳和最近错误文本。
+当 `event-dispatcher` feature 已编译且 `api.event_sinks` 不为空时，应用层启动一个 dispatcher owner 负责投递生命周期，并向管控面暴露只读 sink 状态。`GET /api/v1/sinks` 报告 `pending` 积压、投递计数器、最近成功/失败时间戳和最近错误文本。
 
-生产计费 Sink 应同时配置 `api.outbox_path`。dispatcher 会先同步写入 delivery journal，再调用 Sink；成功后写 ACK，重启时恢复未 ACK 记录。`api.dispatcher.max_in_memory_deliveries` 默认 `4096`，只限制活跃内存工作集；完整 backlog 以文件偏移索引留在 outbox，并在 ACK 释放槽位后分页加载。`api.dispatcher.replay_batch_size` 默认 `4096`，用于从 engine event log 补偿 live queue 断档。`GET /api/v1/sinks` 的 `pending` 统计完整 durable backlog。`api.dead_letter_path` 仍用于保存达到重试上限或不可重试的 delivery。接收端必须按 `event_id` 幂等。
+生产计费 Sink 应同时配置 `api.outbox_path`。dispatcher 会先同步写入 delivery journal，再调用 Sink；成功后写 ACK，重启时恢复未 ACK 记录。每个 sink 使用独立 worker，单个接收端超时不会阻塞其他注册地址。`api.dispatcher` 配置活跃内存工作集、event-log replay 批量、Webhook timeout、重试阈值、初始/最大退避、耗尽策略，以及 outbox 文件系统的绝对/比例空闲保留水位；默认 `retry_forever` 不会隐式删除可重试 delivery。水位不足时新的持久投递 fail-closed 且不推进事件游标，已有 delivery 仍可投递和 ACK。`GET /api/v1/sinks` 的 `pending` 统计完整 durable backlog，`outbox_storage` 报告磁盘保护状态。不可重试 delivery 或显式 `dead_letter` 策略使用 `api.dead_letter_path`。接收端必须按 `event_id` 幂等。
 
 ### control
 
@@ -168,6 +167,8 @@ Zero 使用 JSON。当前顶层结构如下：
 ```
 
 当前管控面使用 `Authorization: Bearer <api-key>` 或 `X-Zero-Api-Key: <api-key>`。建议仅监听 localhost、内网或受防火墙保护的地址。
+
+编译 `grpc-api` 时，gRPC 使用同一监听 IP 的下一端口。`control.grpc` 可选配置原生 TLS、客户端 CA（mTLS）、Bearer 开关或显式远程明文；Bearer 与 mTLS 可以单独使用或叠加。默认远程明文不会启动，外部 TLS 终止仍受支持。详细字段与示例见 [控制面配置](/projects/core/control-plane/configuration#api-control)。
 
 当前 HTTP 管控面支持：
 
@@ -326,7 +327,7 @@ SOCKS5 入站默认无认证。配置 `users` 启用 RFC 1929 用户名/密码�
 
 `mixed.socks5_users` 遵循与 SOCKS5 入站 users 相同的用户名/密码默认规则。
 
-VLESS 入站必须配置 user UUID。`credential_id` 和 `principal_key` 是可观测性归因字段，会出现在 `flow.completed` 的 `auth` 和事件顶层的 `principal_key` 中；UUID 本身默认不会发送给面板：
+VLESS 入站必须配置 user UUID。`principal_key` 是稳定、非敏感的策略与计费归因键，会出现在 `flow.completed` 的 `auth` 和事件顶层；UUID 本身默认不会发送给面板：
 
 ```json
 {
@@ -337,7 +338,6 @@ VLESS 入站必须配置 user UUID。`credential_id` 和 `principal_key` 是可�
     "users": [
       {
         "id": "11111111-2222-3333-4444-555555555555",
-        "credential_id": "node-user-1",
         "principal_key": "user:10001"
       }
     ]
@@ -406,7 +406,7 @@ WebSocket 可以与 TLS 结合使用 (WSS)：
 
 ### VMess 入站
 
-VMess 入站处于实验阶段，需要 TLS。每个 user 必须提供 VMess UUID。`credential_id` 和 `principal_key` 是可观测性归因字段，`cipher` 省略时默认为 `aes-128-gcm`：
+VMess 入站处于实验阶段，需要 TLS。每个 user 必须提供 VMess UUID。`principal_key` 是稳定、非敏感的策略与计费归因键，`cipher` 省略时默认为 `aes-128-gcm`：
 
 ```json
 {
@@ -418,7 +418,6 @@ VMess 入站处于实验阶段，需要 TLS。每个 user 必须提供 VMess UUI
       {
         "id": "11111111-2222-3333-4444-555555555555",
         "cipher": "aes-128-gcm",
-        "credential_id": "node-user-1",
         "principal_key": "user:10001"
       }
     ],
@@ -494,7 +493,6 @@ Trojan 入站需要 TLS，在 TLS 隧道内进行密码认证，然后转发目�
     "type": "trojan",
     "users": [{
       "password": "your-secret-password",
-      "credential_id": "credential:1001",
       "principal_key": "account:1001"
     }],
     "tls": {

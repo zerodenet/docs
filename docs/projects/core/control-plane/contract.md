@@ -14,7 +14,7 @@
 ```json
 {
   "error": { "code": "permission_denied" },
-  "features": ["status_api", "config_snapshot", "runtime_snapshot"],
+  "features": ["status-api", "config_snapshot", "runtime_snapshot"],
   "adapters": [{ "kind": "in_process", "enabled": true }]
 }
 ```
@@ -75,7 +75,7 @@ HTTP 和 IPC 响应使用 `zero_api::ApiResponse`。
 - 当前调用者被授予的权限
 - 协议和事件模式标识
 
-能力发现是描述性的。它不授予额外权限，也不暴露面板特定的业务概念。
+能力发现是描述性的。它不授予额外权限，也不暴露外部系统特定的业务概念。
 
 ## 错误处理
 
@@ -95,7 +95,7 @@ HTTP 和 IPC 响应使用 `zero_api::ApiResponse`。
 
 ## 消费者形态
 
-外部 GUI 和面板集成应将其自身的业务状态保留在内核之外：
+外部 GUI 和其他系统应将其自身的业务状态保留在内核之外：
 
 - 用户账户、套餐、配额、计费、租户和审计策略保留在外部系统中
 - 内核归因使用 `principal_key`、`source_id` 和 `labels`

@@ -25,15 +25,35 @@
 
 | 版本 | 影响面 | 迁移结论 |
 |------|--------|----------|
-| `Unreleased` | 事件消费者、计费/Sink 去重、Zero 原生面板 | 引擎生成的 `event_id` 增加每次启动唯一的随机 epoch；原生面板响应与远程命令改为版本化、有限大小和 fail-closed；用户速率改为 Zero 主体策略聚合 <!-- version-contract:unreleased-row --> |
+| `Unreleased` | 构建脚本、事件消费者、Webhook 接收端 | 公开 Cargo feature 改用 kebab-case；引擎生成的 `event_id` 增加每次启动唯一的随机 epoch；开发期固定中心 API 被撤销，Connector 收缩为通用 Webhook 事件投递；认证项速率改为 Zero 主体策略聚合 <!-- version-contract:unreleased-row --> |
 | `0.0.15-rc.1` | 进程内 Rust `EventSource`、事件 Sink | Rust 实现者必须迁移到实时 `EventStream`；IPC/HTTP/gRPC GUI wire 无变化 |
 | `0.0.15-rc` | GUI flow 生命周期 | 订阅 ACK 后以 `flow.snapshot` 建立活动连接基线，再合并 flow 增量 |
 
 ## Unreleased
 
+### 撤销开发期固定中心 API
+
+项目尚未发布 Connector 合同，因此开发期的节点注册、同步、traffic、presence、访问配置和私有命令设计直接撤销，不保留兼容层。
+
+已移除顶层 `push`、`PushConfig`、`/api/v1/nodes/{node_id}/*`、中心 OpenAPI、conformance 和 production gate。外部控制器通过 Zero API/gRPC 管理节点，并使用 `config.apply` 注册通用 `api.event_sinks`。Connector 只向完整 Webhook URL 推送 `zero.event.v1`，并定义 HTTP 状态确认分类。
+
+### 公开 Cargo feature 改用 kebab-case
+
+构建入口不再暴露下划线式能力名。构建脚本、CI 和制品 feature 校验需要完成以下迁移：
+
+| 旧名称 | 新名称 |
+| --- | --- |
+| `status_api` | `status-api` |
+| `event_dispatcher` | `event-dispatcher` |
+| `sink_jsonl` | `sink-jsonl` |
+| `panel_connector` | `connector` |
+| `grpc_api` | `grpc-api` |
+
+Rust 函数、模块和变量仍按语言规范使用 `snake_case`；本次变化只影响 Cargo feature 名称和二进制对外报告的 feature 字符串。历史候选证据保留其原始名称，不得重写后冒充新候选。
+
 ### 引擎生成事件使用跨启动唯一 ID
 
-旧事件 ID 仅由事件类型、进程内 flow ID/序号和毫秒时间戳组成。进程快速重启后这些值可能复用，使原生面板或 Sink 把新事实误判为已处理事件。
+旧事件 ID 仅由事件类型、进程内 flow ID/序号和毫秒时间戳组成。进程快速重启后这些值可能复用，使 Connector 接收端或 Sink 把新事实误判为已处理事件。
 
 新语义：
 
@@ -44,29 +64,9 @@
 
 该变化不修改 `zero.event.v1` 的 JSON 字段形状，但修正了跨进程启动的唯一性语义。任何依赖旧 `{type}:{flow_id}:{timestamp}` 格式解析的消费者必须删除该解析逻辑，改用 `event_type`、`payload.record.flow_id` 和 `occurred_at_unix_ms` 等正式字段。
 
-### Zero 原生面板合同正式版本化
-
-Zero 原生机场面板合同标识固定为 `zero.panel.v1`，并提供 OpenAPI 3.1 产物和 `zero connector contract` 导出命令。原生同步、节点配置、用户更新和计费 ACK 不再忽略未知字段；无效远程命令也不会先进入防重放账本再被静默跳过。
-
-节点控制交换已收敛为 `POST /api/v1/nodes/{node_id}/sync`，schema 为 `zero.connector.sync.v1`。原 `/heartbeat` 与 `/commands` 端点已删除；配置中的 `heartbeat_interval_seconds`、`command_poll_interval_seconds` 也已由单一 `sync_interval_seconds` 取代，旧字段会被明确拒绝。connector 不再公开进程内 adapter/peer 注入 SPI，第三方方言必须在 Zero 之外适配。
-
-响应大小限制：
-
-- heartbeat、node config、traffic ACK：1 MiB；
-- commands、user update：16 MiB。
-
-面板迁移要求：
-
-1. 删除未在 OpenAPI 中声明的响应扩展字段；
-2. 只下发受支持且参数完整的命令；
-3. 大用户快照应使用 revision 增量，不能依赖无限响应；
-4. 在专用节点运行 `zero connector conformance --allow-writes` 并归档完整报告。
-
-原生验收报告升级为 `zero.panel.conformance-report.v2`：原先顶层的单一 `build_id` 被 `candidate` 对象替代，并同时记录 `build_id`、`git_hash`、`build_profile`、编译 feature 和执行二进制自算的 `binary_sha256`。消费验收报告的工具必须先按 `schema_id` 分支，不能继续把只含版本号的 v1 报告当成完整候选证据。
-
 ### 用户速率改为 Zero 主体策略聚合
 
-开发态预资格期间，`up_bps` / `down_bps` 曾被描述并执行为单条 TCP/UDP flow 的限制。该语义允许同一用户通过增加并发连接绕过带宽策略，不满足 Zero 自有机场控制面的主体策略定义。
+开发态预资格期间，`up_bps` / `down_bps` 曾被描述并执行为单条 TCP/UDP flow 的限制。该语义允许同一主体通过增加并发连接绕过带宽策略，不满足 Zero 主体策略的定义。
 
 新语义：
 
@@ -75,7 +75,7 @@ Zero 原生机场面板合同标识固定为 `zero.panel.v1`，并提供 OpenAPI
 - revision 或速率变化建立新时间线，旧会话在确认式清退前继续持有旧策略；
 - 没有 `principal_key` 的入站默认限速仍按会话独立执行。
 
-JSON 字段形状和 `zero.panel.v1` schema ID 不变。该修正发生在首个清洁 release candidate 和正式生产签字之前；历史开发态 manifest 只能证明当时的每流实现，不得继续作为当前候选产物证据。面板无需修改 wire payload，但容量规划和限速验收必须改为并发 TCP/UDP 聚合测试。
+JSON 字段形状和当时的 `zero.panel.v1` schema ID 不变。该修正发生在首个清洁 release candidate 和正式生产签字之前；历史开发态 manifest 只能证明当时的每流实现，不得继续作为当前候选产物证据。接收端无需修改 wire payload，但容量规划和限速验收必须改为并发 TCP/UDP 聚合测试。
 
 ## 0.0.15-rc.1
 

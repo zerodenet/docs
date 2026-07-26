@@ -19,7 +19,7 @@ Zero Core 是使用 Rust 编写的网络代理内核。这里优先记录可以�
 
 - 第一次运行：阅读[快速开始](./guides/quickstart)。
 - 开发 GUI 或本地控制端：阅读[GUI 接入 Core](./guides/gui-integration)。
-- 开发面板或节点管理系统：阅读[面板接入 Core](./guides/panel-integration)。
+- 开发控制端或节点管理系统：阅读[Connector 接入](./guides/connector-integration)和[Connector 通信边界](./architecture/connector)。
 - 理解模块和请求路径：进入[总体架构](./architecture/)。
 
 ## 文档边界

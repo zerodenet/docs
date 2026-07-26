@@ -75,7 +75,6 @@
     "cipher": "chacha20-ietf-poly1305",
     "users": [{
       "password": "your-secret-password",
-      "credential_id": "credential:1001",
       "principal_key": "account:1001"
     }]
   }
@@ -91,7 +90,6 @@
   "identity_password": "MDEyMzQ1Njc4OWFiY2RlZg==",
   "users": [{
     "password": "ZmVkY2JhOTg3NjU0MzIxMA==",
-    "credential_id": "credential:1001",
     "principal_key": "account:1001"
   }]
 }
@@ -120,7 +118,6 @@ AEAD 2022 的 PSK 必须是标准 base64 key material：AES-128 为 16 字节，
     "type": "trojan",
     "users": [{
       "password": "your-secret-password",
-      "credential_id": "credential:1001",
       "principal_key": "account:1001"
     }],
     "tls": {
@@ -143,7 +140,6 @@ AEAD 2022 的 PSK 必须是标准 base64 key material：AES-128 为 16 字节，
     "type": "hysteria2",
     "users": [{
       "password": "your-secret-password",
-      "credential_id": "credential:1001",
       "principal_key": "account:1001"
     }],
     "cert_path": "certs/fullchain.pem",

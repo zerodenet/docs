@@ -107,7 +107,7 @@ const coreSidebar: DefaultTheme.SidebarItem[] = [
     page('本地 IPC', '/projects/core/control-plane/ipc-protocol'),
     page('事件目录', '/projects/core/control-plane/events'),
     page('FlowHook', '/projects/core/control-plane/hooks'),
-    page('节点主动上报', '/projects/core/control-plane/push-connector'),
+    page('Connector 事件投递', '/projects/core/control-plane/connector'),
     page('CLI', '/projects/core/control-plane/cli'),
     page('通用契约', '/projects/core/control-plane/contract'),
     page('破坏性变更', '/projects/core/control-plane/breaking-changes'),
@@ -115,6 +115,8 @@ const coreSidebar: DefaultTheme.SidebarItem[] = [
   group('架构与格式', [
     page('总体架构', '/projects/core/architecture/'),
     page('请求生命周期', '/projects/core/architecture/lifecycle'),
+    page('Connector 通信边界', '/projects/core/architecture/connector'),
+    page('受管材料事务设计', '/projects/core/architecture/managed-materials'),
     page('参考资料入口', '/projects/core/reference/'),
     page('Zero Rule IR v1', '/projects/core/reference/zero-rule-ir-v1'),
     page('ZRS 0.1', '/projects/core/reference/zrs-0.1'),
@@ -124,9 +126,7 @@ const coreSidebar: DefaultTheme.SidebarItem[] = [
     page('指南入口', '/projects/core/guides/'),
     page('快速开始', '/projects/core/guides/quickstart'),
     page('GUI 接入 Core', '/projects/core/guides/gui-integration'),
-    page('面板接入 Core', '/projects/core/guides/panel-integration'),
-    page('Connector 生产运维', '/projects/core/guides/connector-operations'),
-    page('Connector 生产报告模板', '/projects/core/guides/connector-production-report-template'),
+    page('Connector 接入', '/projects/core/guides/connector-integration'),
   ]),
   group('参与项目', [
     page('参与 Zero Core', '/projects/core/contributing/'),
