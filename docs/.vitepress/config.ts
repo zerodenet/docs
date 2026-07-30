@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 import { nav, sidebar } from './navigation'
 
 export default defineConfig({
+  base: process.env.DOCS_BASE || '/',
   title: 'ZeroDeNet',
   description: 'ZeroDeNet 开源项目文档',
   lang: 'zh-CN',
@@ -14,6 +15,12 @@ export default defineConfig({
   head: [
     ['meta', { name: 'theme-color', content: '#0d5bd7' }],
     ['meta', { property: 'og:site_name', content: 'ZeroDeNet' }],
+    ['meta', {
+      name: 'robots',
+      content: process.env.DOCS_PREVIEW === 'true'
+        ? 'noindex, nofollow'
+        : 'index, follow',
+    }],
   ],
 
   themeConfig: {

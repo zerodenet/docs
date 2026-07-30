@@ -1,97 +1,48 @@
-# 控制与集成
+# 控制接口总览
 
-Zero 通过 HTTP JSON API、gRPC、Unix Domain Socket / Windows Named Pipe、CLI 和事件 Sink 提供统一的查询、命令、事件与诊断能力。本节是 GUI、CLI 和任意外部系统对接 Zero 的正式契约入口。
+Zero 的 HTTP、gRPC、IPC 和 CLI 共享同一套查询与命令语义。Connector 是独立的事件投递通道，不参与外部系统对节点的管理请求。
 
-## 快速导航
+## 选择入口
 
-| 文档 | 说明 |
+| 场景 | 推荐入口 | 主要用途 |
+|------|----------|----------|
+| 同机 GUI、守护程序 | IPC | 查询、命令、订阅事件 |
+| 浏览器或简单外部控制器 | HTTP | JSON API、SSE |
+| 跨主机强类型客户端 | gRPC | 查询、命令、流式事件 |
+| 人工运维 | CLI | 校验、状态、切换、热更新 |
+| 节点主动通知外部系统 | Connector | 可靠投递 `zero.event.v1` |
+
+HTTP、IPC 和 gRPC 都是管理通道。Connector 只把事件投递到注册方提供的完整 URL，不规定接收端路径、认证方式或业务工作流。
+
+## 推荐接入顺序
+
+1. 查询 `health`，确认节点在线。
+2. 查询 `capabilities`，识别当前发行物编译的能力。
+3. 查询 `config`、`runtime` 和 `stats`，建立初始视图。
+4. 订阅事件，按快照和 revision 合并增量状态。
+5. 修改配置时先执行 `config.validate`，确认后再执行 `config.apply`。
+
+`config` 查询返回运行配置摘要，不是完整配置文件。外部控制器必须维护自己的完整 desired state。
+
+## 文档入口
+
+| 任务 | 文档 |
 |------|------|
-| [configuration.md](/projects/core/control-plane/configuration) | `api.*` 配置模型完整参考 |
-| [http-api.md](/projects/core/control-plane/http-api) | HTTP JSON 端点规范 |
-| [ipc-protocol.md](/projects/core/control-plane/ipc-protocol) | UDS / Named Pipe 帧协议 |
-| [events.md](/projects/core/control-plane/events) | 事件目录和 payload 规范 |
-| [hooks.md](/projects/core/control-plane/hooks) | FlowHook 扩展点 |
-| [connector.md](/projects/core/control-plane/connector) | Webhook 注册、事件推送格式与 HTTP 确认语义 |
-| [cli.md](/projects/core/control-plane/cli) | CLI 控制命令 |
-| [contract.md](/projects/core/control-plane/contract) | API 契约和外部命名规则 |
-| [breaking-changes.md](/projects/core/control-plane/breaking-changes) | 版本语义、破坏性变更和 GUI 迁移要求 |
-| [GUI 接入指南](/projects/core/guides/gui-integration) | 本地 GUI 的 IPC/HTTP 接入流程、状态模型和短期补齐建议 |
-| [Connector 接入指南](/projects/core/guides/connector-integration) | 通过 Zero API/gRPC 注册 Webhook 并接收事件 |
+| 使用 HTTP 查询和命令 | [HTTP API](./http-api) |
+| 使用本地 socket/pipe | [IPC 协议](./ipc-protocol) |
+| 使用命令行 | [CLI 命令](./cli) |
+| 配置控制接口和认证 | [控制面配置](./configuration) |
+| 处理事件 | [事件目录](./events) |
+| 注册 Webhook | [Connector 投递合同](./connector) |
+| 实现 GUI | [GUI 接入指南](/projects/core/guides/gui-integration) |
+| 处理版本差异 | [破坏性变更](./breaking-changes) |
 
-## 架构概览
+## 安全边界
 
-```
-┌─────────────────────────────────────────────────────┐
-│                 GUI / CLI / 外部系统                  │
-├──────────┬──────────┬──────────┬──────────┬─────────┐
-│  HTTP    │  gRPC    │   UDS    │   CLI    │ Webhook │
-│  :9090   │  :9091   │ .sock    │  zero    │  Sink   │
-├──────────┴──────────┴──────────┴──────────┴─────────┤
-│                   EngineHandle                       │
-│  ┌──────────┐ ┌──────────┐ ┌──────────────────────┐ │
-│  │  Query   │ │ Command  │ │     EventSource      │ │
-│  │ Service  │ │ Service  │ │  (SSE / IPC / Sink)  │ │
-│  └──────────┘ └──────────┘ └──────────────────────┘ │
-├─────────────────────────────────────────────────────┤
-│                      Engine                          │
-│  ┌──────────┐ ┌──────────────┐ ┌─────────────────┐  │
-│  │  Router  │ │ Session Reg  │ │   Event Log     │  │
-│  └──────────┘ └──────────────┘ └─────────────────┘  │
-└─────────────────────────────────────────────────────┘
-```
+- 本地 IPC 依赖操作系统文件或管道权限。
+- HTTP 跨主机部署应由可信隧道或外部 TLS 终止保护。
+- gRPC 可以配置原生 TLS/mTLS，也可以位于外部 TLS 终止之后。
+- Bearer token 用于认证，不能代替传输加密。
+- `api.control` 的监听地址或认证不能通过承载它的 `config.apply` 在线自替换。
 
-图中的通道职责不同：GUI 和外部控制器通过 IPC/HTTP/gRPC 直接使用查询、命令、配置和实时事件；中心通过同一控制 API 的 `config.apply` 注册 `api.event_sinks`。EventDispatcher 订阅 `EventSource`，Connector 将筛选后的 `zero.event.v1` 事件可靠投递到注册方给出的完整 Webhook URL。Connector 不定义中心端点、节点注册、同步或配置语义。详见 [Connector 边界](/projects/core/control-plane/connector)。
-
-## 四种通道对比
-
-| 维度 | HTTP | gRPC | IPC (UDS/Pipe) | CLI |
-|------|------|------|----------------|-----|
-| 传输 | TCP | HTTP/2；可选原生 TLS/mTLS 或外部 TLS 终止 | Unix Domain Socket / Named Pipe | UDS / Named Pipe |
-| 认证 | Bearer token | 可选 Bearer、mTLS，或两者叠加 | 文件系统权限 (0600) | 文件系统权限 |
-| 查询 | `GET /api/v1/*` | proto RPC | `{"type":"query","id":1,...}` | `zero status/flows/policies` |
-| 命令 | `POST /api/v1/commands` | proto RPC | `{"type":"command","id":1,...}` | `zero select <p> <t>` |
-| 事件流 | SSE (`text/event-stream`) | server streaming | JSON-line 推送 | `zero events` |
-| 适用场景 | 远程调试、外部控制器 | 服务端集成、SDK | 本地 GUI 进程 | 终端管理 |
-| 默认端口/路径 | 127.0.0.1:9090 | 127.0.0.1:9091 | `~/.zero/control.sock` / `\\.\pipe\zero-control` | 自动发现 |
-
-## 核心设计原则
-
-1. **内核通用** — API 不绑定任何特定外部产品或平台，所有消费者平等
-2. **能力原语** — 暴露原子能力（查询、切换、关闭），业务逻辑在外部
-3. **多通道一致** — HTTP、gRPC、IPC、CLI 四种通道共享相同的语义和数据模型
-4. **安全可组合** — 本地 IPC 依赖文件权限；远程控制可组合 Bearer、原生 TLS/mTLS 或外部 TLS 终止，不把单一部署方案写死
-5. **事件驱动** — 所有状态变更以归一化事件推送，支持 SSE、IPC 流、Sink 投递三种消费方式
-
-## GUI 对接重点
-
-本地 GUI 优先使用 IPC，HTTP 作为浏览器 WebView 或远程调试备选。GUI 首屏应先查询 `health`、`capabilities`、`config`、`runtime`，再建立事件订阅；重连后用 `runtime` / `stats` 重建界面状态。配置编辑应先走 `config.validate`，成功后再调用 `config.apply`。
-
-短期对 GUI 最有价值的内核能力是机器可读契约、配置影响预检、结构化校验诊断、DNS/路由解释、日志流和更完整的 flow/policy 事件。这些能力应作为 Zero 内核通用控制面原语设计，不引入外部业务概念。
-
-## 最小可用配置
-
-```text
-{
-  "inbounds": [...],
-  "outbounds": [...],
-  "route": {...},
-  "api": {
-    "control": {
-      "enabled": true,
-      "listen": { "address": "127.0.0.1", "port": 9090 }
-    }
-  }
-}
-```
-
-启动后即可通过 HTTP 或 IPC 访问控制平面：
-
-```bash
-# HTTP
-curl http://127.0.0.1:9090/api/v1/runtime
-
-# CLI (自动连接 ~/.zero/control.sock)
-zero status
-zero select proxy direct
-zero events
-```
+详细部署方式见[保护控制接口](/projects/core/guides/control-security)。

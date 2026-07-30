@@ -129,7 +129,7 @@ Flow 生命周期钩子，按数组顺序执行。
 
 **CLI 覆盖**：`--ipc-hook-socket /run/billing/hook.sock` 优先级高于配置文件。
 
-钩子协议详情：参见 [hooks.md](/projects/core/control-plane/hooks)。
+钩子协议详情：参见 [hooks.md](https://github.com/zerodenet/core/blob/develop/docs/control-plane-api/hooks.md)。
 
 ## `api.event_sinks`
 

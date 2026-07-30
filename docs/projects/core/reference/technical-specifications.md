@@ -1,51 +1,51 @@
-# 技术参数总览
+# 能力与端口速查
 
-本页提供 Zero Core 技术能力的索引和当前默认参数。精确到具体构建时，应同时查询运行时 `capabilities`，因为 Cargo features 可以裁剪协议和控制面能力。
+本页用于部署前快速核对。实际能力始终以运行中的 `zero build-info` 和 `/api/v1/capabilities` 为准。
 
-## 能力基线
+## 构建能力
 
-| 维度 | 当前边界 |
-| --- | --- |
-| 实现语言 | Rust |
-| 运行形态 | 本地网关、边缘节点或服务端 |
-| 配置 | 入站、出站、路由、DNS、运行时与控制面配置 |
-| 默认构建预设 | `full + status_api` |
-| 控制方式 | HTTP JSON、gRPC、Unix Domain Socket / Windows Named Pipe、CLI |
-| 能力发现 | `capabilities` 查询与 `capabilities.protocols` 协议矩阵 |
+| 能力 | 默认构建 | Feature |
+|------|----------|---------|
+| 主流代理协议与 DNS | 是 | `full` |
+| HTTP 控制接口 | 是 | `status-api` |
+| 本地 IPC 与 CLI | 是 | 内置 |
+| Connector Webhook | 否 | `connector` |
+| 本地 JSONL sink | 否 | `sink-jsonl` |
+| gRPC 控制接口 | 否 | `grpc-api` |
 
-构建预设、feature 依赖和裁剪方式见[构建特性](../configuration/features)。完整字段见[配置参考](../configuration/)。
+`connector`、`grpc-api` 和 `status-api` 相互独立，按部署需要选择。
 
-## 协议范围
+## 常用监听
 
-当前文档覆盖 SOCKS5、HTTP CONNECT、Mixed、VLESS、Hysteria2、Shadowsocks、Trojan、Mieru 和 VMess。`direct`、`block`、DNS 与 TUN 等能力具有各自的构建和运行边界。
+| 用途 | 地址或端口 | 说明 |
+|------|------------|------|
+| Mixed 本地代理 | 示例使用 `127.0.0.1:7890` | 由 inbound 配置决定 |
+| HTTP 控制接口 | 示例使用 `127.0.0.1:9090` | 由 `api.control.listen` 或 `--status-listen` 决定 |
+| gRPC 控制接口 | HTTP 控制端口 + 1 | 需要 `grpc-api` |
+| Unix IPC | `~/.zero/control.sock` | 可用 `--control-socket` 覆盖 |
+| Windows IPC | `\\.\pipe\zero-control` | Named Pipe |
 
-协议目录存在不等于当前二进制已经启用，也不等于所有外部实现都已完成互操作验证。核对具体 TCP、UDP、MUX、传输方式和限制时，以[协议能力矩阵](./protocol-capabilities)和运行时能力响应为准。
+这些是文档示例，不是必须占用的固定端口。
 
-## 控制接口
+## 常用命令
 
-| 接口 | 默认端点或路径 | 主要用途 |
-| --- | --- | --- |
-| HTTP JSON | `127.0.0.1:9090` | 查询、命令、SSE 事件与远程调试 |
-| gRPC | `127.0.0.1:9091` | SDK 或服务端集成 |
-| 本地 IPC | `~/.zero/control.sock` / `\\.\pipe\zero-control` | 本地 GUI、CLI 与实时事件 |
-| CLI | 自动发现本地 IPC | 状态、流、策略切换和事件查看 |
+```bash
+zero build-info
+zero validate config.json
+zero run config.json
+zero status --json
+zero flows
+zero events
+zero reload candidate.json
+zero connector state --json config.json
+```
 
-接口是否可用取决于构建特性和运行配置。字段、信封、权限与错误语义见[控制面契约](../control-plane/contract)，通道差异见[控制与集成](../control-plane/)。
+完整说明见[CLI 命令](/projects/core/control-plane/cli)。
 
-## 运行时默认参数
+## 配置与运行参考
 
-| 参数 | 默认值或行为 |
-| --- | --- |
-| TCP 中继空闲超时 | 300 秒，可按入站配置 |
-| 出站失败观察窗口 | 30 秒 |
-| 出站失败阈值 | 窗口内 5 次失败 |
-| 出站隔离时间 | 60 秒 |
-
-这些值描述当前公开文档中的默认行为。部署时应以实际配置、当前构建和运行时状态为准。
-
-## 继续阅读
-
-- [协议概览](../protocols/)
-- [配置参考](../configuration/)
-- [总体架构](../architecture/)
-- [控制面兼容性与破坏性变更](../control-plane/breaking-changes)
+- [配置字段](/projects/core/configuration/)
+- [协议配置](/projects/core/protocols/)
+- [协议能力矩阵](./protocol-capabilities)
+- [HTTP API](/projects/core/control-plane/http-api)
+- [Connector 投递合同](/projects/core/control-plane/connector)

@@ -1,37 +1,47 @@
-# Zero Core
+# Zero Core 使用手册
 
 <ProjectMeta project-id="core" />
 
-Zero Core 是使用 Rust 编写的网络代理内核。这里优先记录可以验证的技术参数、协议能力、配置模型、运行时行为和控制面契约。
+Zero Core 是可裁剪的网络代理内核。本手册从“把节点运行起来”开始，说明如何配置协议、管理运行中的节点、接入外部系统和处理故障。实现设计与仓库工程规则不属于这里的主线。
 
-## 技术参数入口
+## 第一次使用
 
-| 关注点 | 文档入口 |
-| --- | --- |
-| 运行形态、构建预设、协议与控制接口 | [技术参数总览](./reference/technical-specifications) |
-| TCP、UDP、MUX、传输方式和互操作状态 | [协议能力矩阵](./reference/protocol-capabilities) |
-| Cargo features 与能力裁剪 | [构建特性](./configuration/features) |
-| 入站、出站、路由、DNS 和运行时配置 | [配置参考](./configuration/) |
-| HTTP、gRPC、IPC、CLI 和事件 | [控制面](./control-plane/) |
-| API、事件信封和错误语义 | [控制面契约](./control-plane/contract) |
+按顺序完成：
 
-## 运行与接入
+1. [安装与构建](./guides/installation)：准备 Rust、选择 feature 并得到 `zero` 可执行文件。
+2. [启动第一个节点](./guides/quickstart)：使用一个可直接验证的本地 Mixed 入站配置启动 Zero。
+3. [配置基础](./guides/configuration-basics)：加入代理出站、路由和运行参数。
+4. [运行与观测](./guides/operations)：查看状态、流、策略、事件和日志。
 
-- 第一次运行：阅读[快速开始](./guides/quickstart)。
-- 开发 GUI 或本地控制端：阅读[GUI 接入 Core](./guides/gui-integration)。
-- 开发控制端或节点管理系统：阅读[Connector 接入](./guides/connector-integration)和[Connector 通信边界](./architecture/connector)。
-- 理解模块和请求路径：进入[总体架构](./architecture/)。
+## 我想完成……
 
-## 文档边界
+| 目标 | 从这里开始 |
+|------|------------|
+| 增加或修改 VLESS、VMess、Trojan 等节点 | [协议配置](./protocols/) |
+| 不重启进程地更新凭证、监听器或路由 | [安全热更新配置](./guides/hot-reload) |
+| 用脚本或服务管理 Zero | [使用控制 API](./guides/control-api) |
+| 跨主机安全访问 HTTP/gRPC | [保护控制接口](./guides/control-security) |
+| 让节点主动把事件送到控制端 | [Connector Webhook 接入](./guides/connector-integration) |
+| 开发本地 GUI | [GUI 接入](./guides/gui-integration) |
+| 启动失败、配置不生效或事件积压 | [故障排查](./guides/troubleshooting) |
 
-这里维护 Core 对外稳定的使用、配置、协议和控制面文档。历史设计方案、专项测试记录和仅服务于仓库维护者的工程计划仍保留在 Core 代码仓库中。
+## 接口怎么选
 
-运行时集成方应以 Core 返回的能力信息和当前控制面契约为准，不根据页面存在与否推断某个构建一定包含对应 feature。
+| 场景 | 推荐入口 |
+|------|----------|
+| 同机人工操作 | CLI，通过本地 IPC 自动连接 |
+| 同机 GUI | IPC 查询、命令与事件订阅 |
+| 运维脚本或控制服务 | HTTP JSON API |
+| 强类型服务端集成 | 可选 gRPC |
+| 节点主动上报事件 | 可选 Connector Webhook |
 
-## 项目入口
+HTTP、IPC 和 gRPC 调用的是同一组 Zero 查询与命令。Connector 只负责事件投递，不是另一套节点管理 API。
 
-- [快速开始](./guides/quickstart)
-- [技术参数总览](./reference/technical-specifications)
-- [控制面契约](./control-plane/contract)
-- [兼容性与破坏性变更](./control-plane/breaking-changes)
-- [参与 Zero Core](./contributing/)
+## 查字段和协议
+
+- [完整配置字段](./configuration/)
+- [构建特性](./configuration/features)
+- [CLI 命令](./control-plane/cli)
+- [HTTP API](./control-plane/http-api)
+- [事件目录](./control-plane/events)
+- [协议能力矩阵](./reference/protocol-capabilities)

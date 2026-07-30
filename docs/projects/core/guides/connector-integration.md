@@ -1,91 +1,156 @@
-# Connector 接入指南
+# 接入 Connector Webhook
 
-本指南面向需要接收 Zero 节点事件的外部系统。接收端不需要实现 Zero 规定的服务端路径；它只需准备自己的 Webhook URL，然后通过节点已有的 HTTP 或 gRPC 控制 API 注册该 URL。
+Connector 让 Zero 主动把内核事件投递到外部系统。它不接收管理命令，也不要求接收方实现 Zero 指定的 URL 路径。
 
-## 1. 构建节点
+## 1. 构建能力
 
 ```bash
-cargo build --release --features full,status-api,connector
+cargo build --release --features connector
+zero build-info
 ```
 
-`connector` 启用 Webhook 投递，`event-dispatcher` 提供过滤、重试、outbox 和 sink 状态。需要本地 JSONL sink 时另加 `sink-jsonl`。
+确认 `features` 包含 `connector`。它会同时启用事件分发；需要本地 JSONL 文件时再加入 `sink-jsonl`。
 
-## 2. 注册 Webhook
+## 2. 选择要接收的事件
 
-先通过 `GET /api/v1/config` 取得当前配置，在该配置的 `api.event_sinks` 中增删 Webhook，然后通过 `POST /api/v1/commands` 提交：
+常见选择：
+
+| 目的 | 事件 |
+|------|------|
+| 每条连接的最终流量与结果 | `flow.completed` |
+| 周期统计 | `stats.sampled` |
+| 节点告警 | `engine.warning` |
+| 配置变化 | `config.changed` |
+| 策略选择与探测 | `policy.selected`、`policy.probe.completed` |
+
+完整字段见[事件目录](/projects/core/control-plane/events)。
+
+## 3. 实现接收端
+
+接收端接受 `POST` 和 `zero.event.v1` JSON：
 
 ```json
 {
-  "method": "config.apply",
-  "params": {
-    "config": {
-      "inbounds": [],
-      "outbounds": [],
-      "route": {
-        "rules": [],
-        "final": { "type": "direct" }
-      },
-      "api": {
-        "event_sinks": [
-          {
-            "type": "webhook",
-            "tag": "traffic-delivery",
-            "url": "https://central.example/receivers/traffic",
-            "events": ["flow.completed", "stats.sampled"],
-            "source_id": "edge-west",
-            "headers": {
-              "x-central-token": "opaque-secret"
-            }
-          },
-          {
-            "type": "webhook",
-            "tag": "operations-delivery",
-            "url": "https://operations.example/receivers/zero",
-            "events": ["engine.warning"],
-            "source_id": "edge-west"
-          }
-        ],
-        "outbox_path": "state/event-outbox.jsonl",
-        "dispatcher": {
-          "webhook_timeout_ms": 10000,
-          "max_retry_attempts": 3,
-          "retry_initial_delay_ms": 4000,
-          "retry_max_delay_ms": 64000,
-          "outbox_min_free_bytes": 1073741824,
-          "outbox_min_free_percent": 5,
-          "exhausted_delivery_policy": "retry_forever"
+  "schema_id": "zero.event.v1",
+  "event_id": "1730000000000-42",
+  "event_type": "flow.completed",
+  "occurred_at_unix_ms": 1730000000000,
+  "source_id": "edge-west",
+  "sequence": 42,
+  "principal_key": "credential-value",
+  "labels": {},
+  "payload": {}
+}
+```
+
+处理顺序：
+
+1. 使用 `event_id` 去重；
+2. 持久化事件或确认此前已经持久化；
+3. 返回 HTTP 状态。
+
+| 返回状态 | Zero 行为 |
+|----------|-----------|
+| 任意 `2xx` | 确认成功 |
+| `429` 或 `5xx` | 按配置退避重试 |
+| 其他状态 | 不可重试拒绝 |
+
+Connector 提供至少一次投递，因此接收端必须幂等。
+
+## 4. 在完整配置中注册
+
+把下面的 `api` 片段合入节点的完整配置：
+
+```json
+{
+  "api": {
+    "event_sinks": [
+      {
+        "type": "webhook",
+        "tag": "traffic-delivery",
+        "url": "https://central.example/receivers/traffic",
+        "events": ["flow.completed", "stats.sampled"],
+        "source_id": "edge-west",
+        "headers": {
+          "x-central-token": "receiver-defined-secret"
         }
+      },
+      {
+        "type": "webhook",
+        "tag": "operations-delivery",
+        "url": "https://operations.example/receivers/zero",
+        "events": ["engine.warning", "config.changed"],
+        "source_id": "edge-west"
       }
+    ],
+    "outbox_path": "state/event-outbox.jsonl",
+    "dispatcher": {
+      "webhook_timeout_ms": 10000,
+      "max_retry_attempts": 3,
+      "retry_initial_delay_ms": 4000,
+      "retry_max_delay_ms": 64000,
+      "outbox_min_free_bytes": 1073741824,
+      "outbox_min_free_percent": 5,
+      "exhausted_delivery_policy": "retry_forever"
     }
   }
 }
 ```
 
-gRPC 调用 `Control.Execute`，payload 使用完全相同的 JSON。认证和传输安全可按部署组合：Bearer metadata `authorization: Bearer <api.control key>`、Zero 原生 TLS、mTLS，或可信代理上的外部 TLS 终止。非 loopback 明文必须显式开启，远程关闭 Bearer 时必须使用 mTLS；详细字段见[控制面配置](/projects/core/control-plane/configuration#api-control)。Zero 原样使用 `url`，不会追加 `/register`、`/sync`、`/traffic`、`/presence` 或任何其他路径。
+关键语义：
 
-注册数量和拓扑不受节点或代理协议约束：
+- `url` 是接收方提供的完整地址，Zero 不追加 `/register`、`/sync`、`/traffic` 或其他路径；
+- `tag` 只是节点本地的 sink、状态和 outbox 标识；
+- `events` 是这个注册的事件过滤条件，空数组表示全部；
+- `source_id` 只是 envelope 元数据；
+- 一个节点可以注册多个 URL，多个节点也可以复用同一个 URL；
+- URL 不绑定节点身份、inbound、凭证或代理协议。
 
-- 一个节点可注册一个或多个 Webhook；
-- 一个注册可订阅一个或多个事件类型，`events: []` 表示全部；
-- 多个节点可使用相同 URL；
-- 同一 URL 也可用不同 `tag` 注册多次，分别维护事件过滤和投递状态；
-- `tag` 只在节点本地标识投递通道，`source_id` 只作为 envelope 元数据；
-- VMess、VLESS、Trojan 等代理协议不参与 Webhook 地址选择。
+## 5. 校验并应用
 
-## 3. 实现接收端
+同机管理：
 
-接收端接受 `POST` 和 `zero.event.v1` JSON。成功持久化或幂等确认后返回任意 `2xx`。需要节点稍后重试时返回 `429` 或 `5xx`。其他状态表示不可重试拒绝。
+```bash
+zero validate config.json
+zero reload config.json
+```
 
-接收端应使用 `event_id` 去重，因为断网、超时和崩溃恢复会产生至少一次投递。完整 envelope 和状态分类见 [Connector 合同](/projects/core/control-plane/connector)。
+外部控制端通过 HTTP `config.validate` 和 `config.apply`，或 gRPC `Control.Execute` 提交同一份完整配置。外部控制端必须拥有自己的完整期望配置；`GET /api/v1/config` 只是观测摘要，不能作为可回写的完整配置读取接口。
 
-每个 sink 独立投递。默认耗尽策略 `retry_forever` 会持续保留并重试可恢复故障；只有明确选择 `dead_letter` 或 `discard` 才会在达到阈值后结束可重试 delivery。
+当前合同没有 revision/CAS 字段，因此同一节点应只有一个配置写入所有者，避免旧副本覆盖较新的修改。
 
-## 4. 观察与变更
+## 6. 检查投递
 
-- `GET /api/v1/sinks` 查看 pending、成功/失败计数和最近错误；
-- 同一接口的 `outbox_storage` 查看实时可用空间、有效保留水位和 `write_blocked`；默认水位为 1 GiB 或文件系统容量的 5%，取较大值；
-- 通过新的 `config.apply` 修改 URL、headers、事件过滤或移除 sink；
-- 备份 `api.outbox_path` 前先停止节点或使用文件系统一致性快照；
-- 不要让中心维护另一份旧配置后直接覆盖节点，应基于最新配置生成候选事务。
+```bash
+zero connector state --json config.json
+```
 
-节点的 inbound、路由、凭据和协议配置仍由 Zero 配置合同管理。限流、停用、升级、通知等业务决策由外部系统完成；需要改变内核运行状态时调用已有的 Zero HTTP/IPC/gRPC 方法或应用配置，程序升级由部署系统执行。Connector 不拥有这些语义，也不是入站命令通道。
+或查询运行状态：
+
+```bash
+curl \
+  -H "Authorization: Bearer $ZERO_API_KEY" \
+  http://127.0.0.1:9090/api/v1/sinks
+```
+
+关注：
+
+- `pending`
+- `last_error`
+- `replay_gaps`
+- `outbox_storage.write_blocked`
+- 最近成功和失败时间
+
+每个 sink 使用独立投递工作单元，一个 URL 超时不应阻塞其他 URL。
+
+## 7. 故障和磁盘边界
+
+默认 `retry_forever` 会保留并持续重试可恢复故障。只有明确选择 `dead_letter` 或 `discard`，才会在达到重试阈值后结束 delivery。
+
+outbox 使用实时磁盘保留水位。达到水位时会停止新的 PUT，但会尽可能继续投递和 ACK 已有积压。长期低水位可能形成 `replay_gaps`；外部系统仍需以自己的业务账本做最终对账。
+
+## Connector 不负责什么
+
+限流、停用、套餐、计费、通知和升级工作流由外部系统决定。需要改变 Zero 运行状态时，外部系统调用通用 HTTP/IPC/gRPC 方法或应用完整配置；程序升级由部署系统执行。
+
+Connector 只转换、过滤和可靠投递事件。完整 wire 合同见[Connector 投递合同](/projects/core/control-plane/connector)。

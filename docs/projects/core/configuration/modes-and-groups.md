@@ -1,180 +1,144 @@
-# 模式和节点组
+# 运行模式与出站组
 
-这份文档说的是模式和节点组设计。当前已经落地：
+运行模式决定流量按什么方式选择出站，出站组则把多个出站组合成一个可引用目标。
 
-- `mode = rule | global | direct`
-- `selector`
-- `selector` 运行时切换（IPC + CLI + HTTP）
-- `mode` 运行时切换（`zero mode rule|direct|global <outbound>`）
-- `fallback`
-- `group -> group`
-- `url_test`
-- `reload` 热加载（route + mode + DNS 热换，inbounds/outbounds 需重启）
+## 三种运行模式
 
-还没落地的部分：
+### rule
 
-- Inbounds/outbounds 热切换
-
-目标很简单：入站尽量固定，节点尽量都放在出站里，真正变化的是“当前怎么选出站”。
-
-## 基本拆分
-
-- `inbounds`：固定监听口。典型是一个 `mixed` 在 `127.0.0.1:7890`
-- `outbounds`：具体节点或内建动作，比如 `node-a`、`node-b`、`direct`、`block`
-- `outbound_groups`：对一组出站做统一选择
-- `mode`：决定当前流量按什么方式走
-
-## mode
-
-支持三种模式，可运行时切换：
-
-- `direct`：全部直连
-- `global`：全部走某个指定组或节点
-- `rule`：先看规则，没命中再走 `route.final`
-
-模式在启动时从配置文件读取，启动后可通过多种方式热切换：
-
-```bash
-zero mode rule              # CLI
-zero mode direct            # 全部直连
-zero mode global proxy      # 全局走 proxy 出站
-```
-
-IPC 等价命令：
+按 `route.rules` 顺序匹配，未命中时执行 `route.final`：
 
 ```json
-{ "method": "mode.set", "params": { "mode": "global", "outbound": "proxy" } }
+{ "mode": { "type": "rule" } }
 ```
 
-切换即时生效，所有新连接立刻使用新模式。
+### direct
 
-## outbound_groups
+所有新连接直接访问目标：
 
-当前已经实现五类：
-
-- `selector`
-  - 手动指定当前成员
-  - 当前支持运行时切换
-- `fallback`
-  - 前一个成员建连失败时，顺序切到下一个
-- `url_test`
-  - 周期探测后，选择可用且延迟更低的成员
-- `relay`
-  - 链式代理，流量依次经过每个节点
-- `load_balance`
-  - 负载均衡，按策略（round_robin / random）分发连接
-
-这些组的成员现在都可以引用另一个组。运行时会递归解析，配置阶段会拦掉循环引用。
-
-### 默认选择逻辑
-
-Selector 组优先级：
-
-```
-selected > default > outbounds[0]
+```json
+{ "mode": { "type": "direct" } }
 ```
 
-| 配置 | 行为 |
-|------|------|
-| `”selected”: “node-b”` | 启动即用 node-b |
-| `”default”: “node-c”`（无 selected） | 启动用 node-c，切换后不再回头 |
-| 都不配 | 用 `outbounds` 数组第一个 |
+### global
 
-`default` 仅用于初始值——一旦通过 API/CLI 切换过，`default` 就不再生效。`selected` 是持久选择，重启后依然生效。
-
-Fallback 和 URL test 固定从 `outbounds[0]` 开始。
-
-客户端只负责改”当前选哪个”或”当前 mode 是什么”。真正的选择逻辑、健康检查和最终出站决策都在内核里。
-
-当前本地控制入口使用 `POST /api/v1/commands`，selector 切换通过
-`method: "policies.select"` 完成。
-
-`policies.select` 的 `target_tag` 是 selector `outbounds` 里的直接成员 tag。
-这个成员可以是普通 outbound，也可以是 `url_test`、`load_balance`、`fallback`、`relay`
-或另一个 `selector`。控制层只改变这一层 selector 的选择，不展开嵌套组。例如：
+所有新连接使用指定出站或出站组：
 
 ```json
 {
-  "method": "policies.select",
-  "params": {
-    "policy_tag": "manual",
-    "target_tag": "probe"
-  }
-}
-```
-
-这表示 selector `manual` 选中 url_test 组 `probe`。`probe` 内部最终走哪个成员，由
-url_test 探测状态决定；需要刷新延迟时对 `probe` 发送 `policies.probe`，再通过
-policy 查询或 `policy.probe.completed` 事件读取 `latency_ms` 和
-`url_test_members[].latency_ms`。
-
-## 配置草案
-
-```json
-{
-  "inbounds": [
-    {
-      "tag": "mixed-in",
-      "listen": { "address": "127.0.0.1", "port": 7890 },
-      "protocol": { "type": "mixed" }
-    }
-  ],
-  "outbounds": [
-    { "tag": "direct", "protocol": { "type": "direct" } },
-    { "tag": "node-a", "protocol": { "type": "socks5", "server": "1.2.3.4", "port": 1080 } },
-    { "tag": "node-b", "protocol": { "type": "socks5", "server": "5.6.7.8", "port": 1080 } }
-  ],
-  "outbound_groups": [
-    {
-      "tag": "manual",
-      "type": "selector",
-      "outbounds": ["node-a", "node-b"],
-      "selected": "node-a"
-    },
-    {
-      "tag": "fallback-proxy",
-      "type": "fallback",
-      "outbounds": ["node-a", "direct"]
-    },
-    {
-      "tag": "probe",
-      "type": "url_test",
-      "outbounds": ["fallback-proxy", "node-b", "direct"],
-      "url": "http://example.com/",
-      "interval_seconds": 300
-    },
-    {
-      "tag": "chain-hk-us",
-      "type": "relay",
-      "proxies": ["node-hk", "node-us"]
-    },
-    {
-      "tag": "lb",
-      "type": "load_balance",
-      "outbounds": ["node-a", "node-b", "node-c"],
-      "strategy": "round_robin"
-    }
-  ],
   "mode": {
     "type": "global",
-    "outbound": "probe"
-  },
-  "route": {
-    "rules": [
-      {
-        "condition": { "type": "domain", "values": ["internal.local"] },
-        "action": { "type": "route", "outbound": "direct" }
-      }
-    ],
-    "final": { "type": "route", "outbound": "probe" }
+    "outbound": "proxy"
   }
 }
 ```
 
-## 边界
+运行中可以通过控制面切换模式：
 
-- 客户端负责交互，不负责转发实现
-- 内核负责模式语义、节点组解析、健康检查和最终出站选择
-- 本地控制入口当前复用 `--status-listen`，提供最小写接口用于切换 `selector`
-- 云端最小节点不一定需要 `mode` 和 `outbound_groups`
-- 本地用户侧一般最需要这套能力
+```bash
+zero mode rule
+zero mode direct
+zero mode global proxy
+```
+
+切换影响之后建立的连接，现有连接不会被强行中断。
+
+## selector：手动选择
+
+```json
+{
+  "tag": "proxy",
+  "type": "selector",
+  "outbounds": ["node-a", "node-b", "direct"],
+  "selected": "node-a"
+}
+```
+
+运行中切换：
+
+```bash
+zero select proxy node-b
+```
+
+初始成员按 `selected`、`default`、`outbounds` 第一项的顺序确定。选择值必须属于该组。
+
+## url_test：自动测速
+
+```json
+{
+  "tag": "auto",
+  "type": "url_test",
+  "outbounds": ["node-a", "node-b"],
+  "url": "http://cp.cloudflare.com/",
+  "interval_seconds": 300
+}
+```
+
+探测 URL 目前使用 `http://`。省略 `url` 时继承 `runtime.latency_test_url`。
+
+## fallback：按顺序故障切换
+
+```json
+{
+  "tag": "fallback-proxy",
+  "type": "fallback",
+  "outbounds": ["node-a", "node-b", "direct"]
+}
+```
+
+建立连接失败时按成员顺序尝试下一个出站。
+
+## relay：链式代理
+
+```json
+{
+  "tag": "relay-proxy",
+  "type": "relay",
+  "proxies": ["entry-node", "exit-node"]
+}
+```
+
+`relay` 至少需要两个成员。链中协议和传输必须支持所在位置的 relay 能力，部署前应结合[协议能力矩阵](/projects/core/reference/protocol-capabilities)检查。
+
+## load_balance：负载均衡
+
+```json
+{
+  "tag": "balanced",
+  "type": "load_balance",
+  "outbounds": ["node-a", "node-b"],
+  "strategy": "round_robin"
+}
+```
+
+`strategy` 支持 `round_robin` 和 `random`。可以用 `default` 指定初始成员。
+
+## 组可以引用组
+
+普通组成员可以引用另一个组，配置校验会检查不存在的目标和循环引用：
+
+```json
+[
+  {
+    "tag": "fallback-proxy",
+    "type": "fallback",
+    "outbounds": ["node-a", "direct"]
+  },
+  {
+    "tag": "proxy",
+    "type": "selector",
+    "outbounds": ["fallback-proxy", "direct"],
+    "selected": "fallback-proxy"
+  }
+]
+```
+
+## 与热更新的关系
+
+不要依赖旧文档中“入站/出站变更必须重启”的说法。当前 `config.apply`/`zero reload` 会把完整候选配置交给运行时事务处理：
+
+- 监听形状变化时重建对应监听器。
+- 仅凭证等可热更新内容变化时使用协议热更新路径。
+- 应用失败时返回错误，并尝试恢复上一份可用配置与监听状态。
+
+控制接口本身的监听地址或认证配置不会自修改；这类变化仍需重启进程。完整步骤见[安全热更新配置](/projects/core/guides/hot-reload)。
