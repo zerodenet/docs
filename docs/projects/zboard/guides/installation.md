@@ -2,6 +2,8 @@
 
 Zboard 推荐使用 Docker Compose 部署。生产部署需要准备 MySQL 8、Redis 和外部 Docker 网络。
 
+具体镜像标签、Compose 文件和环境变量示例以对应版本的 Zboard 发布包为准，不要在生产环境使用浮动的 `latest` 标签。
+
 ## 前置条件
 
 - Docker Engine
