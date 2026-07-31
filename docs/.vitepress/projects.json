@@ -26,5 +26,17 @@
     "download": "https://github.com/zerodenet/core/releases/latest",
     "platforms": ["Windows", "macOS", "Linux"],
     "audiences": ["operator", "integrator", "contributor"]
+  },
+  {
+    "id": "zboard",
+    "name": "Zboard",
+    "tagline": "一站式代理服务运营管理平台",
+    "description": "面向代理服务提供商，统一管理基础设施、协议节点、订阅交付、用户业务和运营流程。",
+    "kind": "application",
+    "status": "preview",
+    "repository": "https://github.com/zerodenet/zboard",
+    "docsRoot": "/projects/zboard/",
+    "quickStart": "/projects/zboard/guides/installation",
+    "audiences": ["operator", "contributor"]
   }
 ]
