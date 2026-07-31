@@ -25,6 +25,12 @@ export const nav: DefaultTheme.NavItem[] = [
           { text: 'Zero Core', link: '/projects/core/', activeMatch: '^/projects/core/' },
         ],
       },
+      {
+        text: '运营平台',
+        items: [
+          { text: 'Zboard', link: '/projects/zboard/', activeMatch: '^/projects/zboard/' },
+        ],
+      },
     ],
   },
 ]
@@ -96,12 +102,30 @@ const sinkSidebar: DefaultTheme.SidebarItem[] = [
   ]),
 ]
 
+const zboardSidebar: DefaultTheme.SidebarItem[] = [
+  page('Zboard 文档', '/projects/zboard/'),
+  group('开始使用', [
+    page('用户指南入口', '/projects/zboard/guides/'),
+    page('安装与部署', '/projects/zboard/guides/installation'),
+    page('首次初始化', '/projects/zboard/guides/first-setup'),
+  ], false),
+  group('功能说明', [
+    page('节点与协议服务管理', '/projects/zboard/guides/node-management'),
+    page('故障排查', '/projects/zboard/guides/troubleshooting'),
+  ]),
+  group('参与项目', [
+    page('参与 Zboard', '/projects/zboard/contributing/'),
+  ]),
+]
+
 export const sidebar: DefaultTheme.Sidebar = {
   '/projects/core/': coreSidebar,
   '/projects/znet-sink/': sinkSidebar,
+  '/projects/zboard/': zboardSidebar,
   '/projects/': [
     page('项目目录', '/projects/'),
     group('应用', [page('ZNet Sink', '/projects/znet-sink/')]),
     group('内核', [page('Zero Core', '/projects/core/')]),
+    group('运营平台', [page('Zboard', '/projects/zboard/')]),
   ],
 }
