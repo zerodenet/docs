@@ -86,4 +86,4 @@ DNS 记录和托管证书关联到节点与协议服务，但仍是独立资产�
 - 订阅预览包含预期节点和本地 Mixed 入口；
 - 流量记录能够归属到订阅用户。
 
-Zero 的底层协议能力、配置模型和控制接口请参考 [Zero Core 文档](/projects/core/)。
+Zero 的底层协议能力、配置模型和控制接口请参考 [Zero Core 项目仓库](https://github.com/zerodenet/core)。
