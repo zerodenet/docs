@@ -11,6 +11,7 @@
 ## 管理运行中的节点
 
 - [运行与观测](./operations)：状态、流、策略、事件、日志和 Connector 积压。
+- [HTTP / Mixed 代理入口与 URLTest](./proxy-and-urltest)：标准 HTTP 代理、QUIC 域名、并发测速和 GUI 等待语义。
 - [安全热更新配置](./hot-reload)：校验、应用、确认和失败回滚。
 - [使用控制 API](./control-api)：HTTP、IPC、CLI 和 gRPC 的选择与调用。
 - [保护控制接口](./control-security)：Bearer、TLS、mTLS 和远程访问边界。
