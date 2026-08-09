@@ -54,6 +54,25 @@ IPC：
 | `vmess` | `partial` | 部分 | 部分 | 部分 | 部分 | 部分 |
 | `mieru` | `supported` | 支持 | 支持 | 支持 | 支持 | 不支持 |
 
+## VLESS 组合边界
+
+VLESS 顶层保持 `partial`，因为不同 flow、传输、MUX 和 UDP 路径的成熟度不同。当前开发线中需要特别区分：
+
+| 组合 | 当前结论 |
+|------|----------|
+| 普通 VLESS TCP + TLS/REALITY | 可用；仍需检查所选传输和发行物 capability |
+| REALITY + `xtls-rprx-vision` + TCP 出站 | 已按 Xray Vision 线协议实现并完成真实进程互操作验证 |
+| `xtls-rprx-vision` + `mux_concurrency` | 不支持，配置必须拆分 |
+| `xtls-rprx-vision` + UDP | 不支持，会明确拒绝 |
+| `zero-aead-v1` | Zero 私有兼容 flow，不是 Xray Vision |
+| `xtls-rprx-vision-udp443` | 已废弃并拒绝，不再作为别名猜测 |
+| Mux.Cool TCP / XUDP | 分别由 `mux_concurrency` / `xudp_concurrency` 启用，不依赖 Vision flow |
+| XHTTP `stream-one` | 支持单条 H2/H2C 双向流；部署前仍需验证对端版本和链路组合 |
+
+REALITY 客户端的 `client_fingerprint` 支持 `chrome`、`firefox`、`safari`、`edge`，默认 `chrome`。它只改变 REALITY 客户端 ClientHello；普通 TLS 和 REALITY 入站不读取该字段。
+
+不要把“某一条真实互操作路径通过”扩大解释为所有传输、UDP、MUX 和中继组合都已具备相同成熟度。配置示例见[协议配置示例](/projects/core/protocols/configuration)。
+
 ## 部署时如何判断
 
 对于每个节点配置：

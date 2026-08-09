@@ -218,6 +218,35 @@ Mixed 同时接受 SOCKS5 TCP、SOCKS5 UDP ASSOCIATE 和 HTTP CONNECT。
 }
 ```
 
+### VLESS REALITY + Vision
+
+```json
+{
+  "tag": "vless-reality-vision-out",
+  "protocol": {
+    "type": "vless",
+    "server": "edge.example.com",
+    "port": 443,
+    "id": "11111111-2222-3333-4444-555555555555",
+    "flow": "xtls-rprx-vision",
+    "reality": {
+      "public_key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "short_id": "0123456789abcdef",
+      "server_name": "www.cloudflare.com",
+      "client_fingerprint": "chrome"
+    }
+  }
+}
+```
+
+`xtls-rprx-vision` 使用 Xray 兼容的 VLESS Addons 和 Vision 数据阶段语义。当前已验证边界是 **REALITY 上的 TCP 出站**：
+
+- 不能与 `mux_concurrency` 组合；
+- UDP 会被配置校验或运行时明确拒绝；
+- `reality.client_fingerprint` 支持 `chrome`、`firefox`、`safari` 和 `edge`，默认 `chrome`；
+- 历史 Zero 私有请求头加密格式只以 `flow: zero-aead-v1` 保留，它不与 Xray Vision 互通；
+- 旧别名 `xtls-rprx-vision-udp443` 已拒绝，必须显式迁移到标准 Vision 或 `zero-aead-v1`。
+
 ### VMess
 
 ```json
@@ -334,7 +363,7 @@ Mixed 同时接受 SOCKS5 TCP、SOCKS5 UDP ASSOCIATE 和 HTTP CONNECT。
 
 ## 传输和高级字段
 
-VLESS、VMess 等协议还支持 TLS、REALITY、WebSocket、gRPC、H2、HTTP Upgrade、XHTTP、MUX 和 UDP 相关组合。不要仅凭字段存在就任意叠加；组合限制见[完整配置字段](/projects/core/configuration/)和[协议能力矩阵](/projects/core/reference/protocol-capabilities)。
+VLESS、VMess 等协议还支持 TLS、REALITY、WebSocket、gRPC、H2、QUIC、HTTP Upgrade、XHTTP、MUX 和 UDP 相关组合。不要仅凭字段存在就任意叠加；组合限制见[完整配置字段](/projects/core/configuration/)和[协议能力矩阵](/projects/core/reference/protocol-capabilities)。
 
 完成配置后：
 
