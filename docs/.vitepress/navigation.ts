@@ -33,6 +33,31 @@ export const nav: DefaultTheme.NavItem[] = [
       },
     ],
   },
+  { text: '使用场景', link: '/solutions/' },
+  {
+    text: '社区',
+    items: [
+      { text: '社区首页', link: '/community/' },
+      { text: 'GitHub Discussions', link: 'https://github.com/orgs/zerodenet/discussions' },
+      { text: 'Telegram', link: 'https://t.me/zerodenet' },
+    ],
+  },
+]
+
+const solutionSidebar: DefaultTheme.SidebarItem[] = [
+  page('使用场景', '/solutions/'),
+  group('项目', [
+    page('全部项目', '/projects/'),
+    page('ZNet Sink', '/projects/znet-sink/'),
+    page('Zero Core', '/projects/core/'),
+    page('Zboard', '/projects/zboard/'),
+  ], false),
+]
+
+const communitySidebar: DefaultTheme.SidebarItem[] = [
+  page('社区', '/community/'),
+  page('问题反馈', '/community/#问题反馈'),
+  page('赞助、广告与友情链接', '/community/#赞助广告与友情链接'),
 ]
 
 const coreSidebar: DefaultTheme.SidebarItem[] = [
@@ -124,6 +149,8 @@ const zboardSidebar: DefaultTheme.SidebarItem[] = [
 ]
 
 export const sidebar: DefaultTheme.Sidebar = {
+  '/solutions/': solutionSidebar,
+  '/community/': communitySidebar,
   '/projects/core/': coreSidebar,
   '/projects/znet-sink/': sinkSidebar,
   '/projects/zboard/': zboardSidebar,

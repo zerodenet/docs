@@ -4,7 +4,7 @@ import { nav, sidebar } from './navigation'
 export default defineConfig({
   base: process.env.DOCS_BASE || '/',
   title: 'ZeroDeNet',
-  description: 'ZeroDeNet 开源项目文档',
+  description: 'ZeroDeNet 项目文档与社区',
   lang: 'zh-CN',
   cleanUrls: true,
   lastUpdated: true,
@@ -15,6 +15,10 @@ export default defineConfig({
   head: [
     ['meta', { name: 'theme-color', content: '#0d5bd7' }],
     ['meta', { property: 'og:site_name', content: 'ZeroDeNet' }],
+    ['meta', {
+      property: 'og:description',
+      content: 'ZeroDeNet 项目文档与社区',
+    }],
     ['meta', {
       name: 'robots',
       content: process.env.DOCS_PREVIEW === 'true'
@@ -60,7 +64,7 @@ export default defineConfig({
     lightModeSwitchTitle: '切换到浅色模式',
     darkModeSwitchTitle: '切换到深色模式',
     footer: {
-      message: 'ZeroDeNet 开源项目文档',
+      message: 'ZeroDeNet',
     },
   },
 })
