@@ -1,1 +1,8 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/orgs/zerodenet/discussions
+    about: 使用交流、问答、想法建议与开发讨论请在这里发起。
+  - name: Telegram
+    url: https://t.me/zerodenet
+    about: 加入 ZeroDeNet Telegram 群组进行即时交流。
