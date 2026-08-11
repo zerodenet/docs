@@ -1,12 +1,10 @@
-# Zero Core 使用手册
+# Zero Core
 
 <ProjectMeta project-id="core" />
 
-Zero Core 是可裁剪的网络代理内核。本手册从“把节点运行起来”开始，说明如何配置协议、管理运行中的节点、接入外部系统和处理故障。实现设计与仓库工程规则不属于这里的主线。
+Zero Core 是可裁剪的网络代理内核，可作为本地网关、边缘节点或服务器运行，并提供 CLI、HTTP、IPC 等控制接口。
 
 ## 第一次使用
-
-按顺序完成：
 
 1. [安装与构建](./guides/installation)：准备 Rust、选择 feature 并得到 `zero` 可执行文件。
 2. [启动第一个节点](./guides/quickstart)：使用一个可直接验证的本地 Mixed 入站配置启动 Zero。
@@ -36,7 +34,7 @@ Zero Core 是可裁剪的网络代理内核。本手册从“把节点运行起�
 | 强类型服务端集成 | 可选 gRPC |
 | 节点主动上报事件 | 可选 Connector Webhook |
 
-HTTP、IPC 和 gRPC 调用的是同一组 Zero 查询与命令。Connector 只负责事件投递，不是另一套节点管理 API。
+HTTP、IPC 和 gRPC 调用的是同一组 Zero 查询与命令。Connector 负责事件投递。
 
 ## 查字段和协议
 
