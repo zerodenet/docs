@@ -1,0 +1,54 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask a focused question about using ZeroDeNet projects. Search existing discussions first. For a reproducible bug or a concrete implementation task, use the corresponding project's Issue tracker instead.
+
+  - type: dropdown
+    id: project
+    attributes:
+      label: Project
+      description: Which project is this question about?
+      options:
+        - Zero Core
+        - ZNet Sink
+        - Zboard
+        - Documentation
+        - Cross-project / Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Relevant release, build, commit, or branch, if known.
+      placeholder: e.g. 0.0.16-rc.4, develop, or commit SHA
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Relevant operating system, platform, deployment, or runtime details.
+      placeholder: e.g. Windows 11, Ubuntu 24.04, Docker, self-hosted
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: Describe what you are trying to do and where you are blocked.
+      placeholder: Include the expected result and the behavior you are seeing.
+    validations:
+      required: true
+
+  - type: textarea
+    id: attempts
+    attributes:
+      label: What have you tried?
+      description: Share the approaches, configuration changes, or documentation you have already checked.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Logs / configuration / additional context
+      description: Add only the details needed to understand the question. Remove tokens, credentials, subscription URLs, and other secrets before posting.

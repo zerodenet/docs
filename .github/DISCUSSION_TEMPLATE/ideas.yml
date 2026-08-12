@@ -1,0 +1,62 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this category for ideas that still benefit from discussion. Once the scope is concrete and actionable, follow-up work can move to the relevant project's Issue tracker.
+
+  - type: dropdown
+    id: project
+    attributes:
+      label: Project
+      description: Which project or area would this idea affect?
+      options:
+        - Zero Core
+        - ZNet Sink
+        - Zboard
+        - Documentation
+        - Cross-project / Community
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem, limitation, or opportunity are you trying to address?
+      placeholder: Describe the user or developer problem before describing the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the behavior or capability you would like to see.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches, workarounds, or existing solutions have you considered?
+
+  - type: dropdown
+    id: compatibility
+    attributes:
+      label: Compatibility impact
+      description: What kind of compatibility impact do you expect, if any?
+      options:
+        - None expected
+        - Backward-compatible change
+        - Behavior change
+        - Breaking change
+        - Unsure
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add references, examples, screenshots, related discussions, or other useful context.
