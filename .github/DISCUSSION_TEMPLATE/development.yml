@@ -1,0 +1,67 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this category for technical design and implementation discussion that is more concrete than an early idea but not yet ready to become an Issue or Pull Request.
+
+  - type: dropdown
+    id: project
+    attributes:
+      label: Project
+      description: Which project or integration is this discussion about?
+      options:
+        - Zero Core
+        - ZNet Sink
+        - Zboard
+        - Documentation
+        - Cross-project / Integration
+    validations:
+      required: true
+
+  - type: textarea
+    id: background
+    attributes:
+      label: Background
+      description: Describe the current behavior, technical context, and why this needs discussion.
+    validations:
+      required: true
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: List relevant compatibility, platform, protocol, operational, or product constraints.
+
+  - type: textarea
+    id: design
+    attributes:
+      label: Proposed design
+      description: Describe the proposed approach, responsibilities, and expected behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: interfaces
+    attributes:
+      label: API / data model / configuration
+      description: Include relevant interfaces, schemas, configuration examples, or data-flow details when applicable.
+
+  - type: dropdown
+    id: compatibility
+    attributes:
+      label: Compatibility / migration
+      description: What compatibility impact does this design have?
+      options:
+        - No compatibility impact expected
+        - Backward-compatible change
+        - Migration may be required
+        - Breaking change
+        - Unsure
+    validations:
+      required: true
+
+  - type: textarea
+    id: open_questions
+    attributes:
+      label: Open questions
+      description: List decisions or trade-offs that still need discussion.
