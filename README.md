@@ -81,25 +81,30 @@ For application behavior, runtime errors, feature requests, or security issues, 
 
 ## Branches and Publishing
 
-This repository uses the following publishing flow:
+`main` is the stable/default branch and `develop` is the integration and preview branch. The repository keeps a linear history: `main` is always equal to, or an ancestor of, `develop`.
 
 ```text
 feature branch
-    ↓
-develop
-    ↓
-GitHub Pages development preview
-    ↓
-main
-    ↓
-production documentation site
+    │ Pull Request (rebase or squash)
+    ▼
+develop ── development preview
+    │
+    │ develop -> main release PR (review only)
+    │ CI + preview review
+    ▼
+Promote develop to main workflow
+    │ fast-forward
+    ▼
+main ── production documentation
 ```
 
-- `develop`: receives documentation changes and publishes the development preview;
-- `main`: contains reviewed documentation ready for production;
+- `develop`: receives reviewed documentation changes and publishes the development preview;
+- `main`: points to the latest released commit and publishes the production documentation;
 - feature branches: contain changes for a specific project, topic, or documentation batch.
 
-Documentation changes should normally merge into `develop` first. After reviewing the preview, they can be promoted to `main`.
+Normal changes should go through a Pull Request into `develop`. After the preview is accepted, open a `develop -> main` release PR to review the exact production diff. Do not merge that release PR with GitHub's merge buttons. Instead, run **Actions → Promote develop to main**, enter the release PR number, and let the workflow validate and fast-forward `main` to the reviewed `develop` commit.
+
+The promotion workflow aborts if the release PR does not target `main` from `develop`, if `develop` changes during validation, or if `main` is no longer an ancestor of `develop`.
 
 ## Local Development
 
