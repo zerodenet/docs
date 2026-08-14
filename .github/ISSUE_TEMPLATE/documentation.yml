@@ -1,45 +1,61 @@
 name: 文档问题
-description: 报告错误、缺失、过期或难以理解的公开文档
+description: 报告公开文档内容、文档站或文档仓库维护问题
 title: "docs: "
 labels:
-  - documentation
+  - needs-triage
 body:
-  - type: dropdown
-    id: project
+  - type: markdown
     attributes:
-      label: 涉及范围
+      value: |
+        本仓库只处理文档内容、文档站和文档仓库维护问题。
+        程序行为、运行错误和功能实现问题请提交到对应项目仓库。
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 问题类型
       options:
-        - Zero Core
-        - ZNet Sink
-        - 跨项目集成
-        - 公共资料
-        - 站点与导航
+        - 文档内容
+        - 文档站
+        - 仓库维护 / CI
+    validations:
+      required: true
+  - type: dropdown
+    id: section
+    attributes:
+      label: 文档范围
+      description: 选择受影响的文档区域，而不是软件 Issue 的归属。
+      options:
+        - Zero Core 文档
+        - ZNet Sink 文档
+        - Zboard 文档
+        - Community
+        - 公共页面 / 导航
+        - Repository / CI
+        - 其他
     validations:
       required: true
   - type: input
     id: page
     attributes:
       label: 页面地址
-      description: 请提供具体页面或章节地址。
-    validations:
-      required: true
+      description: 如果问题对应具体页面或章节，请提供地址。
   - type: textarea
     id: problem
     attributes:
       label: 当前问题
-      description: 说明哪里错误、缺失、过期或容易产生歧义。
+      description: 说明文档内容、站点或仓库维护方面存在的问题。
     validations:
       required: true
   - type: textarea
     id: evidence
     attributes:
       label: 版本与证据
-      description: 如果问题与行为或兼容性有关，请提供项目版本、平台、日志或对应实现链接。
+      description: 如果问题涉及文档与实现不一致，请提供相关版本、日志或实现链接。
   - type: textarea
     id: expected
     attributes:
-      label: 期望内容
-      description: 说明希望文档如何调整。
+      label: 期望结果
+      description: 说明希望文档或文档站如何调整。
     validations:
       required: true
   - type: checkboxes
