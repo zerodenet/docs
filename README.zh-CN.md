@@ -79,25 +79,30 @@ docs/.vitepress/navigation.ts
 
 ## 分支与发布
 
-本仓库采用以下分支流程：
+`main` 是稳定/默认分支，`develop` 是集成与预览分支。仓库保持线性历史：`main` 始终与 `develop` 相同，或是 `develop` 的祖先提交。
 
 ```text
 功能分支
-    ↓
-develop
-    ↓
-GitHub Pages 开发预览
-    ↓
-main
-    ↓
-正式文档站
+    │ Pull Request（rebase 或 squash）
+    ▼
+develop ── 开发预览
+    │
+    │ develop -> main 发布 PR（仅用于审阅）
+    │ CI + 预览确认
+    ▼
+Promote develop to main workflow
+    │ fast-forward
+    ▼
+main ── 正式文档站
 ```
 
-* `develop`：接收文档变更并生成开发预览；
-* `main`：保存已经确认并准备正式发布的文档；
+* `develop`：接收已经审阅的文档变更并生成开发预览；
+* `main`：指向最近一次正式发布的提交并发布正式文档；
 * 功能分支：用于编写单个项目、主题或批次的文档变更。
 
-文档变更应优先合并到 `develop`，确认预览效果后再同步到 `main`。
+普通文档变更应通过 Pull Request 合入 `develop`。确认开发预览后，创建 `develop -> main` 发布 PR，用于查看正式发布的完整差异。该发布 PR **不要使用 GitHub 的 Merge / Rebase / Squash 按钮合并**，而是在 **Actions → Promote develop to main** 中输入发布 PR 编号，由工作流完成校验并将 `main` fast-forward 到已经审阅的 `develop` 提交。
+
+如果发布 PR 不是 `develop -> main`、校验期间 `develop` 发生变化，或者 `main` 已不再是 `develop` 的祖先，发布工作流会直接终止。
 
 ## 本地开发
 
