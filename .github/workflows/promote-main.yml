@@ -1,16 +1,16 @@
 name: Promote develop to main
 
 on:
-  workflow_dispatch:
-    inputs:
-      release_pr:
-        description: Open develop -> main release PR number
-        required: true
-        type: string
+  pull_request:
+    types:
+      - labeled
+    branches:
+      - main
 
 permissions:
+  checks: read
   contents: write
-  pull-requests: read
+  pull-requests: write
 
 concurrency:
   group: promote-main
@@ -18,8 +18,39 @@ concurrency:
 
 jobs:
   promote:
+    if: github.event.label.name == 'release:promote'
     runs-on: ubuntu-latest
     steps:
+      - name: Authorize release promoter
+        id: promoter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROMOTER: ${{ github.event.sender.login }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          permission_json="$(gh api \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "repos/$REPOSITORY/collaborators/$PROMOTER/permission")"
+          role_name="$(jq -r '.role_name // "none"' <<<"$permission_json")"
+
+          case "$role_name" in
+            maintain|admin)
+              echo "Authorized release promoter: $PROMOTER ($role_name)"
+              ;;
+            *)
+              echo "User $PROMOTER has repository role '$role_name'." >&2
+              echo "Only maintainers or administrators may use the release:promote label to publish main." >&2
+              exit 1
+              ;;
+          esac
+
+          echo "login=$PROMOTER" >> "$GITHUB_OUTPUT"
+          echo "role=$role_name" >> "$GITHUB_OUTPUT"
+
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
@@ -32,45 +63,37 @@ jobs:
       - name: Validate release PR and branch state
         id: release
         env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_PR: ${{ inputs.release_pr }}
+          EVENT_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          EVENT_DRAFT: ${{ github.event.pull_request.draft }}
+          EVENT_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          EVENT_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          EVENT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           REPOSITORY: ${{ github.repository }}
         shell: bash
         run: |
           set -euo pipefail
 
-          if ! [[ "$RELEASE_PR" =~ ^[0-9]+$ ]]; then
-            echo "release_pr must be a pull request number." >&2
+          if [ "$EVENT_DRAFT" = "true" ]; then
+            echo "Release PR #$PR_NUMBER must be ready for review before promotion." >&2
             exit 1
           fi
 
-          pr_json="$(gh api "repos/$REPOSITORY/pulls/$RELEASE_PR")"
-          state="$(jq -r '.state' <<<"$pr_json")"
-          base_ref="$(jq -r '.base.ref' <<<"$pr_json")"
-          head_ref="$(jq -r '.head.ref' <<<"$pr_json")"
-          head_repo="$(jq -r '.head.repo.full_name' <<<"$pr_json")"
-          head_sha="$(jq -r '.head.sha' <<<"$pr_json")"
-
-          if [ "$state" != "open" ]; then
-            echo "Release PR #$RELEASE_PR must be open." >&2
+          if [ "$EVENT_BASE_REF" != "main" ] || [ "$EVENT_HEAD_REF" != "develop" ]; then
+            echo "Release PR #$PR_NUMBER must be develop -> main." >&2
             exit 1
           fi
 
-          if [ "$base_ref" != "main" ] || [ "$head_ref" != "develop" ]; then
-            echo "Release PR #$RELEASE_PR must be develop -> main." >&2
-            exit 1
-          fi
-
-          if [ "$head_repo" != "$REPOSITORY" ]; then
-            echo "Release PR #$RELEASE_PR must use this repository's develop branch." >&2
+          if [ "$EVENT_HEAD_REPO" != "$REPOSITORY" ]; then
+            echo "Release PR #$PR_NUMBER must use this repository's develop branch." >&2
             exit 1
           fi
 
           develop_sha="$(git rev-parse origin/develop)"
           main_sha="$(git rev-parse origin/main)"
 
-          if [ "$head_sha" != "$develop_sha" ]; then
-            echo "Release PR head ($head_sha) does not match current develop ($develop_sha)." >&2
+          if [ "$EVENT_HEAD_SHA" != "$develop_sha" ]; then
+            echo "Release PR head ($EVENT_HEAD_SHA) does not match current develop ($develop_sha)." >&2
             echo "Refresh or recreate the release PR before promoting." >&2
             exit 1
           fi
@@ -88,6 +111,44 @@ jobs:
 
           echo "develop_sha=$develop_sha" >> "$GITHUB_OUTPUT"
           echo "main_sha=$main_sha" >> "$GITHUB_OUTPUT"
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for required release checks
+        env:
+          EXPECTED_DEVELOP_SHA: ${{ steps.release.outputs.develop_sha }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for attempt in $(seq 1 60); do
+            checks_json="$(gh api \
+              -H 'Accept: application/vnd.github+json' \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              "repos/$REPOSITORY/commits/$EXPECTED_DEVELOP_SHA/check-runs?per_page=100")"
+
+            validate="$(jq -r '[.check_runs[] | select(.name == "validate")] | sort_by(.started_at) | last | (.conclusion // .status // "missing")' <<<"$checks_json")"
+            release_policy="$(jq -r '[.check_runs[] | select(.name == "release-policy")] | sort_by(.started_at) | last | (.conclusion // .status // "missing")' <<<"$checks_json")"
+
+            echo "validate=$validate release-policy=$release_policy"
+
+            if [ "$validate" = "success" ] && [ "$release_policy" = "success" ]; then
+              exit 0
+            fi
+
+            case "$validate:$release_policy" in
+              *failure*|*cancelled*|*timed_out*|*action_required*|*startup_failure*|*stale*)
+                echo "A required release check failed or was cancelled." >&2
+                exit 1
+                ;;
+            esac
+
+            sleep 10
+          done
+
+          echo "Timed out waiting for validate and release-policy checks." >&2
+          exit 1
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
@@ -133,11 +194,23 @@ jobs:
           git push origin "$EXPECTED_DEVELOP_SHA:refs/heads/main"
 
       - name: Publish summary
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.release.outputs.pr_number }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
         run: |
+          set -euo pipefail
+
+          gh pr comment "$PR_NUMBER" --repo "$REPOSITORY" --body \
+            "Promoted \`develop\` to \`main\` by fast-forward at \`${{ steps.release.outputs.develop_sha }}\` (authorized by @${{ steps.promoter.outputs.login }})."
+
           {
             echo "## Promotion complete"
             echo
-            echo "- release PR: #${{ inputs.release_pr }}"
+            echo "- release PR: #$PR_NUMBER"
+            echo "- authorized promoter: @${{ steps.promoter.outputs.login }} (${{ steps.promoter.outputs.role }})"
             echo "- main: \`${{ steps.release.outputs.main_sha }}\` -> \`${{ steps.release.outputs.develop_sha }}\`"
+            echo "- trigger: \`release:promote\` label"
             echo "- method: fast-forward"
           } >> "$GITHUB_STEP_SUMMARY"
