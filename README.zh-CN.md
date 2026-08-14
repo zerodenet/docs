@@ -89,8 +89,9 @@ develop ── 开发预览
     │
     │ develop -> main 发布 PR（仅用于审阅）
     │ CI + 预览确认
+    │ Maintain / Admin 添加 release:promote
     ▼
-Promote develop to main workflow
+自动发布工作流
     │ fast-forward
     ▼
 main ── 正式文档站
@@ -100,9 +101,11 @@ main ── 正式文档站
 * `main`：指向最近一次正式发布的提交并发布正式文档；
 * 功能分支：用于编写单个项目、主题或批次的文档变更。
 
-普通文档变更应通过 Pull Request 合入 `develop`。确认开发预览后，创建 `develop -> main` 发布 PR，用于查看正式发布的完整差异。该发布 PR **不要使用 GitHub 的 Merge / Rebase / Squash 按钮合并**，而是在 **Actions → Promote develop to main** 中输入发布 PR 编号，由工作流完成校验并将 `main` fast-forward 到已经审阅的 `develop` 提交。
+普通文档变更应通过 Pull Request 合入 `develop`。确认开发预览后，创建 `develop -> main` 发布 PR，用于查看正式发布的完整差异。该发布 PR **不要使用 GitHub 的 Merge / Rebase / Squash 按钮合并**，而是由具备仓库 **Maintain 或 Admin** 权限的维护者给发布 PR 添加 `release:promote` 标签。较低权限用户即使能够添加该标签，发布工作流也会拒绝执行发布。
 
-如果发布 PR 不是 `develop -> main`、校验期间 `develop` 发生变化，或者 `main` 已不再是 `develop` 的祖先，发布工作流会直接终止。
+发布工作流会校验实际添加标签的用户权限，等待 `validate` 和 `release-policy` 两个必要检查通过，重新构建该 PR 对应的准确 `develop` 提交，确认 `main` 仍然是 `develop` 的祖先，然后将 `main` fast-forward 到该提交。如果发布 PR 仍是 Draft、来源或目标分支错误、添加标签的人没有 Maintain/Admin 权限、必要检查失败、校验期间 `develop` 发生变化，或者分支关系已经不安全，发布会直接终止。
+
+如果发布失败，修复提示的问题后移除 `release:promote` 标签，再由有权限的维护者或管理员重新添加一次即可重试。
 
 ## 本地开发
 

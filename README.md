@@ -91,8 +91,9 @@ develop ── development preview
     │
     │ develop -> main release PR (review only)
     │ CI + preview review
+    │ maintainer/admin adds release:promote
     ▼
-Promote develop to main workflow
+automatic promotion workflow
     │ fast-forward
     ▼
 main ── production documentation
@@ -102,9 +103,11 @@ main ── production documentation
 - `main`: points to the latest released commit and publishes the production documentation;
 - feature branches: contain changes for a specific project, topic, or documentation batch.
 
-Normal changes should go through a Pull Request into `develop`. After the preview is accepted, open a `develop -> main` release PR to review the exact production diff. Do not merge that release PR with GitHub's merge buttons. Instead, run **Actions → Promote develop to main**, enter the release PR number, and let the workflow validate and fast-forward `main` to the reviewed `develop` commit.
+Normal changes should go through a Pull Request into `develop`. After the preview is accepted, open a `develop -> main` release PR to review the exact production diff. Do not merge that release PR with GitHub's merge buttons. A repository maintainer or administrator applies the `release:promote` label to the release PR instead. Labels added by users with lower repository roles are rejected by the promotion workflow.
 
-The promotion workflow aborts if the release PR does not target `main` from `develop`, if `develop` changes during validation, or if `main` is no longer an ancestor of `develop`.
+The promotion workflow waits for the required `validate` and `release-policy` checks, rebuilds the exact `develop` commit, verifies that `main` is still an ancestor of `develop`, and then fast-forwards `main`. It aborts if the release PR is a draft, the source or target branch is wrong, the label was added by someone without Maintain/Admin access, a required check fails, `develop` changes during validation, or the branch relationship is no longer safe.
+
+If a promotion fails, fix the reported condition, remove the `release:promote` label, and have an authorized maintainer or administrator add it again to retry.
 
 ## Local Development
 
