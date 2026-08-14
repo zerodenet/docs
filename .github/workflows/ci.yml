@@ -12,6 +12,26 @@ permissions:
   contents: read
 
 jobs:
+  release-policy:
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require develop as the release source
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ "$HEAD_REF" != "develop" ]; then
+            echo "Pull requests targeting main must come from develop, got: $HEAD_REF" >&2
+            exit 1
+          fi
+
+          if [ "$HEAD_REPOSITORY" != "$REPOSITORY" ]; then
+            echo "The develop -> main release PR must come from this repository." >&2
+            exit 1
+          fi
+
   validate:
     runs-on: ubuntu-latest
     steps:
