@@ -46,6 +46,24 @@ cargo build --release --features connector,grpc-api
 
 `config.apply` 失败后先查询状态，确认旧 listener 是否恢复，再提交新的候选配置。
 
+## TUN 无法启动或启动后断网
+
+`v0.0.16-dev.202608180928` 会自动协调 Windows、Linux 和 macOS 的 TUN 捕获路由，并将代理出站绑定到当前物理 underlay egress。出现问题时先区分“创建 TUN 失败”和“路由已经接管但出口不可用”。
+
+依次检查：
+
+1. 当前进程是否具有创建虚拟网卡和修改系统路由所需的管理员/root 权限；
+2. `runtime.tun.addr`、`secondary_addr` 和 MTU 是否有效，双栈主机是否确实需要 `dual_stack: true`；
+3. `strict_route: true` 时是否因为任一路由安装失败而主动回滚；
+4. 主机物理默认路由是否在 TUN 启动后发生切换，例如 Wi-Fi、有线网络或 VPN 切换；
+5. 日志中是否存在 underlay、route reconcile、TUN device 或权限相关错误。
+
+Windows 官方发布产物已经携带 Wintun 运行组件。使用官方压缩包时通常不需要另外下载 DLL；如果日志明确提示权限失败，应先以管理员权限运行，而不是把权限错误误判为缺少配置。自行重新打包 Zero 时仍要确认 Wintun 组件被一并分发。
+
+macOS 会保留物理出口的 scoped route 语义；Linux/macOS/Windows 都会在默认出口变化后重新协调捕获路由。升级到该版本后不建议继续依赖为每个代理服务器手工添加静态 host route 来避免 TUN 回环。
+
+如果通过控制面关闭 TUN，`tun.stop` 必须发送标准空对象参数：`{"method":"tun.stop","params":{}}`。
+
 ## CLI 找不到运行中的 Zero
 
 CLI 默认连接：
@@ -90,6 +108,8 @@ zero status --socket /run/zero/control.sock
 4. 域名、SNI、证书和协议凭证是否匹配；
 5. UDP 请求是否使用了当前协议支持的路径；
 6. 中继链中的每一跳是否可达。
+
+如果只有经 HTTP forward proxy 的明文 HTTP 请求异常，而 HTTPS CONNECT 正常，先确认版本不早于 `v0.0.16-dev.202608180928`。该版本修正了小请求被拆分到多次读取时的处理竞态；升级后仍可稳定复现时，再保留原始请求边界和 flow 日志报告问题。
 
 先使用[快速开始](./quickstart)的本地 direct 配置确认入站正常，再逐步加入真实代理出站。
 
