@@ -37,7 +37,7 @@ Zero 使用一个完整 JSON 文件描述入站、出站、路由、运行参数
 | `outbound_groups` | 否 | 手动选择、自动测速、故障切换、链式代理或负载均衡 |
 | `mode` | 否 | `rule`、`direct` 或 `global`；默认 `rule` |
 | `route` | 否 | 规则集、匹配规则、URL 改写与默认去向 |
-| `runtime` | 否 | DNS、超时、事件日志、网络和状态持久化 |
+| `runtime` | 否 | DNS、TUN、超时、事件日志、网络和状态持久化 |
 | `api` | 否 | 控制接口、事件投递、outbox 和 hooks |
 
 未知字段会被拒绝。修改后先运行：
@@ -119,8 +119,48 @@ zero validate config.json
 | `latency_test_url` | 通用出站延迟探测地址 |
 | `dns` | DNS 服务器、缓存、路由与 Fake IP |
 | `network.mtu` | 用户态网络栈 MTU |
+| `tun` | 随代理生命周期启停的声明式 TUN 配置 |
 
 涉及路径的字段以主配置文件所在目录为基准。配置、证书、运行状态和日志建议分开存放。
+
+### 声明式 TUN
+
+从 `v0.0.16-dev.202608180928` 起，TUN 的自动路由与物理出口处理完成了一轮跨平台收敛。配置中存在 `runtime.tun` 时，Zero 会在代理运行期间管理 TUN；省略该字段时，仍可通过 `tun.start` / `tun.stop` 由控制面显式管理。
+
+```json
+{
+  "runtime": {
+    "network": {
+      "mtu": 1500
+    },
+    "tun": {
+      "addr": "10.66.0.1/24",
+      "tag": "tun",
+      "auto_route": true,
+      "dual_stack": true,
+      "strict_route": true,
+      "dns_hijack": true
+    }
+  }
+}
+```
+
+| 字段 | 默认值 | 说明 |
+|------|--------|------|
+| `name` | 系统默认 | 可选 TUN 接口名称 |
+| `addr` | — | 主地址；必填 |
+| `mask` | `255.255.255.0` | IPv4 掩码 |
+| `secondary_addr` | 自动 | 双栈时另一地址族的 CIDR；省略时使用 Zero 的保留 TUN 地址 |
+| `mtu` | `runtime.network.mtu` | TUN 局部 MTU 覆盖 |
+| `tag` | `tun` | TUN 流量进入 Zero 后使用的 inbound tag |
+| `auto_route` | `true` | 自动安装经过 TUN 的 split-default 路由 |
+| `dual_stack` | `true` | 同时准备 IPv4 与 IPv6 路由；明确单栈部署时才建议关闭 |
+| `strict_route` | `true` | 自动路由安装失败时终止本次启动并回滚 |
+| `dns_hijack` | `true` | 将 TUN 中的 TCP/UDP 53 端口流量交给 Zero DNS |
+
+自动路由启用后，Zero 会跟踪主机物理默认出口的变化并重新协调捕获路由。代理自身建立的 TCP、UDP 与 QUIC 出站会绑定当前 underlay egress，避免被刚安装的 TUN 默认路由重新捕获形成回环。因此，不需要再为每一个代理服务器地址维护静态 host-route 排除列表。
+
+Windows、Linux 和 macOS 的路由实现使用相同的生命周期语义，但创建 TUN、修改路由表仍需要对应平台权限。Windows 官方发布产物会携带运行 TUN 所需的 Wintun 组件；权限或驱动问题见[故障排查](/projects/core/guides/troubleshooting)。
 
 ## api
 
