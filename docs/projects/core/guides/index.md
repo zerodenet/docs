@@ -12,10 +12,11 @@
 
 - [运行与观测](./operations)：状态、流、策略、事件、日志和 Connector 积压。
 - [HTTP / Mixed 代理入口与 URLTest](./proxy-and-urltest)：标准 HTTP 代理、QUIC 域名、并发测速和 GUI 等待语义。
+- [TUN 接管与路由生命周期](./tun)：TUN 启停、双栈、自动路由、底层出口重协调和平台权限。
 - [安全热更新配置](./hot-reload)：校验、应用、确认和失败回滚。
 - [使用控制 API](./control-api)：HTTP、IPC、CLI 和 gRPC 的选择与调用。
 - [保护控制接口](./control-security)：Bearer、TLS、mTLS 和远程访问边界。
-- [故障排查](./troubleshooting)：从错误信息定位配置、监听、控制面和投递问题。
+- [故障排查](./troubleshooting)：从错误信息定位配置、监听、TUN、控制面和投递问题。
 
 ## 接入外部程序
 
