@@ -98,6 +98,8 @@ curl \
 - `config.validate`
 - `config.apply`
 - `config.apply_runtime`
+- `tun.start`
+- `tun.stop`
 - `diagnostics.probe_target`
 - `diagnostics.probe_outbound`
 
@@ -134,6 +136,39 @@ curl \
 5. 查询运行状态确认预期 listener、policy 和 sink 已生效。
 
 不要由多个独立写入者各自基于旧副本修改整份配置。Zero 会串行执行本地 apply 并在重建失败时回滚，但当前命令合同没有对外提供 revision/CAS 字段；写入协调属于控制端职责。
+
+## 显式管理 TUN
+
+没有在配置中声明 `runtime.tun` 时，GUI 或守护程序可以使用 `tun.start` 和 `tun.stop` 管理 TUN 生命周期。`v0.0.16-dev.202608180928` 的 `tun.start` 支持完整的自动路由与双栈参数：
+
+```json
+{
+  "method": "tun.start",
+  "params": {
+    "addr": "10.66.0.1/24",
+    "tag": "tun",
+    "mtu": 1500,
+    "secondary_addr": "fd66::1/64",
+    "auto_route": true,
+    "dual_stack": true,
+    "strict_route": true,
+    "dns_hijack": true
+  }
+}
+```
+
+`name`、`mtu` 和 `secondary_addr` 可以省略；`mask` 默认是 `255.255.255.0`。`auto_route`、`dual_stack`、`strict_route` 和 `dns_hijack` 默认都为 `true`。省略 `mtu` 时继承活动配置中的 `runtime.network.mtu`。
+
+停止 TUN 时，命令仍然使用标准的对象参数。不要发送 `null` 或省略 `params`：
+
+```json
+{
+  "method": "tun.stop",
+  "params": {}
+}
+```
+
+这个对象形式同时适用于 HTTP 和 IPC，因为两种传输共用同一套命令反序列化合同。
 
 ## 使用 CLI 和 IPC
 
