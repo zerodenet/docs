@@ -73,15 +73,46 @@ zero connector state --json config.json
 
 ## TUN
 
+启动最小 TUN：
+
 ```bash
 zero tun start --addr 10.0.0.1 --tag my-tun
-zero tun start --addr 10.0.0.1 --tag my-tun \
-  --name tun0 --mask 255.255.255.0 --mtu 1500
+```
+
+完整参数形状：
+
+```text
+zero tun start --addr IP --tag TAG \
+  [--name NAME] \
+  [--mask MASK] \
+  [--secondary-addr CIDR] \
+  [--mtu MTU] \
+  [--no-auto-route] \
+  [--single-stack] \
+  [--no-strict-route] \
+  [--no-dns-hijack] \
+  [--socket PATH]
+```
+
+默认启用自动路由、双栈、严格路由和 DNS 劫持请求；未指定 mask 时默认 `255.255.255.0`。第二地址用于双栈时的另一地址族。
+
+查看状态：
+
+```bash
 zero tun status
+```
+
+状态会报告 TUN 是否健康、是否由活动配置管理、接口地址和 MTU、各接管开关，以及当前底层出口接口。网络环境发生变化后，可以用这里的 egress 字段确认 underlay 是否已经重新识别。
+
+停止：
+
+```bash
 zero tun stop
 ```
 
-TUN 命令同样可以使用 `--socket PATH` 连接指定实例。
+TUN 命令都可以使用 `--socket PATH` 连接指定实例。外部控制器如果发现 `managed_by_config=true`，应避免再用命令生命周期争用同一个 TUN。
+
+完整行为见[TUN 接管与路由生命周期](/projects/core/guides/tun)。
 
 ## 常见用法
 
