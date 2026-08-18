@@ -1,6 +1,6 @@
 # 故障排查
 
-按“配置 → 构建能力 → 监听器 → 控制面 → 出站 → 事件投递”的顺序检查，可以避免只盯着最后一条错误。
+按“配置 → 构建能力 → 监听器 / TUN → 控制面 → 出站 → 事件投递”的顺序检查，可以避免只盯着最后一条错误。
 
 ## 配置无法通过校验
 
@@ -45,6 +45,34 @@ cargo build --release --features connector,grpc-api
 5. 热更新错误是否明确表示已恢复上一份配置。
 
 `config.apply` 失败后先查询状态，确认旧 listener 是否恢复，再提交新的候选配置。
+
+## TUN 启动、路由或网络切换异常
+
+先执行：
+
+```bash
+zero tun status
+```
+
+重点确认：
+
+- `running` 和 `healthy` 是否符合预期；
+- `last_error` 是否包含权限、接口或路由错误；
+- TUN 地址、MTU、tag 和双栈设置是否正确；
+- `egress`、`egress_v4`、`egress_v6` 是否指向当前物理出口；
+- 当前 TUN 是外部命令管理还是 `managed_by_config`。
+
+创建 TUN 和修改系统路由通常需要额外系统权限。Windows 使用官方发布包时还应确认发布目录完整，不要只复制 `zero.exe` 而遗漏 Wintun 运行组件。
+
+网络从 Wi-Fi、有线网络或 VPN 之间切换后，Zero 会重新协调自动路由和底层出口。如果此后无流量，不要先手工增加静态路由；先检查 `tun status` 中的 egress 是否已经更新，以及是否有其他 VPN、安全软件或路由脚本持续覆盖系统路由。
+
+停止时使用：
+
+```bash
+zero tun stop
+```
+
+再用 `zero tun status` 确认托管生命周期已经结束。完整语义见[TUN 接管与路由生命周期](./tun)。
 
 ## CLI 找不到运行中的 Zero
 
@@ -127,6 +155,7 @@ curl \
 
 - `zero build-info`
 - `zero status --json`
+- `zero tun status`（涉及 TUN 时）
 - `zero validate config.json` 的完整错误
 - 相关日志时间段
 - 已脱敏的配置
