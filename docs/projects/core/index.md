@@ -17,6 +17,7 @@ Zero Core 是可裁剪的网络代理内核，可作为本地网关、边缘节�
 |------|------------|
 | 增加或修改 VLESS、VMess、Trojan 等节点 | [协议配置](./protocols/) |
 | 使用 HTTP/Mixed 本地代理、QUIC 域名或 URLTest | [代理入口与 URLTest](./guides/proxy-and-urltest) |
+| 使用 TUN 接管系统流量并管理跨平台路由 | [TUN 接管与路由生命周期](./guides/tun) |
 | 不重启进程地更新凭证、监听器或路由 | [安全热更新配置](./guides/hot-reload) |
 | 用脚本或服务管理 Zero | [使用控制 API](./guides/control-api) |
 | 跨主机安全访问 HTTP/gRPC | [保护控制接口](./guides/control-security) |
