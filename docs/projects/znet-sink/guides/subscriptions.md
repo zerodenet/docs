@@ -37,7 +37,7 @@ User-Agent 留空时，客户端发送：
 ZNet-Sink/<当前版本>
 ```
 
-例如 `ZNet-Sink/0.0.16-rc.7`。填写自定义值后，该值会**完全覆盖**默认 User-Agent，不会在末尾追加 ZNet-Sink 标识。
+例如 `ZNet-Sink/0.0.16-rc.8`。填写自定义值后，该值会**完全覆盖**默认 User-Agent，不会在末尾追加 ZNet-Sink 标识。
 
 Zboard 的公开订阅接口要求严格的 `ZNet-Sink/<版本>` 格式。使用 Zboard 链接时通常应保持留空；只有其他订阅服务明确要求特定 User-Agent 时才覆盖。历史版本曾在自定义值末尾追加客户端标识，现有记录会在迁移时清理该旧格式。
 
