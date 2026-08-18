@@ -71,6 +71,7 @@ const coreSidebar: DefaultTheme.SidebarItem[] = [
   group('日常管理', [
     page('运行与观测', '/projects/core/guides/operations'),
     page('HTTP / Mixed 与 URLTest', '/projects/core/guides/proxy-and-urltest'),
+    page('TUN 接管与路由生命周期', '/projects/core/guides/tun'),
     page('安全热更新配置', '/projects/core/guides/hot-reload'),
     page('使用控制 API', '/projects/core/guides/control-api'),
     page('保护控制接口', '/projects/core/guides/control-security'),
@@ -119,6 +120,7 @@ const sinkSidebar: DefaultTheme.SidebarItem[] = [
     page('功能总览', '/projects/znet-sink/guides/features'),
     page('订阅管理', '/projects/znet-sink/guides/subscriptions'),
     page('本地代理与节点测速', '/projects/znet-sink/guides/proxy-and-probes'),
+    page('TUN 模式', '/projects/znet-sink/guides/tun'),
   ], false),
   group('帮助与诊断', [
     page('故障排查', '/projects/znet-sink/guides/troubleshooting'),
@@ -141,6 +143,7 @@ const zboardSidebar: DefaultTheme.SidebarItem[] = [
     page('协议服务配置', '/projects/zboard/guides/protocol-services'),
     page('订阅交付与流量展示', '/projects/zboard/guides/subscriptions-and-traffic'),
     page('DNS 与证书管理', '/projects/zboard/guides/dns-and-certificates'),
+    page('运营概览与系统设置', '/projects/zboard/guides/operations'),
     page('故障排查', '/projects/zboard/guides/troubleshooting'),
   ]),
   group('参与项目', [
