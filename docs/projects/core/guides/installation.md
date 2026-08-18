@@ -39,6 +39,14 @@ cargo build --release
 
 不要只根据文档或文件名判断 feature；`build-info` 输出的 `features`、`git_hash`、`build_profile` 和 `binary_sha256` 才描述当前产物。
 
+## Windows 与 Wintun
+
+官方 Windows 发布流程会为 TUN 运行准备 Wintun 组件，并在发布产物中一并交付。直接使用官方 Release 时，不需要再单独从其他来源下载一个不明版本的 Wintun DLL。
+
+如果自行从源码构建、重新打包或只复制 `zero.exe`，则需要自行确认运行目录已经准备好与当前构建匹配的 Wintun 依赖。TUN 创建和系统路由修改仍然需要 Windows 授予相应权限；依赖存在不代表普通权限进程一定可以完成 TUN 启动。
+
+TUN 的启动、状态和路由生命周期见[TUN 接管与路由生命周期](./tun)。
+
 ## 选择可选能力
 
 Connector 和 gRPC 不属于默认构建，需要显式加入：
