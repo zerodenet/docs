@@ -1,0 +1,17 @@
+.VPNavBarTitle .logo {
+  height: 40px;
+  width: auto;
+  max-width: 190px;
+  object-fit: contain;
+}
+
+.dark .VPNavBarTitle .logo {
+  filter: invert(1);
+}
+
+@media (max-width: 640px) {
+  .VPNavBarTitle .logo {
+    height: 36px;
+    max-width: 172px;
+  }
+}
