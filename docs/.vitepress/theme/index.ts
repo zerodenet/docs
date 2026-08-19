@@ -5,6 +5,7 @@ import ProjectCatalog from './components/ProjectCatalog.vue'
 import ProjectMeta from './components/ProjectMeta.vue'
 import Layout from './Layout.vue'
 import './custom.css'
+import './logo.css'
 
 export default {
   extends: DefaultTheme,
