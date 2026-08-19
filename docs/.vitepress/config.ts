@@ -28,6 +28,12 @@ export default defineConfig({
   ],
 
   themeConfig: {
+    logo: {
+      light: '/brand/zerodenet-light.png',
+      dark: '/brand/zerodenet-dark.png',
+      alt: 'ZeroDeNet',
+    },
+    siteTitle: false,
     nav,
     sidebar,
     search: {
