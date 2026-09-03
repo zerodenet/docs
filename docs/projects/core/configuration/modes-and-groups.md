@@ -2,6 +2,20 @@
 
 运行模式决定流量按什么方式选择出站，出站组则把多个出站组合成一个可引用目标。
 
+## 参数速查
+
+每组都需唯一 `tag` 和 `type`，成员引用已有出站或组，不能形成循环。
+
+| 类型 | 必填参数 | 可选参数与默认值 |
+| --- | --- | --- |
+| `selector` | `outbounds: string[]` | `selected`、`default`；依次回退到第一个成员 |
+| `url_test` | `outbounds: string[]` | `url`；`interval_seconds: 300`；`tolerance_ms: 0` |
+| `fallback` | `outbounds: string[]` | 按数组顺序尝试 |
+| `relay` | `proxies: string[]` | 至少两跳，需满足逐跳协议能力 |
+| `load_balance` | `outbounds: string[]` | `strategy: "round_robin"`，可设 `random`；可选 `default` |
+
+`tolerance_ms` 是 URLTest 切换容差：当前成员健康时，其他成员必须快出超过此值才切换，可减少延迟接近时的来回切换。它的单位是毫秒，不是测速超时。
+
 ## 三种运行模式
 
 ### rule

@@ -23,3 +23,5 @@
 - [GUI 接入](./gui-integration)：通过 IPC 或 HTTP 构建本地控制端。
 
 需要查字段时进入[配置参考](/projects/core/configuration/)，需要查某个代理协议时进入[协议配置](/projects/core/protocols/)。
+
+透明代理场景请阅读 [运行 TUN 与 DNS](./tun-and-dns)，配置前核对 [DNS 参数](../configuration/dns)。

@@ -69,6 +69,7 @@ HTTP 和 IPC 共享相同的响应信封格式（定义在 `zero_api::ApiRespons
 | `not_found` | 404 | 资源不存在 |
 | `invalid_argument` | 400 | 参数无效 |
 | `permission_denied` | 403 | 权限不足 |
+| `insufficient_os_privilege` | 403 | 操作系统权限不足，例如创建 TUN 或修改路由 |
 | `feature_disabled` | 501 | 功能未编译 |
 | `conflict` | 409 | 状态冲突 |
 | `unsupported` | 501 | 不支持的操作 |
@@ -80,7 +81,7 @@ HTTP 和 IPC 共享相同的响应信封格式（定义在 `zero_api::ApiRespons
 
 ### GET /api/v1/capabilities
 
-API 能力列表。
+API 能力列表。当前响应还包含独立版本范围 `contracts`、稳定 `error_codes` 和 `global_limitations`。按[通用契约](./contract#v1-契约版本)匹配版本与功能，不能仅凭构建版本推断能力；下例只展示部分字段。
 
 ```json
 {
@@ -293,6 +294,22 @@ TUN 虚拟网卡运行状态。
 | `addr` | 网卡地址（运行时返回） |
 | `tag` | 入站 tag（运行时返回） |
 
+当前状态还包含以下运行事实；可选字段及空 CIDR 列表可能省略：
+
+| 字段 | 说明 |
+| --- | --- |
+| `addresses`、`mtu` | 实际生效的全部接口地址及 MTU |
+| `healthy`、`last_error` | 健康状态与最后错误 |
+| `auto_route`、`include_cidrs`、`exclude_cidrs` | 自动路由及捕获范围 |
+| `dual_stack`、`strict_route`、`dns_hijack` | 实际启用的接管策略 |
+| `egress_interface`、`egress_interface_v4`、`egress_interface_v6` | 物理出口接口 |
+| `ipv4_egress`、`ipv6_egress` | 含 `availability`（`unknown` / `available` / `unavailable`）、可选 `interface` 和 `reason` |
+| `network_generation` | 网络出口状态代次 |
+| `address_family_policy`、`ipv6_to_ipv4_fallbacks` | 地址族策略及 IPv6 到 IPv4 回退计数 |
+| `managed_by_config` | 是否由声明式配置管理 |
+
+查询失败表示无法确认状态，不应构造 `running: false`。缺少新字段的旧响应也不能用于确认新参数已应用。
+
 未启动时所有字段为零值 / null：
 ```json
 { "running": false, "name": null, "addr": null, "tag": null }
@@ -468,7 +485,7 @@ Response：
 
 #### tun.start
 
-启动 TUN 虚拟网卡。
+启动 TUN 虚拟网卡。还支持 `secondary_addr`（另一地址族 CIDR，可选）、`include_cidrs` / `exclude_cidrs`（string[]，默认 `[]`）和 `auto_route`、`dual_stack`、`strict_route`、`dns_hijack`（bool，默认均为 `true`）。参数约束见[声明式 TUN](../configuration/#声明式-tun)。劫持需要有效 DNS 配置；结束后查询 `tun_status` 核对实际状态，超时不代表命令未执行。
 
 Params：`name` (string, 可选), `addr` (string), `mask` (string, 可选, 默认 `"255.255.255.0"`), `mtu` (number, 可选；省略时使用 `runtime.network.mtu`，其默认值为 1500), `tag` (string)
 
@@ -623,7 +640,7 @@ Response（列表模式）：
 
 #### diagnostics.fakeip_lookup
 
-查询 Fake IP 映射（`runtime.dns.fake_ip`）。`domain` 与 `ip` 二选一：
+查询 Fake-IP 映射（`runtime.dns.answer.type: "fake_ip"`）。`domain` 与 `ip` 二选一；查询已有映射，不分配新地址：
 
 - `domain`：前向查询（域名 → 已分配的 Fake IP，**不分配**新 IP）。
 - `ip`：反向查询（Fake IP → 真实域名）。
@@ -639,6 +656,10 @@ Response（反向）：
 ```
 
 `fake_ip` / `domain` 为 `null` 表示无映射；`enabled: false` 表示未配置 Fake IP。两者都省略返回 `invalid_argument`。
+
+#### fakeip.clear
+
+清理 Fake-IP 映射，同时更新持久状态。权限为 `admin`。`params` 使用 `domain` 或 `ip` 二选一清理指定映射，空对象 `{}` 清空全部，不能同时设置两项。应用可能仍缓存旧合成地址，清理后需要重新解析；不要将它用作普通 DNS 缓存刷新。
 
 权限：`admin`
 

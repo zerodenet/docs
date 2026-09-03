@@ -8,3 +8,6 @@
 - [ZRS Golden Vector](./zrs-0.1-golden)
 
 这些页面描述格式和能力边界，不代表某个具体 Core 构建已经启用所有可选 feature。运行时仍应查询能力信息。
+
+- [DNS 与 Fake-IP 参数](../configuration/dns)
+- [运行与 TUN 参数](../configuration/)

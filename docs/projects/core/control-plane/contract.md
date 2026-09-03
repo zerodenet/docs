@@ -77,6 +77,16 @@ HTTP 和 IPC 响应使用 `zero_api::ApiResponse`。
 
 能力发现是描述性的。它不授予额外权限，也不暴露外部系统特定的业务概念。
 
+### V1 契约版本
+
+当前能力响应增加 `contracts`，分别报告 `capabilities`、`control_api`、`config_schema` 和 `error_codes` 的 `current` 与 `minimum_supported`。客户端支持区间与内核区间相交时才启用对应能力；旧响应没有此字段时视为版本未知，不能默认当作 V1。
+
+完整配置顶层 `schema_version` 默认为 `1`，内核导出时显式携带。未知版本在构造运行资源前拒绝，不通过删除字段静默降级。
+
+`features` 提供正向能力，`global_limitations` 提供跨协议限制，协议局部限制在 `protocols[].limitations`。未知能力和限制条目可忽略；已知限制消失也应结合正向能力判断。TUN 双栈、系统 DNS 自动发现、Fake-IP 持久化及 DNS 地址族策略均应按实际能力启用。
+
+V1 是公开契约版本，不代表当前 develop 已成为稳定发行版。DNS/TUN 的使用及限制见[运行 TUN 与 DNS](../guides/tun-and-dns)。
+
 ## 错误处理
 
 错误码是 `snake_case` 的稳定机器字符串。
@@ -86,6 +96,7 @@ HTTP 和 IPC 响应使用 `zero_api::ApiResponse`。
 | `not_found` | 请求的资源不存在 |
 | `invalid_argument` | 请求格式或字段值无效 |
 | `permission_denied` | 调用者缺少所需权限 |
+| `insufficient_os_privilege` | 操作系统权限不足，例如创建 TUN 或修改路由 |
 | `feature_disabled` | 功能在当前构建/运行时中未启用 |
 | `conflict` | 当前状态拒绝该操作 |
 | `unsupported` | 操作不在当前控制面范围内 |

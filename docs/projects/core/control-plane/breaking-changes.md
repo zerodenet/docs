@@ -2,6 +2,18 @@
 
 本文记录会影响 GUI、SDK、面板、事件 Sink 或进程内 Rust 集成的控制面语义变化。当前事实仍以同目录下的接口与事件文档为准；本文只维护版本边界和迁移要求。
 
+## 当前 develop 的配置与能力迁移
+
+截至 2026-09-03，使用最新 develop 的消费者还应核对以下事项；下方历史发布矩阵不代替当前能力响应：
+
+- 配置显式支持 `schema_version: 1`；未知版本拒绝，缺省仍按 V1。
+- DNS 使用命名 `servers`、`default_server`、`dispatch`、`policy` 和 `answer`；Fake-IP 位于 `answer.type: "fake_ip"`。旧 DNS 结构请按 [DNS 参数](../configuration/dns)显式迁移。
+- 能力响应通过 `contracts` 发布四类独立兼容范围，新增 `insufficient_os_privilege` 稳定错误码，见[通用契约](./contract)。
+- TUN 状态增加实际捕获范围、地址族出口及配置归属；IPC 失败不得解释为 OFF。详见 [HTTP TUN 状态](./http-api#get-api-v1-tun-status)。
+- Connector 状态增加投递和 ACK 重试阶段，见[投递调度](./connector#查看投递调度与恢复状态)。
+
+这些内容描述已合入 develop 的行为，不声明正式稳定版已经发布。
+
 ## 消费者如何判断兼容性
 
 外部消费者连接内核后应依次检查：

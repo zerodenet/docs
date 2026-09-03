@@ -11,3 +11,9 @@
 7. [故障排查](./troubleshooting)
 
 这些页面描述 ZNet Sink 的安装、界面和用户操作。涉及内核字段和协议能力时，以当前 Zero Core 文档及客户端显示的能力信息为准。
+
+## 设置专题
+
+- [DNS 与 Fake-IP](./dns)
+- [TUN 接管与网络切换](./tun)
+- [迁移设置与管理内核](./settings-transfer)
