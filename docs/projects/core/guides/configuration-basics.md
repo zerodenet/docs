@@ -8,6 +8,7 @@ Zero 使用 JSON 配置。推荐从一个能够通过 `zero validate` 的完整�
 
 | 字段 | 用途 |
 |------|------|
+| `schema_version` | 配置契约版本；省略按 `1`，未知版本会拒绝 |
 | `inbounds` | Zero 在哪里接收连接，以及使用什么入站协议 |
 | `outbounds` | 直连、阻断或远程代理节点 |
 | `outbound_groups` | selector、url_test、fallback、relay 和负载均衡 |
@@ -108,3 +109,5 @@ zero status --json
 `reload` 提交完整候选配置，不是局部补丁。成功响应会等待监听器和相关应用服务完成重建；失败时会尝试恢复上一份运行配置。控制接口自身的监听地址和凭证不能在线自替换，需要显式重启。
 
 详细流程见[安全热更新配置](./hot-reload)，所有字段见[配置参考](/projects/core/configuration/)。
+
+需要 DNS 分流或 Fake-IP 时使用[命名服务器参数](../configuration/dns)，不要沿用旧的 `runtime.dns.fake_ip` 形状；应配置 `runtime.dns.answer.type: "fake_ip"`。透明代理的安装、网段接管与验证见[运行 TUN 与 DNS](./tun-and-dns)。

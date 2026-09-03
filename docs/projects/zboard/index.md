@@ -2,6 +2,10 @@
 
 <ProjectMeta project-id="zboard" />
 
+::: info 文档对应版本
+本轮使用说明按 2026-09-03 的 [develop 提交 8d37762](https://github.com/zerodenet/zboard/tree/8d37762bdaca6f4befaf15343960d396417983da)核对。develop 包含尚未进入稳定版的功能；安装旧版时，以实际版本和可用能力为准。
+:::
+
 Zboard 是代理服务运营管理平台，用于管理 VPS、协议服务、节点组、商品、订单、订阅、配置交付、流量、DNS 和证书。
 
 ## 开始使用
@@ -34,7 +38,7 @@ Zboard 是代理服务运营管理平台，用于管理 VPS、协议服务、节
 
 ## 运营面板
 
-`v0.0.1-dev.26` 的管理 Dashboard 以 `today`、`7d`、`30d` 三个时间范围提供后端聚合的运营读模型，主要包括：
+管理 Dashboard 以 `today`、`7d`、`30d` 三个时间范围提供后端聚合的运营读模型，主要包括：
 
 - 已支付净收入、订单和新购/续费构成；
 - 新订阅、当前有效订阅以及即将到期/额度耗尽状态；
@@ -51,7 +55,7 @@ Dashboard 的日期边界遵循系统设置中的 IANA `system_timezone`。底�
 
 管理员可以在系统设置中维护时区和运营历史保留策略。默认审计日志保留 180 天，已结束的运营历史和任务历史默认保留 90 天；`0` 表示永久保留。
 
-“系统运营 → 关于”提供当前 Zboard 版本、发布通道、后端启动时间/运行时长、首次安装时间、MPL-2.0 开源许可和项目资源入口。版本和运行信息来自管理员专用系统信息接口，不通过公开系统信息接口暴露。
+“设置 → 关于 ZBoard”提供当前 Zboard 版本、发布通道、后端启动时间/运行时长、首次安装时间、MPL-2.0 开源许可和项目资源入口。版本和运行信息来自管理员专用系统信息接口，不通过公开系统信息接口暴露。
 
 ## 文档入口
 
@@ -63,3 +67,10 @@ Dashboard 的日期边界遵循系统设置中的 IANA `system_timezone`。底�
 - [订阅交付与流量展示](./guides/subscriptions-and-traffic)
 - [DNS 与证书管理](./guides/dns-and-certificates)
 - [参与 Zboard](./contributing/)
+
+## 日常操作入口
+
+- [后台导航与日常运营](./guides/daily-operations)
+- [套餐、订单与用户交付](./guides/plans-and-orders)
+- [公告、注册验证与邮件](./guides/announcements-and-email)
+- [系统维护与数据库迁移](./guides/maintenance)

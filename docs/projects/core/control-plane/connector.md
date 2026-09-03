@@ -108,3 +108,19 @@ outbox 不使用固定容量上限。每次新增持久记录前，Connector 都
 限流、停用、升级、通知等策略和工作流由外部系统决定。需要内核改变运行状态时，外部系统调用已有的 Zero HTTP/IPC/gRPC 通用方法或应用配置；程序升级由部署系统执行。Connector 不接收、不解释这些业务命令，也不维护面板状态。
 
 Connector 只补充节点向已注册接收端可靠推送事件的能力。它的“保活”是节点内投递循环、重试/outbox 恢复和 sink 状态，不是要求中心实现固定心跳端点。外部系统需要活性信号时，可订阅适合的周期事件（例如启用统计采样后的 `stats.sampled`），并自行定义超时判断。
+
+## 查看投递调度与恢复状态
+
+通过 `GET /api/v1/sinks` 读取每个 sink 的 `pending`、`delivery`、`outbox_storage` 和 `outbox_recovery`。`delivery` 在空闲时可能省略，旧内核也可能没有该字段：
+
+| 字段 | 说明 |
+| --- | --- |
+| `delivery.in_flight` | 当前 worker 正持有一次投递请求 |
+| `delivery.retry_pending` | 已失败、等待再次投递的数量 |
+| `delivery.ack_retry_pending` | 已发布成功、但本地持久 ACK 仍待重试的数量 |
+| `delivery.durable_pending` | outbox 持有的未完成数量 |
+| `delivery.next_retry_at_unix_ms` | 下一次发布或 ACK 重试期限 |
+
+这些数量描述不同生命周期阶段，可能重叠，不能相加得到总积压。`ack_retry_pending` 不等于接收端尚未收到；接收端仍必须幂等处理。发生持久文件恢复问题时，结合 `outbox_recovery` 和 `replay_gaps` 对账；后续发送成功不代表历史缺口已经补齐。
+
+启用 TUN 时，Webhook 受管连接使用物理出口。排查投递失败应同时检查接收 URL、HTTP 状态、重试时间、磁盘水位和出口网络，不能用“没有业务流量”判断接收端在线状态。

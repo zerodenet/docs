@@ -67,6 +67,7 @@ const coreSidebar: DefaultTheme.SidebarItem[] = [
     page('安装与构建', '/projects/core/guides/installation'),
     page('启动第一个节点', '/projects/core/guides/quickstart'),
     page('配置基础', '/projects/core/guides/configuration-basics'),
+    page('运行 TUN 与 DNS', '/projects/core/guides/tun-and-dns'),
   ], false),
   group('日常管理', [
     page('运行与观测', '/projects/core/guides/operations'),
@@ -90,6 +91,7 @@ const coreSidebar: DefaultTheme.SidebarItem[] = [
     page('参考入口', '/projects/core/reference/'),
     page('能力与端口速查', '/projects/core/reference/technical-specifications'),
     page('配置字段', '/projects/core/configuration/'),
+    page('DNS 与 Fake-IP 参数', '/projects/core/configuration/dns'),
     page('运行模式与出站组', '/projects/core/configuration/modes-and-groups'),
     page('构建特性', '/projects/core/configuration/features'),
     page('控制接口总览', '/projects/core/control-plane/'),
@@ -118,6 +120,9 @@ const sinkSidebar: DefaultTheme.SidebarItem[] = [
   group('功能说明', [
     page('功能总览', '/projects/znet-sink/guides/features'),
     page('订阅管理', '/projects/znet-sink/guides/subscriptions'),
+    page('DNS 与 Fake-IP', '/projects/znet-sink/guides/dns'),
+    page('TUN 接管与网络切换', '/projects/znet-sink/guides/tun'),
+    page('迁移设置与管理内核', '/projects/znet-sink/guides/settings-transfer'),
     page('本地代理与节点测速', '/projects/znet-sink/guides/proxy-and-probes'),
   ], false),
   group('帮助与诊断', [
@@ -135,11 +140,15 @@ const zboardSidebar: DefaultTheme.SidebarItem[] = [
     page('用户指南入口', '/projects/zboard/guides/'),
     page('安装与部署', '/projects/zboard/guides/installation'),
     page('首次初始化', '/projects/zboard/guides/first-setup'),
+    page('后台导航与日常运营', '/projects/zboard/guides/daily-operations'),
   ], false),
   group('功能说明', [
     page('节点与协议服务管理', '/projects/zboard/guides/node-management'),
     page('协议服务配置', '/projects/zboard/guides/protocol-services'),
+    page('套餐、订单与用户交付', '/projects/zboard/guides/plans-and-orders'),
     page('订阅交付与流量展示', '/projects/zboard/guides/subscriptions-and-traffic'),
+    page('公告、注册验证与邮件', '/projects/zboard/guides/announcements-and-email'),
+    page('系统维护与数据库迁移', '/projects/zboard/guides/maintenance'),
     page('DNS 与证书管理', '/projects/zboard/guides/dns-and-certificates'),
     page('故障排查', '/projects/zboard/guides/troubleshooting'),
   ]),

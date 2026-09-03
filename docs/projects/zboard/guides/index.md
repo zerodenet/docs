@@ -13,3 +13,10 @@
 7. [故障排查](./troubleshooting)
 
 节点资产、协议服务、订阅模板和证书是独立资源。先完成节点接入，再按实际业务启用协议、订阅和基础设施自动化能力。
+
+## 日常运营专题
+
+- [后台导航与日常运营](./daily-operations)
+- [套餐、订单与用户交付](./plans-and-orders)
+- [公告、注册验证与邮件](./announcements-and-email)
+- [系统维护与数据库迁移](./maintenance)

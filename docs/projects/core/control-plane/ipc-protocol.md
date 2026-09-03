@@ -85,11 +85,14 @@
 | `config.apply` | `config` (完整 JSON) | 持久化并等待 proxy 与进程级服务热重建；失败回滚 |
 | `config.apply_runtime` | `config` (完整 JSON) | 不写回源文件，并等待 proxy 与进程级服务热重建；失败回滚 |
 | `mode.set` | `mode`, `outbound?` | 设置全局模式 |
-| `tun.start` | `name?`, `addr`, `mask?`, `mtu?`, `tag` | 启动 TUN |
+| `tun.start` | `addr`, `tag`, `name?`, `mask?`, `secondary_addr?`, `mtu?`, `include_cidrs?`, `exclude_cidrs?`, `auto_route?`, `dual_stack?`, `strict_route?`, `dns_hijack?` | 启动 TUN，约束见 [HTTP 命令](./http-api#tun-start) |
 | `tun.stop` | — | 停止 TUN |
 | `diagnostics.probe_target` | `target_tag` | 直连 TCP 可达性（不走代理，仅本机→server:port RTT） |
 | `diagnostics.probe_outbound` | `target_tag`, `url?` | 同步经代理单节点延迟；全局 `runtime.latency_test_url` 优先 |
 | `diagnostics.dns_lookup` | `hostname` | DNS 查询 |
+| `diagnostics.dns_cache` | `domain?`, `limit?` | 查询普通 DNS 缓存 |
+| `diagnostics.fakeip_lookup` | `domain` 或 `ip` | 查询已有 Fake-IP 映射 |
+| `fakeip.clear` | `domain?` 或 `ip?`；均省略清空全部 | 清理 Fake-IP 映射与持久状态 |
 | `diagnostics.trace_route` | `target`, `port`, `protocol?`, `inbound_tag?` | 路由追踪 |
 
 > **实现说明：** IPC Command 和 HTTP `POST /api/v1/commands` 共用同一条 serde 反序列化路径（`CommandRequest` 的 `#[serde(tag = "method", content = "params")]`）。新增 command 只需修改 `zero_api::CommandRequest`，传输层无需单独适配。
@@ -170,7 +173,7 @@ IPC 响应使用统一信封格式（`zero_api::ApiResponse`），包含 `api_id
 | `QueryRequest::Policy` | `"policy"` | `{tag, kind, outbounds, selected, ...}` |
 | `QueryRequest::Diagnostics` | `"diagnostics"` | `{healthy, active_sessions, ...}` |
 | `QueryRequest::Sinks` | `"sinks"` | `{sinks: [{name, pending, total_delivered, total_failed, replay_gaps, ...}]}` |
-| `QueryRequest::TunStatus` | `"tun_status"` | `{running, name, addr, tag}` |
+| `QueryRequest::TunStatus` | `"tun_status"` | 实际参数、地址族出口、健康及配置归属，见 [TUN 状态](./http-api#get-api-v1-tun-status) |
 
 > **注意：** 这是 IPC 通道的格式。HTTP 通道的 `result` 字段**不包含**变体名 key——直接就是内部数据。例如 HTTP `GET /api/v1/health` 返回 `result: {"engine_build_id":"build-id",...}`，而 IPC 返回 `result: {"health":{"engine_build_id":"build-id",...}}`。
 

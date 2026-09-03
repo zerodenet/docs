@@ -2,6 +2,10 @@
 
 <ProjectMeta project-id="znet-sink" />
 
+::: info 文档对应版本
+本轮使用说明按 2026-09-03 的 [develop 提交 dff6b73](https://github.com/zerodenet/znet-sink/tree/dff6b732415a860e3807cb22ccbdb016c230eccc)核对。develop 包含尚未进入稳定版的功能；安装旧版时，以实际版本和可用能力为准。
+:::
+
 ZNet Sink 是跨平台代理客户端，提供配置与订阅管理、节点选择、系统代理、连接状态和诊断。默认集成 Zero Core，并可通过适配接入其他运行时。
 
 ## 第一次使用
@@ -14,7 +18,8 @@ ZNet Sink 是跨平台代理客户端，提供配置与订阅管理、节点选�
 
 - 管理本地代理配置和远程订阅；
 - 查看连接状态并切换节点、策略组和运行模式；
-- 管理系统代理或 TUN 入口；
+- 管理系统代理、[TUN 接管网段](./guides/tun)及 [DNS/Fake-IP](./guides/dns)；
+- [迁移客户端设置并管理内核版本](./guides/settings-transfer)；
 - 查看实时连接、日志和能力信息；
 - 导出经过脱敏的诊断资料。
 

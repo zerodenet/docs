@@ -2,6 +2,10 @@
 
 <ProjectMeta project-id="core" />
 
+::: info 文档对应版本
+本轮使用说明按 2026-09-03 的 [develop 提交 6d0553d](https://github.com/zerodenet/core/tree/6d0553d743ecd074379126e574d9263157486f7a)核对。develop 包含尚未进入稳定版的功能；安装旧版时，以实际版本和可用能力为准。
+:::
+
 Zero Core 是可裁剪的网络代理内核，可作为本地网关、边缘节点或服务器运行，并提供 CLI、HTTP、IPC 等控制接口。
 
 ## 第一次使用
@@ -44,3 +48,7 @@ HTTP、IPC 和 gRPC 调用的是同一组 Zero 查询与命令。Connector 负�
 - [HTTP API](./control-plane/http-api)
 - [事件目录](./control-plane/events)
 - [协议能力矩阵](./reference/protocol-capabilities)
+
+## DNS 与透明代理
+
+先按 [TUN 与 DNS 使用指南](./guides/tun-and-dns)完成启动和验证，再查阅 [DNS 参数](./configuration/dns)、[运行与 TUN 参数](./configuration/)及 [CLI 参数](./control-plane/cli)。
