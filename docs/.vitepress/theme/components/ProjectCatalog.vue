@@ -6,6 +6,9 @@ defineProps<{ compact?: boolean }>()
 
 const displayAddress = (url: string) => url.replace(/^https?:\/\//, '')
 const quickStartLabel = (kind: string) => kind === 'application' ? '安装与使用' : '快速开始'
+const downloadHref = (project: (typeof projects)[number]) => (
+  project.downloadPage ? withBase(project.downloadPage) : project.download
+)
 </script>
 
 <template>
@@ -47,7 +50,13 @@ const quickStartLabel = (kind: string) => kind === 'application' ? '安装与使
           <a class="project-link project-link--primary" :href="withBase(project.docsRoot)">进入文档 <span aria-hidden="true">→</span></a>
           <a v-if="!compact && project.quickStart" class="project-link" :href="withBase(project.quickStart)">{{ quickStartLabel(project.kind) }}</a>
           <template v-if="!compact">
-            <a v-if="project.download" class="project-link" :href="project.download" target="_blank" rel="noreferrer">下载</a>
+            <a
+              v-if="downloadHref(project)"
+              class="project-link"
+              :href="downloadHref(project)"
+              :target="project.downloadPage ? undefined : '_blank'"
+              :rel="project.downloadPage ? undefined : 'noreferrer'"
+            >下载</a>
             <a class="project-link" :href="project.repository" target="_blank" rel="noreferrer">源码</a>
           </template>
         </nav>

@@ -10,6 +10,7 @@
     "docsRoot": "/projects/znet-sink/",
     "quickStart": "/projects/znet-sink/guides/installation",
     "download": "https://github.com/zerodenet/znet-sink/releases/latest",
+    "downloadPage": "/download",
     "platforms": ["Windows", "macOS", "Linux"],
     "audiences": ["user", "contributor"]
   },

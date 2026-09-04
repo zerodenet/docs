@@ -107,6 +107,9 @@ if (!existsSync(projectsFile)) {
         errors.push(`docs/.vitepress/projects.json: 项目 ${label} 的 download 必须是 HTTPS URL`)
       }
     }
+    if (project.downloadPage && !resolveLocalTarget(join(docsRoot, 'index.md'), project.downloadPage)) {
+      errors.push(`docs/.vitepress/projects.json: 项目 ${label} 的 downloadPage 页面不存在`)
+    }
     if (project.quickStart && !resolveLocalTarget(join(docsRoot, 'index.md'), project.quickStart)) {
       errors.push(`docs/.vitepress/projects.json: 项目 ${label} 的 quickStart 页面不存在`)
     }

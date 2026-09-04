@@ -8,9 +8,14 @@
 
 ZNet Sink 是跨平台代理客户端，提供配置与订阅管理、节点选择、系统代理、连接状态和诊断。默认集成 Zero Core，并可通过适配接入其他运行时。
 
+<figure class="product-screenshot product-screenshot--wide">
+  <img src="/screenshots/znet-sink-rules.png" alt="ZNet Sink 专业模式中的规则集管理界面" loading="lazy">
+  <figcaption>实机截图 · 专业模式的规则集管理</figcaption>
+</figure>
+
 ## 第一次使用
 
-1. [安装并完成首次启动](./guides/installation)。
+1. [下载最新版客户端](/download)，并[完成首次启动](./guides/installation)。
 2. [导入配置并完成第一次连接](./guides/first-connection)。
 3. 如果使用远程订阅，阅读[订阅管理](./guides/subscriptions)。
 

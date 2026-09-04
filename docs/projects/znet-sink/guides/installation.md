@@ -4,11 +4,13 @@ ZNet Sink 是桌面代理客户端。安装应用后，还需要在首次引导�
 
 ## 下载安装包
 
-官方下载地址：<https://github.com/zerodenet/znet-sink/releases/latest>
+打开[客户端下载页](/download)，页面会根据浏览器识别 Windows、macOS 或 Linux，并优先显示适合当前设备的安装包。无法确认芯片架构时，可以手动选择。
+
+GitHub 发布页：<https://github.com/zerodenet/znet-sink/releases/latest>
 
 源码地址：<https://github.com/zerodenet/znet-sink>
 
-从 Releases 页面下载与你的平台和架构匹配的安装包，并按系统提示完成安装：
+下载与你的平台和架构匹配的安装包，并按系统提示完成安装：
 
 | 平台 | 架构 | 安装包 |
 | --- | --- | --- |
@@ -27,6 +29,11 @@ ZNet Sink 是桌面代理客户端。安装应用后，还需要在首次引导�
 3. 进入应用后准备内核组件、代理配置或订阅。
 
 界面模式以后仍可在应用内切换。
+
+<figure class="product-screenshot">
+  <img src="/screenshots/znet-sink-settings.png" alt="ZNet Sink 专业模式中的 DNS 设置界面" loading="lazy">
+  <figcaption>实机截图 · 设置页会集中展示常用网络选项</figcaption>
+</figure>
 
 ## 准备内核组件
 

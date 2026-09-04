@@ -9,6 +9,7 @@ const group = (
 ): DefaultTheme.SidebarItem => ({ text, items, collapsed })
 
 export const nav: DefaultTheme.NavItem[] = [
+  { text: '下载客户端', link: '/download' },
   {
     text: '项目',
     items: [

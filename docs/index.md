@@ -8,12 +8,28 @@ hero:
   tagline: ZeroDeNet 维护 Zero Core、ZNet Sink 和 Zboard，分别用于网络运行时、桌面代理和服务运营。
   actions:
     - theme: brand
-      text: 查看项目
-      link: /projects/
+      text: 下载客户端
+      link: /download
     - theme: alt
-      text: 使用场景
-      link: /solutions/
+      text: 浏览项目文档
+      link: /projects/
 ---
+
+<section class="home-product" aria-labelledby="home-product-title">
+  <div class="home-product__copy">
+    <p class="home-section-kicker">DESKTOP CLIENT</p>
+    <h2 id="home-product-title">从桌面开始，连接更直观</h2>
+    <p>ZNet Sink 把节点、规则、系统代理、TUN 与诊断集中在一个清晰的工作台中。简约模式专注日常连接，专业模式保留完整控制能力。</p>
+    <nav aria-label="ZNet Sink 快捷入口">
+      <a class="home-product__primary" href="/download">为当前设备下载 <span aria-hidden="true">↓</span></a>
+      <a href="/projects/znet-sink/">查看客户端文档 <span aria-hidden="true">→</span></a>
+    </nav>
+  </div>
+  <figure class="home-product__visual">
+    <img src="/screenshots/znet-sink-rules.png" alt="ZNet Sink 专业模式的规则管理界面" loading="eager">
+    <figcaption>实机截图 · 专业模式</figcaption>
+  </figure>
+</section>
 
 <section class="home-section home-projects" aria-labelledby="home-products-title">
   <p class="home-section-kicker">PROJECTS</p>

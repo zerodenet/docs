@@ -1,6 +1,7 @@
 import DefaultTheme from 'vitepress/theme'
 import type { Theme } from 'vitepress'
 import DiscussionFeed from './components/DiscussionFeed.vue'
+import DownloadChooser from './components/DownloadChooser.vue'
 import ProjectCatalog from './components/ProjectCatalog.vue'
 import ProjectMeta from './components/ProjectMeta.vue'
 import Layout from './Layout.vue'
@@ -11,6 +12,7 @@ export default {
   Layout,
   enhanceApp({ app }) {
     app.component('DiscussionFeed', DiscussionFeed)
+    app.component('DownloadChooser', DownloadChooser)
     app.component('ProjectCatalog', ProjectCatalog)
     app.component('ProjectMeta', ProjectMeta)
   },
