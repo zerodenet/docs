@@ -21,6 +21,11 @@ Clash 内容会转换为 Zero 配置。转换能力不等同于完整兼容所�
 
 ## 添加订阅
 
+<figure class="product-screenshot">
+  <img src="/screenshots/znet-sink-subscription-add.png" alt="ZNet Sink 新建订阅窗口，包含名称、订阅地址、格式与更新周期" loading="lazy">
+  <figcaption>实机截图 · 新建订阅时可一次设置格式识别与自动更新周期</figcaption>
+</figure>
+
 1. 打开“订阅”。
 2. 点击新增订阅，填写名称和订阅 URL。
 3. 通常保留“自动检测”；只有服务端格式固定且检测失败时再手动指定。

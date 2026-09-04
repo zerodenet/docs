@@ -39,6 +39,11 @@ ZNet Sink 将应用设置、代理配置、订阅、规则和运行记录保存�
 
 ## 日志与调试
 
+<figure class="product-screenshot">
+  <img src="/screenshots/znet-sink-logs.png" alt="ZNet Sink 日志页面的错误筛选与空状态" loading="lazy">
+  <figcaption>实机截图 · 日志页可按来源、级别和关键词缩小排查范围</figcaption>
+</figure>
+
 专业模式还提供：
 
 - 应用日志和内核日志；
@@ -47,6 +52,11 @@ ZNet Sink 将应用设置、代理配置、订阅、规则和运行记录保存�
 - 连接与策略事件的原始帧。
 
 日志页用于日常筛选和复制；调试页更接近原始控制面数据，不应把其中未经检查的内容直接公开。
+
+<figure class="product-screenshot">
+  <img src="/screenshots/znet-sink-ipc-debug.png" alt="ZNet Sink IPC 调试页面，展示请求、响应和事件帧" loading="lazy">
+  <figcaption>实机截图 · IPC 调试页适合确认控制请求、响应和实时事件是否连通</figcaption>
+</figure>
 
 ## 导出诊断包
 
@@ -65,6 +75,11 @@ ZNet Sink 将应用设置、代理配置、订阅、规则和运行记录保存�
 清理连接历史只删除客户端保存的诊断记录，不会修改内核当前连接，也不会回滚 Zboard 已接收的流量事实。
 
 ## DNS、出口诊断与设置迁移
+
+<figure class="product-screenshot">
+  <img src="/screenshots/znet-sink-diagnostics.png" alt="ZNet Sink 诊断工具页面，包含 DNS 查询、缓存管理和路由追踪" loading="lazy">
+  <figcaption>实机截图 · 诊断工具把 DNS、缓存与路由检查集中在同一页面</figcaption>
+</figure>
 
 在专业模式诊断工具的“解析缓存”中，可按域名或 Fake-IP 查询映射，查看容量、过期、驱逐及 reverse miss 等计数，删除当前映射或清空全部。清空后应用中的旧合成地址可能失效，需要重新解析。
 

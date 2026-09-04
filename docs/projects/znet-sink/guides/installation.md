@@ -35,6 +35,11 @@ GitHub 发布页：<https://github.com/zerodenet/znet-sink/releases/latest>
   <figcaption>实机截图 · 设置页会集中展示常用网络选项</figcaption>
 </figure>
 
+<figure class="product-screenshot">
+  <img src="/screenshots/znet-sink-about.png" alt="ZNet Sink 关于页面，展示客户端版本、构建标识与项目资源" loading="lazy">
+  <figcaption>实机截图 · “关于”页可核对客户端版本、构建标识和项目来源</figcaption>
+</figure>
+
 ## 准备内核组件
 
 打开“设置 → 内核”，选择以下任一方式：
