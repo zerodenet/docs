@@ -21,6 +21,7 @@ export interface ProjectDefinition {
   docsRoot: string
   quickStart?: string
   download?: string
+  downloadPage?: string
   platforms?: string[]
   audiences: string[]
 }

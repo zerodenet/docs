@@ -5,6 +5,9 @@ import { getProject, projectKindLabels, projectStatusLabels } from '../../projec
 
 const props = defineProps<{ projectId: string }>()
 const project = computed(() => getProject(props.projectId))
+const downloadHref = computed(() => (
+  project.value.downloadPage ? withBase(project.value.downloadPage) : project.value.download
+))
 const displayAddress = (url: string) => url.replace(/^https?:\/\//, '')
 </script>
 
@@ -18,12 +21,12 @@ const displayAddress = (url: string) => url.replace(/^https?:\/\//, '')
 
     <nav class="project-meta__actions" :aria-label="`${project.name} 常用入口`">
       <a
-        v-if="project.download"
+        v-if="downloadHref"
         class="project-link project-link--primary"
-        :href="project.download"
-        target="_blank"
-        rel="noreferrer"
-      >下载最新版 <span aria-hidden="true">↗</span></a>
+        :href="downloadHref"
+        :target="project.downloadPage ? undefined : '_blank'"
+        :rel="project.downloadPage ? undefined : 'noreferrer'"
+      >下载最新版 <span aria-hidden="true">{{ project.downloadPage ? '→' : '↗' }}</span></a>
       <a v-if="project.quickStart" class="project-link" :href="withBase(project.quickStart)">
         {{ project.kind === 'application' ? '安装指南' : '快速开始' }}
       </a>
