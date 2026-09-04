@@ -17,6 +17,11 @@
 
 ## 安装与选择内核
 
+<figure class="product-screenshot">
+  <img src="/screenshots/znet-sink-version-management.png" alt="ZNet Sink 版本管理页面，展示当前内核和可安装版本" loading="lazy">
+  <figcaption>实机截图 · 版本管理会标记当前版本，并提供不同发布渠道的安装入口</figcaption>
+</figure>
+
 在“设置 → 内核”查看、安装或选择 Zero。更新客户端后，仍需确认实际选用的内核版本以及能力信息；新界面不意味着旧内核自动具备 DNS、TUN 或 V1 契约能力。
 
 日常使用优先选择稳定渠道。develop 对应开发集成进展，RC 是候选版本；需要新功能时选择配套构建，并保留可用的旧版本用于恢复。
