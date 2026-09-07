@@ -115,6 +115,7 @@ const sinkSidebar: DefaultTheme.SidebarItem[] = [
   page('ZNet Sink 文档', '/projects/znet-sink/'),
   group('开始使用', [
     page('用户指南入口', '/projects/znet-sink/guides/'),
+    page('交互式客户端导览', '/projects/znet-sink/guides/interactive-tour'),
     page('安装与首次启动', '/projects/znet-sink/guides/installation'),
     page('完成第一次连接', '/projects/znet-sink/guides/first-connection'),
   ], false),
