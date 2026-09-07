@@ -12,6 +12,11 @@
 
 第一次使用可按[安装与首次启动](./installation)和[完成第一次连接](./first-connection)顺序操作。本地入口、Windows 系统代理和代理终端的具体语义见[本地代理、系统代理与节点测速](./proxy-and-probes)。
 
+<figure class="product-screenshot product-screenshot--wide">
+  <img src="/screenshots/znet-sink-overview-demo.png" alt="ZNet Sink 概览页面，包含内核状态、代理模式、高级功能和流量趋势" loading="lazy">
+  <figcaption>客户端真实界面，演示数据 · 连接后可在概览确认内核、系统代理、TUN 和流量状态</figcaption>
+</figure>
+
 ## TUN 与 DNS
 
 在“设置 → DNS”选择 Real DNS 或 Fake-IP，配置命名服务器、回退、节点解析链及域名分流。在“设置 → TUN”设置双栈接管、接管/排除网段和 DNS 劫持。
@@ -35,6 +40,20 @@
 节点页会处理单节点探测、URLTest 策略快照、嵌套策略组和配置隔离的延迟历史。切换配置后，同名节点不会直接继承上一份配置的历史；大量节点的策略测速会使用自适应等待时间。
 
 客户端会继续以运行时策略快照校准 URLTest 的当前选中项。手动探测 URLTest 卡片时，客户端按当前实际生效的策略出站刷新结果，避免 UI 选中态和内核运行态长期分离。
+
+<figure class="product-screenshot product-screenshot--wide">
+  <img src="/screenshots/znet-sink-nodes-demo.png" alt="ZNet Sink 节点页面，展示策略组、当前选中节点、协议和延迟" loading="lazy">
+  <figcaption>客户端真实界面，演示数据 · 左侧切换策略组，节点卡片展示协议、传输与最近延迟</figcaption>
+</figure>
+
+## 规则分流
+
+专业模式的“规则”页集中管理公共规则注入、规则集更新和分流动作。先确认公共规则是否生效，再按优先级检查各规则集的直连、代理或最终规则动作；远程规则集可以单独更新，也可以统一刷新。
+
+<figure class="product-screenshot product-screenshot--wide">
+  <img src="/screenshots/znet-sink-rules-demo.png" alt="ZNet Sink 规则页面，展示公共规则、规则集状态、动作和优先级" loading="lazy">
+  <figcaption>客户端真实界面，演示数据 · 每条规则集同时显示构建状态、条目数量、分流动作和顺序</figcaption>
+</figure>
 
 ## 桌面代理集成
 

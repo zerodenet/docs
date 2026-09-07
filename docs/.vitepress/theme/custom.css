@@ -391,6 +391,12 @@ body {
   transform: translateX(-50%);
 }
 
+@media (min-width: 960px) {
+  .VPDoc.has-aside .product-screenshot--wide {
+    width: min(760px, calc(100vw - 560px));
+  }
+}
+
 .download-page .VPDoc .container,
 .download-page .VPDoc .content-container {
   max-width: 1040px;

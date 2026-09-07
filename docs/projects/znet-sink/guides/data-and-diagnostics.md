@@ -10,6 +10,11 @@ ZNet Sink 将应用设置、代理配置、订阅、规则和运行记录保存�
 
 专业模式的连接页面会先用内核快照建立活动连接基线，再合并后续生命周期事件。实时列表支持暂停刷新、筛选、查看详情和终止连接等操作。
 
+<figure class="product-screenshot product-screenshot--wide">
+  <img src="/screenshots/znet-sink-connections-demo.png" alt="ZNet Sink 实时连接页面，展示进程、目标、协议、出站、流量和连接时长" loading="lazy">
+  <figcaption>客户端真实界面，演示数据 · 通过筛选定位连接，再查看详情或终止指定活动连接</figcaption>
+</figure>
+
 连接记录会保留内核返回的结构化字段与原始 wire 元数据。后台协调只用于修复遗漏状态，不应持续制造可见日志，也不会用轮询结果覆盖更新的事件状态。
 
 ## 历史连接
@@ -38,6 +43,11 @@ ZNet Sink 将应用设置、代理配置、订阅、规则和运行记录保存�
 原始帧可能包含地址、域名、标签和错误上下文。复制或公开前必须检查敏感信息。
 
 ## 日志与调试
+
+<figure class="product-screenshot product-screenshot--wide">
+  <img src="/screenshots/znet-sink-logs-demo.png" alt="ZNet Sink 日志页面，展示应用与内核日志、级别筛选、搜索和复制操作" loading="lazy">
+  <figcaption>客户端真实界面，演示数据 · 可按来源、级别和关键词筛选，并暂停滚动或复制结果</figcaption>
+</figure>
 
 <figure class="product-screenshot">
   <img src="/screenshots/znet-sink-logs.png" alt="ZNet Sink 日志页面的错误筛选与空状态" loading="lazy">

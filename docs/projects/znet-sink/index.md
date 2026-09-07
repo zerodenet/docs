@@ -8,9 +8,14 @@
 
 ZNet Sink 是跨平台代理客户端，提供配置与订阅管理、节点选择、系统代理、连接状态和诊断。默认集成 Zero Core，并可通过适配接入其他运行时。
 
-::: tip 先在网页里操作一遍
-打开[交互式客户端导览](./guides/interactive-tour)，可以用安全的假数据体验连接、订阅同步、节点切换、规则分流、连接记录和诊断流程，不需要安装客户端。
+::: tip 关于界面截图
+为避免公开真实订阅、节点和连接信息，部分整页截图由 ZNet Sink 当前 Svelte/Tauri 客户端前端加载脱敏演示数据生成。界面结构、组件和主题来自客户端本体；图中网络状态与测速结果仅用于说明操作。
 :::
+
+<figure class="product-screenshot product-screenshot--wide">
+  <img src="/screenshots/znet-sink-overview-demo.png" alt="ZNet Sink 客户端概览，展示内核运行状态、代理模式、TUN 状态和流量趋势" loading="lazy">
+  <figcaption>客户端真实界面 · 概览集中展示运行状态、代理模式、TUN 与实时流量</figcaption>
+</figure>
 
 <figure class="product-screenshot product-screenshot--wide">
   <img src="/screenshots/znet-sink-rules.png" alt="ZNet Sink 专业模式中的规则集管理界面" loading="lazy">
@@ -39,7 +44,6 @@ ZNet Sink 是跨平台代理客户端，提供配置与订阅管理、节点选�
 ## 项目入口
 
 - [用户指南](./guides/)
-- [交互式客户端导览](./guides/interactive-tour)
 - [功能总览](./guides/features)
 - [故障排查](./guides/troubleshooting)
 - [参与 ZNet Sink](./contributing/)
