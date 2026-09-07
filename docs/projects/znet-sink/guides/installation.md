@@ -16,9 +16,57 @@ GitHub 发布页：<https://github.com/zerodenet/znet-sink/releases/latest>
 | --- | --- | --- |
 | Windows 10/11 | x86_64 | NSIS 或 MSI |
 | macOS | Intel、Apple Silicon | DMG |
-| Linux | x86_64 | deb 或 AppImage |
+| Linux | x86_64 | DEB、RPM 或 AppImage |
 
 不要从非项目发布页下载二次打包程序。升级前如需保留诊断或配置快照，请先查看[数据与诊断](./data-and-diagnostics)。
+
+## macOS：提示应用“已损坏”
+
+当前 macOS 安装包尚未完成 Apple 开发者签名和公证。即使文件本身下载完整，macOS 也可能提示“ZNet Sink 已损坏，无法打开”或无法验证开发者。
+
+请先确认 DMG 来自上方 ZeroDeNet 官方 GitHub Releases，并且架构选择正确：Apple 芯片使用 `aarch64.dmg`，Intel Mac 使用 `x64.dmg`。将 ZNet Sink 拖入“应用程序”后，关闭系统提示并打开“终端”，执行：
+
+```bash
+sudo xattr -rd com.apple.quarantine "/Applications/ZNet Sink.app"
+```
+
+输入当前 Mac 的登录密码后重新打开 ZNet Sink。终端输入密码时不会显示字符，这是正常现象。如果应用放在其他目录，请把命令中的路径改为实际位置。
+
+该命令只移除 ZNet Sink 的下载隔离标记。不要关闭整个系统的 Gatekeeper，也不要对来源不明的应用执行此命令。
+
+## Linux：通过终端安装或运行
+
+Linux 桌面环境不一定会在双击安装包时自动完成安装，建议先打开终端，再根据下载的文件类型执行命令。以下文件名以 `0.0.15` 为例；下载其他版本时，请替换为实际文件名。
+
+### Ubuntu / Debian（DEB）
+
+```bash
+cd ~/Downloads
+sudo apt install ./ZNet.Sink_0.0.15_amd64.deb
+```
+
+`apt install ./文件名.deb` 会同时处理软件包依赖。安装完成后，可以从桌面应用菜单打开 ZNet Sink。
+
+### Fedora / RHEL 系（RPM）
+
+```bash
+cd ~/Downloads
+sudo dnf install ./ZNet.Sink-0.0.15-1.x86_64.rpm
+```
+
+安装完成后，从桌面应用菜单启动。如果系统使用 `yum`，可以把 `dnf` 替换为 `yum`。
+
+### 通用 AppImage
+
+AppImage 不写入系统软件包数据库，需要先授予执行权限，再从终端启动：
+
+```bash
+cd ~/Downloads
+chmod +x ZNet.Sink_0.0.15_amd64.AppImage
+./ZNet.Sink_0.0.15_amd64.AppImage
+```
+
+以后仍可执行同一个 AppImage 文件启动客户端；如果移动了文件，需要从新位置运行。当前官方 Linux 桌面安装包仅提供 x86_64 版本。
 
 ## 完成首次引导
 

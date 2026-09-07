@@ -16,7 +16,8 @@ pageClass: download-page
 
 - Windows 10/11 使用 x86-64 安装程序；日常安装优先选择 EXE。
 - Apple 芯片 Mac 选择 ARM64，Intel Mac 选择 x86-64。
-- Linux 可直接使用 AppImage，也可按发行版选择 DEB 或 RPM。
+- macOS 安装包当前未完成 Apple 签名和公证；如果提示应用“已损坏”，请按[macOS 处理步骤](/projects/znet-sink/guides/installation#macos-提示应用-已损坏)移除该应用的隔离标记。
+- Linux 桌面端建议通过终端安装：Ubuntu/Debian 使用 DEB，Fedora/RHEL 系使用 RPM；AppImage 需要先执行 `chmod +x`。完整命令见[Linux 安装说明](/projects/znet-sink/guides/installation#linux-通过终端安装或运行)。
 
 安装完成后，继续阅读 [安装与首次启动](/projects/znet-sink/guides/installation) 和 [完成第一次连接](/projects/znet-sink/guides/first-connection)。
 
