@@ -59,6 +59,11 @@ Windows 托盘菜单中的“打开终端”会：
 
 节点页会把单节点探测、策略组快照和本地历史合并为当前显示结果：
 
+<figure class="product-screenshot product-screenshot--wide">
+  <img src="/screenshots/znet-sink-nodes-demo.png" alt="ZNet Sink 节点管理页面，展示 Selector 与 URLTest 策略组及节点延迟" loading="lazy">
+  <figcaption>客户端真实界面，演示数据 · 选择策略组后可查看当前出口、节点能力和探测延迟</figcaption>
+</figure>
+
 - URLTest 组使用内核返回的成员快照和当前选中项；
 - 客户端会继续用运行时策略快照校准 URLTest 当前选中项，避免 UI 长期保留旧选择；
 - 当 URLTest 作为另一个组中的节点卡片出现时，单点测速只探测它当前实际生效的出站，不递归重测全部成员；

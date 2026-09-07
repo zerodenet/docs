@@ -34,6 +34,13 @@ Clash 内容会转换为 Zero 配置。转换能力不等同于完整兼容所�
 
 “自动检测”会作为真实源格式保存，不会根据当前本地生成配置被强制改写为 Zero 或 Clash。同步成功后，订阅会创建或更新一份本地代理配置；新生成的配置不会无条件抢占当前配置，需要时请在“配置”页确认并启用。
 
+<figure class="product-screenshot product-screenshot--wide">
+  <img src="/screenshots/znet-sink-subscriptions-demo.png" alt="ZNet Sink 订阅管理页面，展示订阅格式、节点数量、流量、到期时间和同步操作" loading="lazy">
+  <figcaption>客户端真实界面，演示数据 · 保存后可直接查看配额、有效期、节点数量与最近同步时间</figcaption>
+</figure>
+
+订阅卡片右侧依次提供同步、编辑和删除操作。批量更新前先确认需要参与同步的订阅处于启用状态；同步完成后再到“配置”和“节点”页检查转换结果及当前启用配置。
+
 ## User-Agent
 
 User-Agent 留空时，客户端发送：
