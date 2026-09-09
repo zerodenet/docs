@@ -48,7 +48,7 @@ cargo build --release --features connector,grpc-api
 
 ## TUN 无法启动或启动后断网
 
-`v0.0.16-dev.202608180928` 会自动协调 Windows、Linux 和 macOS 的 TUN 捕获路由，并将代理出站绑定到当前物理 underlay egress。出现问题时先区分“创建 TUN 失败”和“路由已经接管但出口不可用”。
+Zero Core 0.0.1 会自动协调 Windows、Linux 和 macOS 的 TUN 捕获路由，并将代理出站绑定到当前物理 underlay egress。出现问题时先区分“创建 TUN 失败”和“路由已经接管但出口不可用”。
 
 依次检查：
 
@@ -109,7 +109,7 @@ zero status --socket /run/zero/control.sock
 5. UDP 请求是否使用了当前协议支持的路径；
 6. 中继链中的每一跳是否可达。
 
-如果只有经 HTTP forward proxy 的明文 HTTP 请求异常，而 HTTPS CONNECT 正常，先确认版本不早于 `v0.0.16-dev.202608180928`。该版本修正了小请求被拆分到多次读取时的处理竞态；升级后仍可稳定复现时，再保留原始请求边界和 flow 日志报告问题。
+如果只有经 HTTP forward proxy 的明文 HTTP 请求异常，而 HTTPS CONNECT 正常，先确认使用 Zero Core 0.0.1 的完整构建，并核对 HTTP 请求解析和转发日志。仍可稳定复现时，保留原始请求边界、构建信息和 flow 日志报告问题。
 
 先使用[快速开始](./quickstart)的本地 direct 配置确认入站正常，再逐步加入真实代理出站。
 

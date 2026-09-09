@@ -1,196 +1,68 @@
-# 控制面兼容性与破坏性变更
+# 控制面兼容性与版本约定
 
-本文记录会影响 GUI、SDK、面板、事件 Sink 或进程内 Rust 集成的控制面语义变化。当前事实仍以同目录下的接口与事件文档为准；本文只维护版本边界和迁移要求。
+Zero Core、ZNet Sink 和 Zboard 的产品版本统一为 **0.0.1**，Git Release tag 使用 `v0.0.1`。本页以 0.0.1 为当前基线，说明 GUI、SDK、面板、事件 Sink 和进程内 Rust 集成需要遵守的契约。
 
-## 当前 develop 的配置与能力迁移
+## 0.0.1 配置与能力基线
 
-截至 2026-09-03，使用最新 develop 的消费者还应核对以下事项；下方历史发布矩阵不代替当前能力响应：
+- 配置支持 `schema_version: 1`；未知版本拒绝，缺省按 V1。
+- DNS 使用命名 `servers`、`default_server`、`dispatch`、`policy` 和 `answer`；Fake-IP 位于 `answer.type: "fake_ip"`。配置方式见 [DNS 参数](../configuration/dns)。
+- 能力响应通过 `contracts` 报告独立兼容范围，权限不足使用 `insufficient_os_privilege` 错误码，见[通用契约](./contract)。
+- TUN 状态报告实际捕获范围、地址族出口及配置归属；IPC 失败不能解释为关闭。详见 [HTTP TUN 状态](./http-api#get-api-v1-tun-status)。
+- Connector 状态区分投递和 ACK 重试阶段，见[投递调度](./connector#查看投递调度与恢复状态)。
+- `route.bypass` 写入前检查 `route_bypass_v1`；[直连例外](../configuration/modes-and-groups#直连例外-route-bypass)优先于全局和规则模式。
+- Direct 入站支持 UDP，部署时检查对应构建能力；仅需 TCP 时显式设置 `udp.enabled: false`。
 
-- 配置显式支持 `schema_version: 1`；未知版本拒绝，缺省仍按 V1。
-- DNS 使用命名 `servers`、`default_server`、`dispatch`、`policy` 和 `answer`；Fake-IP 位于 `answer.type: "fake_ip"`。旧 DNS 结构请按 [DNS 参数](../configuration/dns)显式迁移。
-- 能力响应通过 `contracts` 发布四类独立兼容范围，新增 `insufficient_os_privilege` 稳定错误码，见[通用契约](./contract)。
-- TUN 状态增加实际捕获范围、地址族出口及配置归属；IPC 失败不得解释为 OFF。详见 [HTTP TUN 状态](./http-api#get-api-v1-tun-status)。
-- Connector 状态增加投递和 ACK 重试阶段，见[投递调度](./connector#查看投递调度与恢复状态)。
-
-这些内容描述已合入 develop 的行为，不声明正式稳定版已经发布。
+这些能力统一归入 0.0.1，不沿用编号重置前的发布矩阵或最低版本门槛。源码与安装验收范围见[实现进度](/progress)。
 
 ## 消费者如何判断兼容性
 
-外部消费者连接内核后应依次检查：
+连接内核后依次检查：
 
-1. `health.engine_build_id`，确定实际运行的内核版本；
-2. `capabilities.api_id` 和 `capabilities.schema_id`，确定请求与事件信封版本；
-3. `capabilities.features`、`build_features` 和协议矩阵，确定当前构建实际启用的能力；
-4. 本文对应版本的语义变更，再决定是否启用兼容分支。
+1. `health.engine_build_id`，确认实际运行的构建；
+2. `capabilities.api_id` 和 `capabilities.schema_id`，确认请求与事件信封；
+3. `contracts` 中的兼容区间，以及 `features`、构建特性和协议能力矩阵；
+4. 实际使用的协议方向、传输、权限和 `limitations`。
 
-兼容性标识的含义：
+同为 0.0.1 的构建仍可能裁剪不同能力，不能仅凭产品版本号启用功能。
 
-| 标识 | 当前值 | 何时必须变化 |
-|------|--------|--------------|
-| `api_id` | `zero.api.v1` | 请求、响应信封或既有字段出现不兼容 wire 变化 |
-| `schema_id` | `zero.event.v1` | 事件信封或既有事件字段出现不兼容 wire 变化 |
-| `engine_build_id` | Cargo 包版本 | wire 兼容但行为、时序或恢复语义发生变化 |
+| 标识 | 当前含义 | 与产品版本的关系 |
+| --- | --- | --- |
+| `api_id: zero.api.v1` | 控制面请求与响应信封 | 独立契约版本 |
+| `schema_id: zero.event.v1` | 事件信封 | 独立契约版本 |
+| `schema_version: 1` | 配置结构版本 | 独立配置版本 |
+| `engine_build_id` | 实际内核构建标识 | 用于定位运行构建，结合能力响应判断兼容性 |
 
-新增可选字段、未知事件类型和新增 capability 通常保持向前兼容；消费者必须忽略不认识的可选字段和事件。改变 ACK 时序、快照含义、增量合并规则、重放范围或既有字段含义，即使 JSON 形状不变，也必须在本文登记。
+新增可选字段、事件类型和 capability 通常保持向前兼容；消费者应容忍未知可选字段与事件。产品版本重置不改变这些协议标识。
 
-## 版本矩阵
+## 事件订阅与恢复
 
-| 版本 | 影响面 | 迁移结论 |
-|------|--------|----------|
-| `Unreleased` | - | No pending compatibility changes <!-- version-contract:unreleased-row --> |
-| `0.0.15` | - | No pending compatibility changes |
-| `0.0.15-rc.4` | - | No pending compatibility changes |
-| `0.0.15-rc.3` | Diagnostics API 消费者、Connector 运维与事件 Sink | `diagnostics.trace_route` 改为执行真实会话路由追踪；Connector 对事实事件施加有界内存与可选 outbox 背压，采样事件改为仅 best-effort 且不持久化；默认重试次数由 3 调整为 10 |
-| `0.0.15-rc.2` | 构建脚本、事件消费者、Webhook 接收端 | 公开 Cargo feature 改用 kebab-case；引擎生成的 `event_id` 增加每次启动唯一的随机 epoch；开发期固定中心 API 被撤销，Connector 收缩为通用 Webhook 事件投递；认证项速率改为 Zero 主体策略聚合 |
-| `0.0.15-rc.1` | 进程内 Rust `EventSource`、事件 Sink | Rust 实现者必须迁移到实时 `EventStream`；IPC/HTTP/gRPC GUI wire 无变化 |
-| `0.0.15-rc` | GUI flow 生命周期 | 订阅 ACK 后以 `flow.snapshot` 建立活动连接基线，再合并 flow 增量 |
+包含 flow 生命周期事件的实时订阅，在订阅确认后先用 `flow.snapshot` 建立活动连接基线：
 
-## Unreleased
+1. 用 `payload.records` 替换当前活动连接集合并记录 `watermark`；
+2. 按 `flow_id + revision` 合并 `flow.started`、`flow.routed`、`flow.updated`；
+3. 收到 `flow.completed` 后移除活动连接，使用其自包含的 `payload.record` 记录完成事实；
+4. 发现事件缺口时，通过快照或 Query 重建状态，不直接继续套用增量。
 
-<!-- Record implemented but unsealed compatibility changes here. -->
+`flow.snapshot` 不进入事件环，也不投递到 JSONL/Webhook；`recent_flows` 不替代断线重建或长期历史数据库。完整字段与通道行为见[事件目录](./events)。
 
-## 0.0.15
+进程内 `EventSource::subscribe()` 返回实现 `EventStream` 的实时订阅；`latest()` 用于近期历史，`since()` 用于游标恢复。`has_gap = true` 时应重新建立基线。
 
-<!-- No compatibility changes in this release. -->
+引擎生成的事件 ID 使用启动时随机 epoch 保持跨启动唯一；重放保持原 ID。外部消费者把 `event_id` 当作不透明字符串进行幂等去重，使用正式字段读取事件类型、flow ID 和时间，不解析 ID 的内部拼接格式。
 
-## 0.0.15-rc.4
+## Connector 与控制端边界
 
-<!-- No compatibility changes in this release. -->
+0.0.1 使用通用 Webhook 事件投递。控制器通过 Zero API/gRPC 管理节点，并通过 `config.apply` 注册 `api.event_sinks`；Connector 向完整 URL 发送 `zero.event.v1`，按 HTTP 确认规则处理重试和恢复。
 
-## 0.0.15-rc.3
+Connector 不提供节点注册、套餐、支付、订阅或中心私有命令 API。配置不能使用开发期的顶层 `push` 或固定中心协议。
 
-### Diagnostics 路由追踪使用真实会话语义
+事实事件使用有界工作集，配置 outbox 时持久化并按空位恢复；`flow.updated`、`stats.sampled` 是可丢弃采样，不作为可靠账务事实。重试和背压参数以当前 [Connector 配置](./connector)为准。
 
-`diagnostics.trace_route` 现在构造 TCP 或 UDP 会话并复用代理运行时的路由追踪路径。域名规则没有直接命中且路由需要解析 IP 时，会通过真实 DNS 解析结果再次匹配 IP 规则。响应中的 `effective_mode`、`route_action` 和 `matched_rule` 因此反映实际运行时决策，不再使用简化推断。依赖旧诊断结果的控制端应以新结果为准。
+## 构建与主体策略
 
-### Connector backlog 改为有界工作集
+公开 Cargo feature 使用 `status-api`、`event-dispatcher`、`sink-jsonl`、`connector`、`grpc-api` 等名称。Rust 函数和模块仍使用 `snake_case`；完整选项见[构建特性](../configuration/features)。
 
-Connector 不再让慢速或失联 Sink 导致进程内待投递队列无界增长：
+同一主体策略下的并发 TCP/UDP 会话共享双向速率控制；不能把主体限速理解为每条连接都各自获得完整额度。没有 `principal_key` 的入站默认限速仍按会话执行。验收主体限速时应覆盖并发连接。
 
-- 配置 outbox 时，事实事件先写入持久化 journal，内存只保留有界工作集，其余记录按空位从磁盘分页恢复；
-- 未配置 outbox 时，事实事件通过停止继续消费事件源施加背压，不会静默丢弃；
-- `flow.updated` 与 `stats.sampled` 是可丢弃采样，只做 best-effort 投递、不会写入 outbox；工作集已满时优先替换同一 Sink 的旧采样，不驱逐事实事件；
-- `api.dispatcher.max_in_memory_deliveries = 0` 表示 outbox-only 模式，因此必须同时配置 `api.outbox_path`；
-- `max_retry_attempts` 默认值由 `3` 调整为 `10`，显式配置不受影响。
+## 后续文档维护
 
-事件 Sink 不应把吞吐采样当作可靠事实流；需要恢复保证的消费者应使用事实事件并配置 outbox。
-
-## 0.0.15-rc.2
-
-### 撤销开发期固定中心 API
-
-项目尚未发布 Connector 合同，因此开发期的节点注册、同步、traffic、presence、访问配置和私有命令设计直接撤销，不保留兼容层。
-
-已移除顶层 `push`、`PushConfig`、`/api/v1/nodes/{node_id}/*`、中心 OpenAPI、conformance 和 production gate。外部控制器通过 Zero API/gRPC 管理节点，并使用 `config.apply` 注册通用 `api.event_sinks`。Connector 只向完整 Webhook URL 推送 `zero.event.v1`，并定义 HTTP 状态确认分类。
-
-### 公开 Cargo feature 改用 kebab-case
-
-构建入口不再暴露下划线式能力名。构建脚本、CI 和制品 feature 校验需要完成以下迁移：
-
-| 旧名称 | 新名称 |
-| --- | --- |
-| `status_api` | `status-api` |
-| `event_dispatcher` | `event-dispatcher` |
-| `sink_jsonl` | `sink-jsonl` |
-| `panel_connector` | `connector` |
-| `grpc_api` | `grpc-api` |
-
-Rust 函数、模块和变量仍按语言规范使用 `snake_case`；本次变化只影响 Cargo feature 名称和二进制对外报告的 feature 字符串。历史候选证据保留其原始名称，不得重写后冒充新候选。
-
-### 引擎生成事件使用跨启动唯一 ID
-
-旧事件 ID 仅由事件类型、进程内 flow ID/序号和毫秒时间戳组成。进程快速重启后这些值可能复用，使 Connector 接收端或 Sink 把新事实误判为已处理事件。
-
-新语义：
-
-- 每个 `EngineEventLog` 创建时生成一个 128 位随机 epoch；
-- 所有引擎内部生成的事件 ID 均以前述 epoch 限定，在同一进程内重放时保持不变；
-- 通过进程内 `emit()` 注入、由调用者拥有 ID 的外部事件保持原 ID；
-- `event_id` 的内部拼接形式不是公共契约，消费者只能比较完整字符串并用于幂等去重。
-
-该变化不修改 `zero.event.v1` 的 JSON 字段形状，但修正了跨进程启动的唯一性语义。任何依赖旧 `{type}:{flow_id}:{timestamp}` 格式解析的消费者必须删除该解析逻辑，改用 `event_type`、`payload.record.flow_id` 和 `occurred_at_unix_ms` 等正式字段。
-
-### 用户速率改为 Zero 主体策略聚合
-
-开发态预资格期间，`up_bps` / `down_bps` 曾被描述并执行为单条 TCP/UDP flow 的限制。该语义允许同一主体通过增加并发连接绕过带宽策略，不满足 Zero 主体策略的定义。
-
-新语义：
-
-- 同一 `principal_key`、`policy_revision` 和双向速率组成一个 Zero 主体策略身份；
-- 该身份下的并发 TCP/UDP 会话共享上传、下载 GCRA 时间线；
-- revision 或速率变化建立新时间线，旧会话在确认式清退前继续持有旧策略；
-- 没有 `principal_key` 的入站默认限速仍按会话独立执行。
-
-JSON 字段形状和当时的 `zero.panel.v1` schema ID 不变。该修正发生在首个清洁 release candidate 和正式生产签字之前；历史开发态 manifest 只能证明当时的每流实现，不得继续作为当前候选产物证据。接收端无需修改 wire payload，但容量规划和限速验收必须改为并发 TCP/UDP 聚合测试。
-
-## 0.0.15-rc.1
-
-### `EventSource` 统一为实时订阅
-
-旧语义存在两个不同实现：
-
-- `Engine::subscribe()` 返回一次性的 `Vec<RawApiEvent>` 历史快照；
-- `EngineHandle::subscribe()` 返回实时 `EventSubscriber`。
-
-新语义：
-
-- 所有 `EventSource::subscribe()` 都返回实现 `EventStream` 的实时订阅；
-- `latest(limit, filter)` 只用于读取近期历史；
-- `since(sequence, limit, filter)` 用于按事件序号恢复，返回 `requested_after`、`actual_from` 和 `has_gap`；
-- `has_gap = true` 时，消费者不得直接继续套用增量，必须先通过快照或 Query 重建状态；
-- 包含 flow 生命周期的实时订阅仍可在增量前发送合成的 `flow.snapshot`。
-
-进程内 Rust 实现者需要：
-
-1. 将 `type Stream = Vec<RawApiEvent>` 替换为实现 `EventStream` 的实时流；
-2. 实现阻塞 `recv()` 和非阻塞 `try_recv()`；
-3. 实现新的 `EventSource::since()` 游标恢复方法；
-4. 不再把 `subscribe()` 当作历史查询使用。
-
-### EventDispatcher 投递时序
-
-EventDispatcher 从周期性事件环扫描改为持有一个实时订阅：
-
-- dispatcher 不再反复把历史快照当作新事件扫描；实时订阅仍按配置的轮询间隔排空并投递到 Sink；
-- `flow.snapshot` 仍只用于实时客户端同步，不投递到 JSONL/Webhook；
-- Webhook、重试、死信和 Sink 过滤语义保持不变；
-- 外部 Sink 应继续使用 `event_id` 去重，并按 `source_id + sequence` 检测缺口。
-
-### 对外 GUI 影响
-
-IPC、HTTP SSE 和 gRPC 的 wire 格式保持 `zero.api.v1` / `zero.event.v1`，现有 GUI 不需要因本次待发布变更修改帧解析。GUI 仍需遵守 `0.0.15-rc` 建立的快照与增量合并规则。
-
-## `0.0.15-rc`
-
-### Flow 订阅改为“基线 + 增量”
-
-包含任一 flow 生命周期事件的 IPC/SSE/CLI 实时订阅，在订阅确认后先收到 `flow.snapshot`：
-
-1. 使用 `payload.records` **替换**当前活动连接集合；
-2. 记录快照 `watermark`；
-3. 按 `flow_id + revision` 合并后续 `flow.started`、`flow.routed`、`flow.updated`；
-4. 收到 `flow.completed` 后从活动集合移除，并由 GUI 自行保存需要展示的历史；
-5. 不把 `recent_flows` 当作断线重建或长期历史数据库。
-
-`flow.snapshot` 是同步基线，不进入事件环，也不会投递到 JSONL/Webhook。`flow.completed.payload.record` 是自包含完成事实，新客户端应优先解析 `record`，同时容忍旧内核没有该字段。
-
-### GUI 兼容分支建议
-
-| 内核版本 | GUI 行为 |
-|----------|----------|
-| `< 0.0.15-rc` | 使用 `active_flows` 查询作为活动连接基线，并兼容旧 flow payload |
-| `>= 0.0.15-rc` | 等待 subscribe ACK 和 `flow.snapshot`，之后按 revision 合并增量 |
-
-## 新增条目的要求
-
-后续每个破坏性或语义性变更必须在发布前补充：
-
-- 首个受影响版本；
-- 影响的通道和消费者；
-- 旧语义与新语义；
-- wire 标识是否变化；
-- 兼容窗口和可检测条件；
-- GUI/SDK/面板的明确迁移步骤；
-- 对应回归测试位置。
-
-开发期间只在版本矩阵和 `## Unreleased` 下登记，不预判最终发布版本，也不写入 Cargo 的 `-dev.N` 构建号。完整测试通过后，由 `Prepare Release` 工作流或 `scripts/release.sh` 将矩阵行、章节标题和 workspace 版本一起封板；禁止手工分别修改这些位置。
+后续兼容性变更应根据实际发布记录注明产品版本、影响的通道、契约标识、可检测条件和操作步骤，并附实现与测试依据。未发布实现使用提交标识说明范围，不推测发行编号；功能可用性始终结合实际构建能力判断。

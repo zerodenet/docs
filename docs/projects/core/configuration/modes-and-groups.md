@@ -20,7 +20,7 @@
 
 ### rule
 
-按 `route.rules` 顺序匹配，未命中时执行 `route.final`：
+未命中 `route.bypass` 时，按 `route.rules` 顺序匹配，再回退到 `route.final`：
 
 ```json
 { "mode": { "type": "rule" } }
@@ -36,7 +36,7 @@
 
 ### global
 
-所有新连接使用指定出站或出站组：
+未命中 `route.bypass` 的新连接使用指定出站或出站组：
 
 ```json
 {
@@ -56,6 +56,27 @@ zero mode global proxy
 ```
 
 切换影响之后建立的连接，现有连接不会被强行中断。
+
+## 直连例外：route.bypass
+
+`route.bypass` 默认空数组，复用现有路由条件；每项直接填写条件，不包装 `condition` 或 `action`。命中后直接访问目标，优先于 `rule` 和 `global` 模式：
+
+```json
+{
+  "route": {
+    "bypass": [
+      { "type": "ip", "values": ["192.168.0.0/16"] },
+      { "type": "domain", "values": ["intranet.example.com"] }
+    ],
+    "rules": [],
+    "final": { "type": "direct" }
+  }
+}
+```
+
+控制器写入前检查 `route_bypass_v1` 能力。IP 条件可使用可信解析结果，在全局模式或普通域名规则已命中时仍有优先权；域名例外需要可观察的目标域名，不能从加密 DNS/ECH 的裸 IP 流量猜测名称。
+
+这是内核路由决策，不会自行改写系统路由。客户端可另行将 IP 网段投影到 TUN 排除列表，并协调操作系统代理例外。
 
 ## selector：手动选择
 

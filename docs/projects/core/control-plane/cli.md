@@ -16,7 +16,7 @@ zero version
 zero build-info
 ```
 
-`validate` 无副作用。`build-info` 用于确认当前发行物包含的协议和可选能力。
+`validate` 不启动监听或 TUN，也不占用运行内核的 Fake-IP 租约或修复配额状态；完整边界见[配置校验](../guides/hot-reload#校验与运行状态隔离)。`build-info` 用于确认当前发行物包含的协议和可选能力。
 
 | 参数 / 命令 | 取值与作用 |
 | --- | --- |

@@ -3,7 +3,7 @@
 <ProjectMeta project-id="core" />
 
 ::: info 文档对应版本
-本轮使用说明按 2026-09-03 的 [develop 提交 6d0553d](https://github.com/zerodenet/core/tree/6d0553d743ecd074379126e574d9263157486f7a)核对。develop 包含尚未进入稳定版的功能；安装旧版时，以实际版本和可用能力为准。
+本轮使用说明按 2026-09-09 的 [main 提交 50322956](https://github.com/zerodenet/core/tree/503229562ef5854e3be6be3a9c8e7cbc5efffc61)核对。已公开 [0.0.1 正式版](https://github.com/zerodenet/core/releases/tag/v0.0.1)；源码、发布与安装验收范围见[实现与文档进度](/progress)。实际能力以所用制品及运行时响应为准。
 :::
 
 Zero Core 是可裁剪的网络代理内核，可作为本地网关、边缘节点或服务器运行，并提供 CLI、HTTP、IPC 等控制接口。

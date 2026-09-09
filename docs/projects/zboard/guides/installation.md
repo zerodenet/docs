@@ -1,6 +1,8 @@
 # 安装与部署
 
-Zboard 支持 MySQL 和 SQLite。使用仓库中的 Docker Compose 发布配置部署，并固定镜像标签；develop、RC 和稳定发布的功能可能不同。
+Zboard 支持 MySQL 和 SQLite。使用仓库中的 Docker Compose 发布配置部署，并固定镜像标签；当前产品版本为 0.0.1，部署时仍需核对制品构建和所需能力。
+
+当前已提供 [0.0.1 正式发布](https://github.com/zerodenet/zboard/releases/tag/v0.0.1)，包含 Linux amd64 二进制、Docker 镜像离线包与 SHA256SUMS；镜像为 `ghcr.io/zerodenet/zboard:v0.0.1`。同名标签重建后需重新拉取镜像并重建容器，仅重启已有容器不会替换镜像。升级前备份数据库、配置与持久目录。
 
 ## 准备运行环境
 

@@ -36,13 +36,13 @@ sudo xattr -rd com.apple.quarantine "/Applications/ZNet Sink.app"
 
 ## Linux：通过终端安装或运行
 
-Linux 桌面环境不一定会在双击安装包时自动完成安装，建议先打开终端，再根据下载的文件类型执行命令。以下文件名以 `0.0.15` 为例；下载其他版本时，请替换为实际文件名。
+Linux 桌面环境不一定会在双击安装包时自动完成安装，建议先打开终端，再根据下载的文件类型执行命令。以下文件名以 `0.0.1` 为例；下载其他版本时，请替换为实际文件名。
 
 ### Ubuntu / Debian（DEB）
 
 ```bash
 cd ~/Downloads
-sudo apt install ./ZNet.Sink_0.0.15_amd64.deb
+sudo apt install ./ZNet.Sink_0.0.1_amd64.deb
 ```
 
 `apt install ./文件名.deb` 会同时处理软件包依赖。安装完成后，可以从桌面应用菜单打开 ZNet Sink。
@@ -51,7 +51,7 @@ sudo apt install ./ZNet.Sink_0.0.15_amd64.deb
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./ZNet.Sink-0.0.15-1.x86_64.rpm
+sudo dnf install ./ZNet.Sink-0.0.1-1.x86_64.rpm
 ```
 
 安装完成后，从桌面应用菜单启动。如果系统使用 `yum`，可以把 `dnf` 替换为 `yum`。
@@ -62,8 +62,8 @@ AppImage 不写入系统软件包数据库，需要先授予执行权限，再�
 
 ```bash
 cd ~/Downloads
-chmod +x ZNet.Sink_0.0.15_amd64.AppImage
-./ZNet.Sink_0.0.15_amd64.AppImage
+chmod +x ZNet.Sink_0.0.1_amd64.AppImage
+./ZNet.Sink_0.0.1_amd64.AppImage
 ```
 
 以后仍可执行同一个 AppImage 文件启动客户端；如果移动了文件，需要从新位置运行。当前官方 Linux 桌面安装包仅提供 x86_64 版本。

@@ -85,7 +85,7 @@ HTTP 和 IPC 响应使用 `zero_api::ApiResponse`。
 
 `features` 提供正向能力，`global_limitations` 提供跨协议限制，协议局部限制在 `protocols[].limitations`。未知能力和限制条目可忽略；已知限制消失也应结合正向能力判断。TUN 双栈、系统 DNS 自动发现、Fake-IP 持久化及 DNS 地址族策略均应按实际能力启用。
 
-V1 是公开契约版本，不代表当前 develop 已成为稳定发行版。DNS/TUN 的使用及限制见[运行 TUN 与 DNS](../guides/tun-and-dns)。
+V1 是公开契约版本，与发行编号独立。当前已公开 0.0.1，具体构建与安装验收范围见[实现进度](/progress)。DNS/TUN 的使用及限制见[运行 TUN 与 DNS](../guides/tun-and-dns)。
 
 ## 错误处理
 

@@ -34,7 +34,7 @@
     "tagline": "代理服务运营管理",
     "description": "基础设施、协议服务、节点组、商品、订单、订阅、配置交付和流量管理。",
     "kind": "application",
-    "status": "preview",
+    "status": "active",
     "repository": "https://github.com/zerodenet/zboard",
     "docsRoot": "/projects/zboard/",
     "quickStart": "/projects/zboard/guides/installation",
