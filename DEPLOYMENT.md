@@ -11,6 +11,7 @@ VitePress 文件，不在托管平台上再次安装或构建依赖。
 | Pull Request | 检查和构建 | 不部署 | 不部署 |
 | `main` 推送 | 检查和构建 | 生产部署 | 不部署 |
 | `develop` 推送 | 检查和构建 | 预览部署 | 公开预览 |
+| `release:promote` 晋升 | 验证发布候选 | 晋升后显式触发生产部署 | 不部署 |
 | 手动触发 | 可选分支 | 仅允许 `main` 或 `develop` | 仅允许 `develop` |
 
 Cloudflare Pages 项目的生产分支必须是 `main`。工作流把当前 Git 分支传给
@@ -90,8 +91,15 @@ Actions 的 deployment 输出为准。
 
 1. 功能或文档改动通过 Pull Request 合入 `develop`。
 2. `develop` 自动更新 Cloudflare 与 GitHub Pages 两个预览。
-3. 验收预览后，把 `develop` 合入 `main`。
-4. `main` 自动更新 Cloudflare 生产站。
+3. 验收预览后，创建 `develop -> main` 发布 PR，由维护者或管理员添加
+   `release:promote` 标签；不要使用 GitHub 的合并按钮。
+4. 晋升工作流验证发布候选并快进 `main`，随后通过 `workflow_dispatch`
+   显式触发 `Deploy to Cloudflare Pages` 的 `main` 部署。
+5. 确认该生产部署成功，并检查 `https://docs.zerodenet.org` 的实际内容。
+   分支晋升成功只表示 `main` 已更新，不代表站点部署已完成。
+
+晋升使用的 `GITHUB_TOKEN` 推送不会触发其他 `push` 工作流，因此生产
+部署依赖上述显式触发。晋升工作流的 `actions: write` 权限用于发起部署。
 
 需要重新部署现有提交时，可在 Actions 中手动运行工作流并选择对应分支。
 手动部署仍会重新安装锁定依赖并执行完整检查，不会上传未经验证的本地产物。
@@ -101,5 +109,7 @@ Actions 的 deployment 输出为准。
 - 检查、构建或安装失败时不会执行上传。
 - 同一分支的新部署会取消仍在运行的旧部署，避免旧提交后完成并覆盖新提交。
 - Cloudflare 部署失败不会影响当前在线版本。
+- 如果 `main` 已晋升但部署触发或上传失败，手动运行
+  `Deploy to Cloudflare Pages` 并选择 `main`，然后验证正式域名；无需重复晋升。
 - 生产内容有问题时，优先回退 Git 提交并重新推送；紧急情况下可先在
   Cloudflare Pages 的 Deployments 页面回滚到之前成功的生产部署。
