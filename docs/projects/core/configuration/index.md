@@ -34,7 +34,7 @@ Zero 使用一个完整 JSON 文件描述入站、出站、路由、运行参数
 | 字段 | 是否必需 | 用途 |
 |------|----------|------|
 | `schema_version` | 否 | 默认 `1`；只接受支持的版本，导出时显式携带 |
-| `inbounds` | 否 | 默认 `[]`；监听地址与入站协议，TUN-only 配置可以为空 |
+| `inbounds` | 否 | 默认 `[]`；监听地址与入站协议，TUN-only 或仅管理模式均可为空 |
 | `outbounds` | 否 | 默认 `[]`；需要引用命名出站时定义 |
 | `outbound_groups` | 否 | 手动选择、自动测速、故障切换、链式代理或负载均衡 |
 | `mode` | 否 | `rule`、`direct` 或 `global`；默认 `rule` |
@@ -85,7 +85,7 @@ zero validate config.json
 
 ## 模式与路由
 
-`rule` 模式先匹配 `route.rules`，未命中时执行 `route.final`：
+先检查 `route.bypass` 直连例外；未命中时，`rule` 模式按顺序匹配 `route.rules`，最终回退到 `route.final`：
 
 ```json
 {
@@ -124,6 +124,7 @@ zero validate config.json
 | `route` 参数 | 默认 / 类型 | 说明 |
 | --- | --- | --- |
 | `final` | 必填 object | 未命中动作：`direct`、`reject` 或 `route`；`route` 需 `outbound` |
+| `bypass` | `[]`，条件数组 | 命中即直连，优先于运行模式；复用规则条件，不带 `action` |
 | `rules` | `[]` | 每条为 `condition` 与 `action`，顺序匹配 |
 | `rule_sets` | `[]` | 共用规则资源，可供流量路由和适用的 DNS 分流引用 |
 | `rule_sets[].tag` | 必填 string | 规则集标识 |

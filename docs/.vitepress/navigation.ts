@@ -14,6 +14,7 @@ export const nav: DefaultTheme.NavItem[] = [
     text: '项目',
     items: [
       { text: '全部项目', link: '/projects/' },
+      { text: '实现与文档进度', link: '/progress' },
       {
         text: '客户端',
         items: [
@@ -47,6 +48,7 @@ export const nav: DefaultTheme.NavItem[] = [
 
 const solutionSidebar: DefaultTheme.SidebarItem[] = [
   page('使用场景', '/solutions/'),
+  page('实现与文档进度', '/progress'),
   group('项目', [
     page('全部项目', '/projects/'),
     page('ZNet Sink', '/projects/znet-sink/'),
@@ -159,6 +161,7 @@ const zboardSidebar: DefaultTheme.SidebarItem[] = [
 ]
 
 export const sidebar: DefaultTheme.Sidebar = {
+  '/progress': solutionSidebar,
   '/solutions/': solutionSidebar,
   '/community/': communitySidebar,
   '/projects/core/': coreSidebar,
@@ -166,6 +169,7 @@ export const sidebar: DefaultTheme.Sidebar = {
   '/projects/zboard/': zboardSidebar,
   '/projects/': [
     page('项目目录', '/projects/'),
+    page('实现与文档进度', '/progress'),
     group('应用', [page('ZNet Sink', '/projects/znet-sink/')]),
     group('内核', [page('Zero Core', '/projects/core/')]),
     group('运营平台', [page('Zboard', '/projects/zboard/')]),

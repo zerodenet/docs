@@ -2,17 +2,19 @@
 
 本文记录会影响 GUI、SDK、面板、事件 Sink 或进程内 Rust 集成的控制面语义变化。当前事实仍以同目录下的接口与事件文档为准；本文只维护版本边界和迁移要求。
 
-## 当前 develop 的配置与能力迁移
+## 当前 main 与 v0.0.1 的配置迁移
 
-截至 2026-09-03，使用最新 develop 的消费者还应核对以下事项；下方历史发布矩阵不代替当前能力响应：
+截至 2026-09-09，按 main 核对的消费者应检查以下事项；下方历史发布矩阵不代替当前能力响应：
 
 - 配置显式支持 `schema_version: 1`；未知版本拒绝，缺省仍按 V1。
 - DNS 使用命名 `servers`、`default_server`、`dispatch`、`policy` 和 `answer`；Fake-IP 位于 `answer.type: "fake_ip"`。旧 DNS 结构请按 [DNS 参数](../configuration/dns)显式迁移。
 - 能力响应通过 `contracts` 发布四类独立兼容范围，新增 `insufficient_os_privilege` 稳定错误码，见[通用契约](./contract)。
 - TUN 状态增加实际捕获范围、地址族出口及配置归属；IPC 失败不得解释为 OFF。详见 [HTTP TUN 状态](./http-api#get-api-v1-tun-status)。
 - Connector 状态增加投递和 ACK 重试阶段，见[投递调度](./connector#查看投递调度与恢复状态)。
+- 新增 `route.bypass`，写入前检查 `route_bypass_v1`；[直连例外](../configuration/modes-and-groups#直连例外-route-bypass)优先于全局和规则模式。
+- Direct 入站增加 UDP，旧的仅 TCP 部署应明确设置 `udp.enabled: false`；实际支持以构建能力为准。
 
-这些内容描述已合入 develop 的行为，不声明正式稳定版已经发布。
+三个产品已公开统一编号 v0.0.1。旧 `0.0.15` / `0.0.16` 编号高于 `0.0.1`，不能只用“版本更大”判断功能更新或期待常规自动升级。固定目标版本、核对能力、备份后显式切换；源码与安装验收范围见[实现进度](/progress)。
 
 ## 消费者如何判断兼容性
 
@@ -79,7 +81,7 @@ Connector 不再让慢速或失联 Sink 导致进程内待投递队列无界增�
 
 ### 撤销开发期固定中心 API
 
-项目尚未发布 Connector 合同，因此开发期的节点注册、同步、traffic、presence、访问配置和私有命令设计直接撤销，不保留兼容层。
+在 Connector 正式合同建立前，开发期的节点注册、同步、traffic、presence、访问配置和私有命令设计已撤销，不保留兼容层。当前 v0.0.1 使用通用事件投递合同。
 
 已移除顶层 `push`、`PushConfig`、`/api/v1/nodes/{node_id}/*`、中心 OpenAPI、conformance 和 production gate。外部控制器通过 Zero API/gRPC 管理节点，并使用 `config.apply` 注册通用 `api.event_sinks`。Connector 只向完整 Webhook URL 推送 `zero.event.v1`，并定义 HTTP 状态确认分类。
 

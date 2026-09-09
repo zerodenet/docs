@@ -3,7 +3,7 @@
 <ProjectMeta project-id="zboard" />
 
 ::: info 文档对应版本
-本轮使用说明按 2026-09-03 的 [develop 提交 8d37762](https://github.com/zerodenet/zboard/tree/8d37762bdaca6f4befaf15343960d396417983da)核对。develop 包含尚未进入稳定版的功能；安装旧版时，以实际版本和可用能力为准。
+本轮使用说明按 2026-09-09 的 [main 提交 e1b7246c](https://github.com/zerodenet/zboard/tree/e1b7246cc4ef805bf39b22d634ba209114eb3b14)核对。已公开 [v0.0.1 正式版](https://github.com/zerodenet/zboard/releases/tag/v0.0.1)；源码、发布与安装验收范围见[实现与文档进度](/progress)。实际能力以所用制品及运行时响应为准。
 :::
 
 Zboard 是代理服务运营管理平台，用于管理 VPS、协议服务、节点组、商品、订单、订阅、配置交付、流量、DNS 和证书。
@@ -20,6 +20,9 @@ Zboard 是代理服务运营管理平台，用于管理 VPS、协议服务、节
 
 - 管理 VPS 资产、供应商账号、SSH 凭证、Zero 安装升级和节点生命周期；
 - 将 Zero 内核健康、Connector 事件在线和业务流量活跃作为不同运行事实分别观测；
+- 管理前置 TCP/UDP 转发与节点共享代理池，分别授权入口线路和落地协议；
+- 使用持久化发布队列重试配置交付；本地资源删除与远端停机清理分别执行；
+- 为指定用户分配待付款订单，调整应付金额并保留原因，管理员确认后开通权益；
 - 管理 VLESS、VMess、Shadowsocks、Trojan、Hysteria2、Mieru 等协议服务；
 - 为 VLESS/VMess 配置 TCP、WebSocket、gRPC 和受支持的 TLS/REALITY 组合；
 - 生成面向 ZNet Sink、Clash/Mihomo、sing-box 的完整配置订阅，以及 Shadowrocket、Quantumult X、v2rayN 节点订阅；

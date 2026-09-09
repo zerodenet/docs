@@ -1,33 +1,32 @@
 # Content synchronization baseline
 
-Public guides were checked against these fetched `origin/develop` revisions on 2026-09-03. Each local product checkout matched the fetched revision and was clean; product code was read only.
+Public guides were checked on 2026-09-09 against freshly fetched GitHub `main` revisions. None of the three product repositories has a `master` branch. Source was read from immutable Git archives, excluding develop, feature branches and uncommitted changes. In particular, the client checkout contains ongoing uncommitted work and the panel checkout is on a feature branch; neither is the documentation baseline.
 
-| Repository | Revision |
+| Repository | Main revision |
 | --- | --- |
-| core | `6d0553d743ecd074379126e574d9263157486f7a` |
-| znet-sink | `dff6b732415a860e3807cb22ccbdb016c230eccc` |
-| zboard | `8d37762bdaca6f4befaf15343960d396417983da` |
-| docs before this update | `ee10f810c382d04ec324cfefc3607c935375b1a6` |
+| core | `503229562ef5854e3be6be3a9c8e7cbc5efffc61` |
+| znet-sink | `6d822fb96140be87cdccdd0bea472ba0b089cf04` |
+| zboard | `e1b7246cc4ef805bf39b22d634ba209114eb3b14` |
+| docs develop before this update | `8e00ddfeec94707c1c2dd2d587f68ed23386c3ef` |
 
-## Evidence used
+GitHub release API responses confirmed public, non-draft, non-prerelease `v0.0.1` releases for all three products. This verifies publication, not installed behavior or every main change in a downloaded artifact. The public [implementation progress page](docs/progress.md) links the pinned evidence and release records.
 
-- Core: `crates/config/src/model/{mod,dns,tun,route,inbound,outbound,log,api}.rs`, DNS/API validation, `src/cli.rs`, `crates/api/src/{command,query,capabilities,error,sink}.rs`, Fake-IP state path and pool implementation, `docs/project/stable-contract-v1.md`, and the develop commit history. Repository `docs/control-plane/` contains historical designs, not the current public contract.
-- Client: actual DNS/TUN settings components, DNS recommendations and capability checks, portable settings model and import transaction, release-check policy, diagnostics components, and TUN apply/recovery notes. Running imports restart the managed core; online TUN parameter application recreates TUN.
-- Platform: actual admin navigation/router, maintenance/migration handler and form, announcements form, registration settings, purchase UI, Fair Use page, backend configuration and release/SQLite Compose files. Deployment documentation in the source repository contains older database assumptions, so current code and Compose definitions take precedence.
+## Evidence and changes
 
-## Editorial scope
-
-- Client and operator pages describe tasks, UI entry points, expected outcomes and failure recovery.
-- Core pages retain runnable starts and add parameter types, defaults, limits, examples and capability boundaries.
-- Source revision notices distinguish develop behavior from stable availability.
-- No production configuration, database, network routes, runtime binary or product code is changed by this documentation task.
+- Core: inspected `crates/config/src/model/route.rs`, route compilation/validation, `crates/engine/src/runtime/route.rs`, `crates/proxy/src/adapters/direct/{inbound,udp}.rs`, and management, validation-isolation and URLTest implementation notes/test references. Added `route.bypass` precedence, management-only startup, Direct UDP capability and bind semantics, validation isolation, and the distinction between policy probes and read-only diagnostics. Corrected the old Direct UDP matrix entry and develop-only version notices.
+- Client: inspected `src-tauri/src/services/bypass.rs`, `services/bypass/rules.rs`, `services/kernel_settings.rs`, `models/app_config.rs`, Network/TUN settings components, kernel integration and v0.0.1 qualification records. Updated the shared bypass editor, TUN exclusions, portable settings v2, lifecycle semantics and explicit migration from higher-numbered legacy releases. The four-platform installed-E2E waiver remains an outstanding acceptance boundary.
+- Panel: inspected `backend/internal/handler/{admin_order_assignment,node_publish_worker,node_delete_cascade,dns_deletion,certificate_deletion,network_entry_delivery,network_entry_capabilities,managed_rule_client_compatibility,kernel_automation}.go`, related tests and implementation notes. Updated fronting and explicit landing authorization, shared proxy pools, durable publication, administrator order confirmation, client-specific rules, the v0.0.1 compatibility reset, and database-only deletion versus independent remote cleanup. The compiler still injects a bootstrap listener even though Core now supports management-only operation.
+- Release and scope records distinguish existing main implementation from plans, including panel online payment/plugin runtime and product installed/long-running acceptance. No product code, live network settings or remote node state was changed.
 
 ## Verification
 
-- `pnpm install --frozen-lockfile` completed without changing the lockfile.
-- `pnpm check:build` passed for all 67 Markdown pages, including links, anchors, JSON syntax, navigation, reachability and production output.
-- `git diff --check` passed.
-- Browser review of the built DNS parameter, operator navigation and client TUN pages passed at the default 1280px viewport: tables and sidebars rendered, no horizontal document overflow, no captured warnings/errors. The final DNS page was reloaded with a fresh URL to avoid the previous build's browser cache.
-- Product checkouts were clean at the revisions listed above when the source audit completed. This update changes documentation only; it does not release or deploy any product.
+- `pnpm check:build` passed for 69 Markdown pages: links, anchors, JSON examples, project boundaries, navigation, reachability and production output. Local tools were Node 24.19.0 and pnpm 11.19.0; repository CI independently uses Node 22 and pnpm 11.9.0.
+- `git diff --check` passed. The progress page and three project entry pages contain 23 pinned source references, checked against the archived trees.
+- The final `/progress` development route returned HTTP 200. No browser visual acceptance was performed.
+- Existing dependencies were reused; the package manifest, lockfile and hosting/workflow configuration remain unchanged.
 
-These checks do not execute Rust configuration validation or establish TUN, payment, email or database migration runtime acceptance.
+This task did not run Rust/Go product suites, installed clients, live TUN changes, payment/email delivery or node cleanup.
+
+## Delivery
+
+The target is docs `develop` through a `codex/*` pull request. Current GitHub branch rules require a pull request and the `validate` status check. GitHub Pages listens to develop pushes; this documentation PR does not itself deploy a product or publish the separate Sites preview.

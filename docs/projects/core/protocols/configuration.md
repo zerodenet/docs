@@ -361,6 +361,21 @@ Mixed 同时接受 SOCKS5 TCP、SOCKS5 UDP ASSOCIATE 和 HTTP CONNECT。
 
 `direct` 和 `block` 是 Zero 内置动作，不是外部代理协议。
 
+## Direct 固定目标转发
+
+Direct 入站支持原始 TCP，以及具备 `managed-datagram-runtime` 构建能力时的 UDP 转发。它不执行落地代理协议的认证，适合把入口端口转发到既有服务：
+
+```json
+{
+  "tag": "entry",
+  "listen": { "address": "127.0.0.1", "port": 10000 },
+  "udp": { "enabled": true },
+  "protocol": { "type": "direct", "target": "landing.example.com", "port": 443 }
+}
+```
+
+转发经过既有路由、出站策略和流量生命周期。启用 UDP 时同时绑定该端口的 TCP/UDP；UDP 端口被占用会使绑定失败，不会静默降级。只需 TCP 时显式设置 `udp.enabled: false`。UDP 还受 `runtime.udp.enabled` 全局开关约束；部署前通过 `zero build-info` 确认 `direct.inbound.udp.supported`，仅能解析该字段不代表二进制具备转发能力。
+
 ## 传输和高级字段
 
 VLESS、VMess 等协议还支持 TLS、REALITY、WebSocket、gRPC、H2、QUIC、HTTP Upgrade、XHTTP、MUX 和 UDP 相关组合。不要仅凭字段存在就任意叠加；组合限制见[完整配置字段](/projects/core/configuration/)和[协议能力矩阵](/projects/core/reference/protocol-capabilities)。
