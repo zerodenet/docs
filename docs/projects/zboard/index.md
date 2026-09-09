@@ -3,7 +3,7 @@
 <ProjectMeta project-id="zboard" />
 
 ::: info 文档对应版本
-本轮使用说明按 2026-09-09 的 [main 提交 e1b7246c](https://github.com/zerodenet/zboard/tree/e1b7246cc4ef805bf39b22d634ba209114eb3b14)核对。已公开 [v0.0.1 正式版](https://github.com/zerodenet/zboard/releases/tag/v0.0.1)；源码、发布与安装验收范围见[实现与文档进度](/progress)。实际能力以所用制品及运行时响应为准。
+本轮使用说明按 2026-09-09 的 [main 提交 e1b7246c](https://github.com/zerodenet/zboard/tree/e1b7246cc4ef805bf39b22d634ba209114eb3b14)核对。已公开 [0.0.1 正式版](https://github.com/zerodenet/zboard/releases/tag/v0.0.1)；源码、发布与安装验收范围见[实现与文档进度](/progress)。实际能力以所用制品及运行时响应为准。
 :::
 
 Zboard 是代理服务运营管理平台，用于管理 VPS、协议服务、节点组、商品、订单、订阅、配置交付、流量、DNS 和证书。

@@ -139,7 +139,7 @@ curl \
 
 ## 显式管理 TUN
 
-没有在配置中声明 `runtime.tun` 时，GUI 或守护程序可以使用 `tun.start` 和 `tun.stop` 管理 TUN 生命周期。`v0.0.16-dev.202608180928` 的 `tun.start` 支持完整的自动路由与双栈参数：
+没有在配置中声明 `runtime.tun` 时，GUI 或守护程序可以使用 `tun.start` 和 `tun.stop` 管理 TUN 生命周期。Zero Core 0.0.1 的 `tun.start` 支持完整的自动路由与双栈参数：
 
 ```json
 {

@@ -23,7 +23,7 @@ body:
     attributes:
       label: Version
       description: Relevant release, build, commit, or branch, if known.
-      placeholder: e.g. 0.0.16-rc.4, develop, or commit SHA
+      placeholder: e.g. 0.0.1; include the build commit SHA when available
 
   - type: input
     id: environment

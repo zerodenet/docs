@@ -2,13 +2,21 @@
 
 本页记录截至 **2026-09-09** 的主分支实现、公开发布和文档覆盖范围。三个产品仓库的正式主分支均为 `main`，没有 `master`；下列链接固定到本轮读取的提交，不包含 develop、功能分支或未提交改动。
 
+## 版本术语
+
+三个产品当前统一使用 **0.0.1**。安装示例、功能说明和兼容性判断均以此为产品版本基线，不沿用重置前的编号与门槛。
+
+- **产品版本**：Zero Core、ZNet Sink、Zboard 均为 `0.0.1`；Git tag、下载路径和镜像标签按实际发布使用 `v0.0.1`。
+- **源码分支与构建**：`main`、`develop` 是分支名称，提交 SHA 用于定位实现；发布渠道与构建标识不替代产品版本。
+- **协议与数据格式**：`zero.api.v1`、`zero.event.v1`、配置 `schema_version: 1`、客户端设置 `v2` 和 ZRS `0.1` 各自表示独立契约，保持原有值。
+
 ## 核对基线
 
 | 项目 | main 源码快照 | 已公开正式版 | 本轮文档重点 |
 | --- | --- | --- | --- |
-| Zero Core | [50322956](https://github.com/zerodenet/core/tree/503229562ef5854e3be6be3a9c8e7cbc5efffc61) | [v0.0.1](https://github.com/zerodenet/core/releases/tag/v0.0.1) | 管理模式、直连例外、Direct UDP、配置校验与探测语义 |
-| ZNet Sink | [6d822fb](https://github.com/zerodenet/znet-sink/tree/6d822fb96140be87cdccdd0bea472ba0b089cf04) | [v0.0.1](https://github.com/zerodenet/znet-sink/releases/tag/v0.0.1) | 统一绕过、设置迁移、内核生命周期与版本切换 |
-| Zboard | [e1b7246](https://github.com/zerodenet/zboard/tree/e1b7246cc4ef805bf39b22d634ba209114eb3b14) | [v0.0.1](https://github.com/zerodenet/zboard/releases/tag/v0.0.1) | 前置转发、共享代理池、可靠发布、订单分配与资源清理 |
+| Zero Core | [50322956](https://github.com/zerodenet/core/tree/503229562ef5854e3be6be3a9c8e7cbc5efffc61) | [0.0.1](https://github.com/zerodenet/core/releases/tag/v0.0.1) | 管理模式、直连例外、Direct UDP、配置校验与探测语义 |
+| ZNet Sink | [6d822fb](https://github.com/zerodenet/znet-sink/tree/6d822fb96140be87cdccdd0bea472ba0b089cf04) | [0.0.1](https://github.com/zerodenet/znet-sink/releases/tag/v0.0.1) | 统一绕过、设置迁移、内核生命周期与版本切换 |
+| Zboard | [e1b7246](https://github.com/zerodenet/zboard/tree/e1b7246cc4ef805bf39b22d634ba209114eb3b14) | [0.0.1](https://github.com/zerodenet/zboard/releases/tag/v0.0.1) | 前置转发、共享代理池、可靠发布、订单分配与资源清理 |
 
 Release 已于本轮查询确认公开且非预发布。源码快照说明实现范围；下载后的实际能力仍以制品版本、构建特性和运行时响应为准。源码存在、自动化测试存在、安装验收通过是三个不同结论。
 
@@ -32,7 +40,7 @@ TUN、DNS/Fake-IP 和多协议能力已提供配置与控制接口；具体协�
 | 可移植设置 v2 | 导出 DNS、TUN 和绕过偏好，导入旧设置时迁移，避免静默丢失域名例外 | [设置迁移](/projects/znet-sink/guides/settings-transfer)；[导入实现](https://github.com/zerodenet/znet-sink/blob/6d822fb96140be87cdccdd0bea472ba0b089cf04/src-tauri/src/services/kernel_settings.rs) |
 | 受管内核启动与恢复 | 无代理配置时保留管理入口；启动确认健康 IPC，升级失败进入恢复路径 | [功能总览](/projects/znet-sink/guides/features)；[内核接入与恢复](https://github.com/zerodenet/znet-sink/blob/6d822fb96140be87cdccdd0bea472ba0b089cf04/docs/gui/core.md) |
 
-v0.0.1 已发布 Windows x86_64、macOS Intel/Apple Silicon 和 Linux x86_64 安装包。该版本的[发布记录](https://github.com/zerodenet/znet-sink/blob/6d822fb96140be87cdccdd0bea472ba0b089cf04/docs/releases/v0.0.1.md)明确保留四个平台安装运行验收的豁免：DNS 与接管模式组合、升级中断恢复、退出清理及跨资源故障注入等仍待补验。不能把发布成功写成这些场景已经安装验收通过。
+0.0.1 已发布 Windows x86_64、macOS Intel/Apple Silicon 和 Linux x86_64 安装包。该版本的[发布记录](https://github.com/zerodenet/znet-sink/blob/6d822fb96140be87cdccdd0bea472ba0b089cf04/docs/releases/v0.0.1.md)明确保留四个平台安装运行验收的豁免：DNS 与接管模式组合、升级中断恢复、退出清理及跨资源故障注入等仍待补验。不能把发布成功写成这些场景已经安装验收通过。
 
 ## Zboard
 
@@ -44,7 +52,7 @@ v0.0.1 已发布 Windows x86_64、macOS Intel/Apple Silicon 和 Linux x86_64 安
 | 本地删除与独立远端清理 | 节点或供应商不可达时可清理面板记录；远端停机另行执行 | [节点清理](/projects/zboard/guides/node-management#删除节点与远端清理)；[删除实现](https://github.com/zerodenet/zboard/blob/e1b7246cc4ef805bf39b22d634ba209114eb3b14/backend/internal/handler/node_delete_cascade.go) |
 | 规则集按客户端能力交付 | Clash/sing-box 可保留进程条件，Zero 模板拒绝不支持的规则集 | [规则兼容](/projects/zboard/guides/subscriptions-and-traffic#规则集与客户端兼容性)；[兼容检查](https://github.com/zerodenet/zboard/blob/e1b7246cc4ef805bf39b22d634ba209114eb3b14/backend/internal/handler/managed_rule_client_compatibility.go) |
 
-当前提供用户、节点、订阅、基础订单和流量计量闭环。在线支付集成与插件运行时仍是后续方向，不作为 main 已交付能力；详见[当前范围](https://github.com/zerodenet/zboard/blob/e1b7246cc4ef805bf39b22d634ba209114eb3b14/docs/core-baseline.md)。[v0.0.1 发布记录](https://github.com/zerodenet/zboard/blob/e1b7246cc4ef805bf39b22d634ba209114eb3b14/docs/release/v0.0.1.md)也未将 24 小时长稳、500 events/s 突发或完整多节点恢复标为验收完成。
+当前提供用户、节点、订阅、基础订单和流量计量闭环。在线支付集成与插件运行时仍是后续方向，不作为 main 已交付能力；详见[当前范围](https://github.com/zerodenet/zboard/blob/e1b7246cc4ef805bf39b22d634ba209114eb3b14/docs/core-baseline.md)。[0.0.1 发布记录](https://github.com/zerodenet/zboard/blob/e1b7246cc4ef805bf39b22d634ba209114eb3b14/docs/release/v0.0.1.md)也未将 24 小时长稳、500 events/s 突发或完整多节点恢复标为验收完成。
 
 ## 本轮核对范围
 
