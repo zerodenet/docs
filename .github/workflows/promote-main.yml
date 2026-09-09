@@ -8,6 +8,7 @@ on:
       - main
 
 permissions:
+  actions: write
   checks: read
   contents: write
   pull-requests: write
@@ -193,6 +194,18 @@ jobs:
 
           git push origin "$EXPECTED_DEVELOP_SHA:refs/heads/main"
 
+      - name: Trigger production deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Pushes made with GITHUB_TOKEN do not trigger other push workflows.
+          # workflow_dispatch is explicitly supported for this token.
+          gh workflow run deploy-cloudflare.yml --repo "$REPOSITORY" --ref main
+
       - name: Publish summary
         env:
           GH_TOKEN: ${{ github.token }}
@@ -203,7 +216,7 @@ jobs:
           set -euo pipefail
 
           gh pr comment "$PR_NUMBER" --repo "$REPOSITORY" --body \
-            "Promoted \`develop\` to \`main\` by fast-forward at \`${{ steps.release.outputs.develop_sha }}\` (authorized by @${{ steps.promoter.outputs.login }})."
+            "Promoted \`develop\` to \`main\` by fast-forward at \`${{ steps.release.outputs.develop_sha }}\` (authorized by @${{ steps.promoter.outputs.login }}). Production deployment requested: https://github.com/$REPOSITORY/actions/workflows/deploy-cloudflare.yml. Check the main deployment result before considering the site published."
 
           {
             echo "## Promotion complete"
@@ -213,4 +226,5 @@ jobs:
             echo "- main: \`${{ steps.release.outputs.main_sha }}\` -> \`${{ steps.release.outputs.develop_sha }}\`"
             echo "- trigger: \`release:promote\` label"
             echo "- method: fast-forward"
+            echo "- production deployment: requested via workflow_dispatch; verify the main run at https://github.com/$REPOSITORY/actions/workflows/deploy-cloudflare.yml"
           } >> "$GITHUB_STEP_SUMMARY"

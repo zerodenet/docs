@@ -107,6 +107,8 @@ Normal changes should go through a Pull Request into `develop`. After the previe
 
 The promotion workflow waits for the required `validate` and `release-policy` checks, rebuilds the exact `develop` commit, verifies that `main` is still an ancestor of `develop`, and then fast-forwards `main`. It aborts if the release PR is a draft, the source or target branch is wrong, the label was added by someone without Maintain/Admin access, a required check fails, `develop` changes during validation, or the branch relationship is no longer safe.
 
+After the fast-forward, the workflow explicitly dispatches the Cloudflare Pages deployment on `main`: pushes made with `GITHUB_TOKEN` do not trigger other push workflows. Promotion success means deployment was requested; verify the production deployment and `docs.zerodenet.org` before treating the release as published. If `main` advanced but deployment failed to start or finish, manually run `Deploy to Cloudflare Pages` on `main` instead of retrying the promotion.
+
 If a promotion fails, fix the reported condition, remove the `release:promote` label, and have an authorized maintainer or administrator add it again to retry.
 
 ## Local Development
