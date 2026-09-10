@@ -196,4 +196,4 @@ Documentation in this repository is published under the license declared by this
 
 ## ZBoard documentation ownership
 
-ZBoard documentation is maintained in `docs/projects/zboard/`, including installation, plugin usage and technical references. The product repository retains only entry-point READMEs and build-owned release notes. Historical materials are labeled and grouped separately. See `zboard-document-migration.json` for migration provenance.
+ZBoard documentation is maintained in `docs/projects/zboard/`, including installation, plugin usage and technical references. The product repository retains only entry-point READMEs and build-owned release notes. Development history is excluded from the public site. See `zboard-document-migration.json` for migration provenance.

@@ -100,7 +100,7 @@ Complete the site settings and create the first administrator. After initializat
 5. **Activate a user subscription.** Use the basic order workflow to create an order for the plan and confirm it as an administrator.
 6. **Connect a client.** In the user's account, choose the subscription format for the client and import its link. Make a connection, then check traffic usage in the console.
 
-For a forwarding node or a shared upstream pool, continue with [network fronting](/projects/zboard/guides/network-fronting). Node installation and recovery are covered in the [node lifecycle guide](/projects/zboard/reference/node-kernel-lifecycle).
+For a forwarding node or a shared upstream pool, continue with [network fronting](/projects/zboard/guides/network-fronting). Node installation and recovery are covered in the [node management guide](/projects/zboard/guides/node-management).
 
 ## Keep your data
 

@@ -67,8 +67,9 @@ create the first administrator and finish site initialization.
 
 The embedded SQL baseline is applied during startup. To run migrations without
 starting the HTTP service, use `scripts/migrate.ps1` or `scripts/migrate.sh`.
-See [database-migrations.md](/projects/zboard/reference/database-migrations) before opening an existing
-development database with a newer build.
+Back up an existing database before running a newer build. Review the SQL migrations
+shipped with that exact build; do not apply historical baseline-squashing procedures
+to a published schema.
 
 ## Manual frontend startup
 
@@ -128,8 +129,8 @@ Docker. The mixed workload defaults to 10 nodes, 1,000 subscriptions, 100,000
 historical records, four concurrent readers and 100 events/second for 300 seconds.
 `DURATION_SECONDS`, `EVENT_RATE` and `READERS` select other workload profiles.
 The application and database share the 1 CPU / 1 GiB budget; the load generator
-runs outside it. The [roadmap](/projects/zboard/reference/history/roadmap#资源和性能预算) defines latency and memory
-budgets. Also verify exact accounting under replay and reordering, no OOM,
+runs outside it. Set latency and memory budgets for the environment under test.
+Also verify exact accounting under replay and reordering, no OOM,
 explained failures and a fully drained backlog.
 
 Real Zero revocation checks use isolated nodes and test credentials:
@@ -142,8 +143,7 @@ ZERO_ARTIFACT_DIR=/path/to/verified-linux-zero-artifact \
 The artifact directory must contain `zero` and its matching `verification.json`.
 Other scenarios are `exhaustion`, `group_change` and `recovery`. Verify data-plane
 access after revocation and publication recovery, including existing connections;
-control-plane status or a mock SSH server alone is insufficient. See also
-[node publication](/projects/zboard/reference/node-config-delivery#重跑-mysql-验证) for real MySQL checks.
+control-plane status or a mock SSH server alone is insufficient.
 
 Keep raw logs, profiles, environment details, source/build hashes and per-run
 reports under the ignored `.codex-local-artifacts/acceptance/` directory. A dirty

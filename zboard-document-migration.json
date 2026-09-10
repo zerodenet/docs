@@ -6,132 +6,170 @@
     {
       "source": "docs/README.md",
       "destination": "docs/projects/zboard/guides/index.md",
-      "source_sha256": "92a97ca0e0a609b9893d787163bc4b9aeb736f7906cc6e71fa172713e6767288"
+      "source_sha256": "92a97ca0e0a609b9893d787163bc4b9aeb736f7906cc6e71fa172713e6767288",
+      "status": "retained_or_rewritten"
     },
     {
       "source": "docs/getting-started.zh-CN.md",
       "destination": "docs/projects/zboard/guides/installation.md",
-      "source_sha256": "3b95936d16d746e4e46ffbdd7657b57f66d37ecc8c7307fba6df5a4540492a1f"
+      "source_sha256": "3b95936d16d746e4e46ffbdd7657b57f66d37ecc8c7307fba6df5a4540492a1f",
+      "status": "retained_or_rewritten"
     },
     {
       "source": "docs/getting-started.md",
       "destination": "docs/projects/zboard/guides/installation-en.md",
-      "source_sha256": "cce43ed1c3d9ad71f642248bbbe0f84a5771870290a47e75c63051e2ecb2fd8b"
+      "source_sha256": "cce43ed1c3d9ad71f642248bbbe0f84a5771870290a47e75c63051e2ecb2fd8b",
+      "status": "retained_or_rewritten"
     },
     {
       "source": "docs/core-baseline.md",
-      "destination": "docs/projects/zboard/reference/core-baseline.md",
-      "source_sha256": "1290d8a6dc16d2f7c49320c46230027d4b54730c944265b5b4f2d097de2707b6"
+      "source_sha256": "1290d8a6dc16d2f7c49320c46230027d4b54730c944265b5b4f2d097de2707b6",
+      "excluded_destination": "docs/projects/zboard/reference/core-baseline.md",
+      "status": "excluded",
+      "reason": "Development history or superseded implementation snapshot; removed from the public site."
     },
     {
       "source": "docs/data-model.md",
-      "destination": "docs/projects/zboard/reference/data-model.md",
-      "source_sha256": "0534d6ee4df981908f73950e006aeea4504617bcd6fc214546b092f3b1b4fda9"
+      "source_sha256": "0534d6ee4df981908f73950e006aeea4504617bcd6fc214546b092f3b1b4fda9",
+      "excluded_destination": "docs/projects/zboard/reference/data-model.md",
+      "status": "excluded",
+      "reason": "Development history or superseded implementation snapshot; removed from the public site."
     },
     {
       "source": "docs/database-migrations.md",
-      "destination": "docs/projects/zboard/reference/database-migrations.md",
-      "source_sha256": "4037a83bb4152454c494f983b7df4456b48b8e66c72f97b977162834daa5b82c"
+      "source_sha256": "4037a83bb4152454c494f983b7df4456b48b8e66c72f97b977162834daa5b82c",
+      "excluded_destination": "docs/projects/zboard/reference/database-migrations.md",
+      "status": "excluded",
+      "reason": "Development history or superseded implementation snapshot; removed from the public site."
     },
     {
       "source": "docs/development.md",
       "destination": "docs/projects/zboard/contributing/development.md",
-      "source_sha256": "d671964dfa51d87d7b383c705d814d89c336357323f3250daadd84b18009acfc"
+      "source_sha256": "d671964dfa51d87d7b383c705d814d89c336357323f3250daadd84b18009acfc",
+      "status": "retained_or_rewritten"
     },
     {
       "source": "docs/managed-rule-compatibility.md",
       "destination": "docs/projects/zboard/reference/managed-rule-compatibility.md",
-      "source_sha256": "16d32d883111c1e05eeafb1149552efeb1e2022ef8644e83377973e8625901df"
+      "source_sha256": "16d32d883111c1e05eeafb1149552efeb1e2022ef8644e83377973e8625901df",
+      "status": "retained_or_rewritten"
     },
     {
       "source": "docs/mieru-kernel-contract.md",
-      "destination": "docs/projects/zboard/reference/mieru-kernel-contract.md",
-      "source_sha256": "24583bf35106e05b6b070f2d5205f827cc272ceab74a79cfca3944774b7e9a85"
+      "source_sha256": "24583bf35106e05b6b070f2d5205f827cc272ceab74a79cfca3944774b7e9a85",
+      "excluded_destination": "docs/projects/zboard/reference/mieru-kernel-contract.md",
+      "status": "excluded",
+      "reason": "Development history or superseded implementation snapshot; removed from the public site."
     },
     {
       "source": "docs/network-fronting.md",
       "destination": "docs/projects/zboard/guides/network-fronting.md",
-      "source_sha256": "b5d15a14318ec076f4c437a338bb613b8cd5c3695644c9d097029a5f92d80691"
+      "source_sha256": "b5d15a14318ec076f4c437a338bb613b8cd5c3695644c9d097029a5f92d80691",
+      "status": "retained_or_rewritten"
     },
     {
       "source": "docs/node-cleanup.md",
       "destination": "docs/projects/zboard/guides/node-cleanup.md",
-      "source_sha256": "e2599ecb3b01f2f2bcaf5ca451ee1167daa9c43ad5c1c52ddf78ba9d1555af0f"
+      "source_sha256": "e2599ecb3b01f2f2bcaf5ca451ee1167daa9c43ad5c1c52ddf78ba9d1555af0f",
+      "status": "retained_or_rewritten"
     },
     {
       "source": "docs/node-config-delivery.md",
       "destination": "docs/projects/zboard/reference/node-config-delivery.md",
-      "source_sha256": "ab17515b729b7dce00bc9d3c7eb94797d9489d701117301411225315f01b93ec"
+      "source_sha256": "ab17515b729b7dce00bc9d3c7eb94797d9489d701117301411225315f01b93ec",
+      "status": "retained_or_rewritten"
     },
     {
       "source": "docs/node-kernel-lifecycle.md",
-      "destination": "docs/projects/zboard/reference/node-kernel-lifecycle.md",
-      "source_sha256": "060878515c8552182917d644f522f39673ebdb25ef3657c5b9b795c4be99af20"
+      "source_sha256": "060878515c8552182917d644f522f39673ebdb25ef3657c5b9b795c4be99af20",
+      "excluded_destination": "docs/projects/zboard/reference/node-kernel-lifecycle.md",
+      "status": "excluded",
+      "reason": "Development history or superseded implementation snapshot; removed from the public site."
     },
     {
       "source": "docs/plugin-governance.md",
       "destination": "docs/projects/zboard/plugins/governance.md",
-      "source_sha256": "1bf5ac826f530767c43e74cfdf95d0d8242b1f48358c18f0c6e027e9ca42e7e5"
+      "source_sha256": "1bf5ac826f530767c43e74cfdf95d0d8242b1f48358c18f0c6e027e9ca42e7e5",
+      "status": "retained_or_rewritten"
     },
     {
       "source": "docs/plugin-identity.md",
       "destination": "docs/projects/zboard/plugins/identity-reference.md",
-      "source_sha256": "a08c051771cff5328167c462099b49f6fe1f4c15043046930f1b96b75bd81e58"
+      "source_sha256": "a08c051771cff5328167c462099b49f6fe1f4c15043046930f1b96b75bd81e58",
+      "status": "retained_or_rewritten"
     },
     {
       "source": "docs/plugin-installation-trust.md",
       "destination": "docs/projects/zboard/plugins/trust-en.md",
-      "source_sha256": "9f3f42f7291ce69c15fbed439f7f6a72ffa3f27b1f7e795fa8d460062198e9bf"
+      "source_sha256": "9f3f42f7291ce69c15fbed439f7f6a72ffa3f27b1f7e795fa8d460062198e9bf",
+      "status": "retained_or_rewritten"
     },
     {
       "source": "docs/plugin-installation-trust.zh-CN.md",
       "destination": "docs/projects/zboard/plugins/trust.md",
-      "source_sha256": "63716eaff9ff3e1cc447b66da5cca526cf2eef48792f61f6804f8b8431305382"
+      "source_sha256": "63716eaff9ff3e1cc447b66da5cca526cf2eef48792f61f6804f8b8431305382",
+      "status": "retained_or_rewritten"
     },
     {
       "source": "docs/plugin-marketplace-design.md",
-      "destination": "docs/projects/zboard/reference/plugin-marketplace-design.md",
-      "source_sha256": "de953f3347a362412ce345dc5a534fbeafb2d62c8c59b6f54c6c130277f9d3a0"
+      "source_sha256": "de953f3347a362412ce345dc5a534fbeafb2d62c8c59b6f54c6c130277f9d3a0",
+      "excluded_destination": "docs/projects/zboard/reference/plugin-marketplace-design.md",
+      "status": "excluded",
+      "reason": "Development history or superseded implementation snapshot; removed from the public site."
     },
     {
       "source": "docs/plugin-system-design.md",
-      "destination": "docs/projects/zboard/reference/plugin-system-design.md",
-      "source_sha256": "cbeb5624d82280bc09b2e1aa5c153ffa90d6c95671840b85de24058f64dd6969"
+      "source_sha256": "cbeb5624d82280bc09b2e1aa5c153ffa90d6c95671840b85de24058f64dd6969",
+      "excluded_destination": "docs/projects/zboard/reference/plugin-system-design.md",
+      "status": "excluded",
+      "reason": "Development history or superseded implementation snapshot; removed from the public site."
     },
     {
       "source": "docs/plugins.md",
       "destination": "docs/projects/zboard/plugins/development.md",
-      "source_sha256": "50c5ee0b0d9413a9a8fcfed2f84474ad5ec20cb4099478d01835628af7cdd5a3"
+      "source_sha256": "50c5ee0b0d9413a9a8fcfed2f84474ad5ec20cb4099478d01835628af7cdd5a3",
+      "status": "retained_or_rewritten"
     },
     {
       "source": "docs/public-subscription-filtering.md",
       "destination": "docs/projects/zboard/guides/subscription-filtering.md",
-      "source_sha256": "49ac8e1c5683b402f5955ad8fe49061393e6e6664ed5b3ce5101085a579017d1"
+      "source_sha256": "49ac8e1c5683b402f5955ad8fe49061393e6e6664ed5b3ce5101085a579017d1",
+      "status": "retained_or_rewritten"
     },
     {
       "source": "docs/release/2026-09-06-core-rc.md",
-      "destination": "docs/projects/zboard/reference/history/core-rc.md",
-      "source_sha256": "7e9166cf98846bb98c1047c547e9886e54e70b99b73577f20ed023659d1d1975"
+      "source_sha256": "7e9166cf98846bb98c1047c547e9886e54e70b99b73577f20ed023659d1d1975",
+      "excluded_destination": "docs/projects/zboard/reference/history/core-rc.md",
+      "status": "excluded",
+      "reason": "Development history or superseded implementation snapshot; removed from the public site."
     },
     {
       "source": "docs/release/v0.0.1.md",
-      "destination": "docs/projects/zboard/reference/history/v0.0.1.md",
-      "source_sha256": "ff65e5c0db7f5f0d61129b3cf2fb23200d46fa6139feb7e2ff45e9aa4946fe6c"
+      "source_sha256": "ff65e5c0db7f5f0d61129b3cf2fb23200d46fa6139feb7e2ff45e9aa4946fe6c",
+      "excluded_destination": "docs/projects/zboard/reference/history/v0.0.1.md",
+      "status": "excluded",
+      "reason": "Development history or superseded implementation snapshot; removed from the public site."
     },
     {
       "source": "docs/release/v0.1.0-launch-checklist.md",
-      "destination": "docs/projects/zboard/reference/history/launch-checklist.md",
-      "source_sha256": "642ba473b2da6855b87ca5d6862f312e590d8abd4ed764d3065d5b011bdd1e69"
+      "source_sha256": "642ba473b2da6855b87ca5d6862f312e590d8abd4ed764d3065d5b011bdd1e69",
+      "excluded_destination": "docs/projects/zboard/reference/history/launch-checklist.md",
+      "status": "excluded",
+      "reason": "Development history or superseded implementation snapshot; removed from the public site."
     },
     {
       "source": "docs/roadmap.md",
-      "destination": "docs/projects/zboard/reference/history/roadmap.md",
-      "source_sha256": "8def6fc6c8c53489de86b755e284adf2cbdfbf9dbf0c19d76a6a60ba3c805221"
+      "source_sha256": "8def6fc6c8c53489de86b755e284adf2cbdfbf9dbf0c19d76a6a60ba3c805221",
+      "excluded_destination": "docs/projects/zboard/reference/history/roadmap.md",
+      "status": "excluded",
+      "reason": "Development history or superseded implementation snapshot; removed from the public site."
     },
     {
       "source": "deploy/docker/README.md",
       "destination": "docs/projects/zboard/guides/storage-and-backups.md",
-      "source_sha256": "11e7b29c7852c0e0bba912b53beecacfa4921344e7d3eb772933650a3145b75c"
+      "source_sha256": "11e7b29c7852c0e0bba912b53beecacfa4921344e7d3eb772933650a3145b75c",
+      "status": "retained_or_rewritten"
     }
-  ]
+  ],
+  "publication_policy": "Publish current usage and plugin integration guides; exclude development plans, temporary contracts and historical acceptance records."
 }

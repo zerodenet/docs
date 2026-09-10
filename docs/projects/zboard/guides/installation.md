@@ -100,7 +100,7 @@ docker compose -f docker-compose.release.yml --env-file .env.release logs --tail
 5. **开通用户订阅。** 使用基础订单流程，创建对应套餐的订单，由管理员确认后开通订阅。
 6. **连接客户端。** 在用户账户中选择对应的订阅格式，将订阅链接导入客户端；连接后回到控制台查看流量用量。
 
-需要转发节点或共享上游代理池时，继续阅读[网络前置指南](/projects/zboard/guides/network-fronting)。节点安装和故障恢复见[节点生命周期说明](/projects/zboard/reference/node-kernel-lifecycle)。
+需要转发节点或共享上游代理池时，继续阅读[网络前置指南](/projects/zboard/guides/network-fronting)。节点安装和故障恢复见[节点管理指南](/projects/zboard/guides/node-management)。
 
 ## 保存部署数据
 
