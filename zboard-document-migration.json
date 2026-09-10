@@ -17,9 +17,10 @@
     },
     {
       "source": "docs/getting-started.md",
-      "destination": "docs/projects/zboard/guides/installation-en.md",
       "source_sha256": "cce43ed1c3d9ad71f642248bbbe0f84a5771870290a47e75c63051e2ecb2fd8b",
-      "status": "retained_or_rewritten"
+      "status": "excluded",
+      "excluded_destination": "docs/projects/zboard/guides/installation-en.md",
+      "reason": "Duplicate English page removed; the ZBoard documentation section uses Chinese."
     },
     {
       "source": "docs/core-baseline.md",
@@ -100,9 +101,10 @@
     },
     {
       "source": "docs/plugin-installation-trust.md",
-      "destination": "docs/projects/zboard/plugins/trust-en.md",
       "source_sha256": "9f3f42f7291ce69c15fbed439f7f6a72ffa3f27b1f7e795fa8d460062198e9bf",
-      "status": "retained_or_rewritten"
+      "status": "excluded",
+      "excluded_destination": "docs/projects/zboard/plugins/trust-en.md",
+      "reason": "Duplicate English page removed; the ZBoard documentation section uses Chinese."
     },
     {
       "source": "docs/plugin-installation-trust.zh-CN.md",

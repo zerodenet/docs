@@ -1,6 +1,5 @@
 # 首次安装
 
-[English](/projects/zboard/guides/installation-en) | [简体中文](/projects/zboard/guides/installation)
 
 本指南使用正式发布的 Docker 镜像安装面板，并说明如何配置第一条服务。镜像已经包含后端和 Web 控制台，无需自行构建前端，也无需安装 Go 或 Node.js。
 

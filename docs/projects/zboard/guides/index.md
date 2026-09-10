@@ -11,7 +11,6 @@ ZBoard 的核心是基础面板。先完成安装和一条服务的配置，再�
 5. [开通订阅](./plans-and-orders)：关联节点组、套餐与用户权益。
 6. [连接客户端](./subscriptions-and-traffic)：获取对应格式的订阅并查看流量。
 
-English installation instructions are available in [First installation](./installation-en).
 
 ## 按需配置
 

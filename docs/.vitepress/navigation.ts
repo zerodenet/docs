@@ -175,10 +175,6 @@ const zboardSidebar: DefaultTheme.SidebarItem[] = [
     page('节点配置交付', '/projects/zboard/reference/node-config-delivery'),
     page('规则兼容性', '/projects/zboard/reference/managed-rule-compatibility'),
   ]),
-  group('English', [
-    page('Installation', '/projects/zboard/guides/installation-en'),
-    page('Plugin installation trust', '/projects/zboard/plugins/trust-en'),
-  ]),
 ]
 
 export const sidebar: DefaultTheme.Sidebar = {
