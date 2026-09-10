@@ -17,7 +17,7 @@ The production site is published from `main`, while the development preview is p
 | --- | --- | --- |
 | Zero Core | Documentation for the ZeroDeNet network runtime, protocols, control interfaces, and deployment. | [zerodenet/core](https://github.com/zerodenet/core) |
 | ZNet Sink | Usage, configuration, and platform compatibility documentation for the ZeroDeNet desktop proxy client. | [zerodenet/znet-sink](https://github.com/zerodenet/znet-sink) |
-| Zboard | Deployment, initialization, node management, and usage documentation for the service operations platform. | [zerodenet/zboard](https://github.com/zerodenet/zboard) |
+| Zboard | Installation, basic panel management, and plugin extension documentation. | [zerodenet/zboard](https://github.com/zerodenet/zboard) |
 
 Each project has its own navigation, page hierarchy, and documentation boundaries so that versions, configuration semantics, and usage guidance remain project-specific.
 
@@ -193,3 +193,7 @@ After running the scaffold:
 ## License
 
 Documentation in this repository is published under the license declared by this repository. Source code licenses are defined by the corresponding project repositories.
+
+## ZBoard documentation ownership
+
+ZBoard documentation is maintained in `docs/projects/zboard/`, including installation, plugin usage and technical references. The product repository retains only entry-point READMEs and build-owned release notes. Historical materials are labeled and grouped separately. See `zboard-document-migration.json` for migration provenance.
