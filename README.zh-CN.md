@@ -192,4 +192,4 @@ pnpm create:project -- \
 
 ## ZBoard 文档维护
 
-ZBoard 的安装、插件使用与技术参考统一维护在 `docs/projects/zboard/`。产品仓库保留入口说明和构建使用的发布文案，历史资料在文档站单独归档。迁移来源记录在 `zboard-document-migration.json`。
+ZBoard 的安装、插件使用与技术参考统一维护在 `docs/projects/zboard/`。产品仓库保留入口说明和构建使用的发布文案，开发过程的历史资料不发布到文档站。迁移来源记录在 `zboard-document-migration.json`。

@@ -2,13 +2,15 @@
 
 ## ZBoard documentation migration — 2026-09-10
 
-ZBoard documentation is now authored in `docs/projects/zboard/`. Product introductions, installation, basic management, and plugin usage lead the navigation; contracts, design notes and historical acceptance records are separate reference sections. `zboard-document-migration.json` records each source, destination and source digest.
+ZBoard documentation is now authored in `docs/projects/zboard/`. Product introductions, installation, basic management, and plugin usage lead the navigation; only current usage and integration references are published. Development plans, temporary contracts, schema snapshots and historical acceptance records are excluded. `zboard-document-migration.json` records each source, destination and source digest.
 
-This migration uses ZBoard develop `37d1716c466ce16a1198399ac91c9de3e2c0c4f8` plus local documentation revisions. It is not a claim that every feature is in the published v0.0.1 artifact. Plugin runtime and marketplace documentation explicitly identifies the post-v0.0.1 development scope; shared-pool RAW editor additions are marked pending publication. Payments and other business extensions belong to plugins; the current payment extension interface is not implemented. Core and client evidence remains on the earlier baseline below.
+This migration uses ZBoard develop `37d1716c466ce16a1198399ac91c9de3e2c0c4f8` plus local documentation revisions. It is not a claim that every feature is in the published v0.0.1 artifact. Plugin runtime and marketplace documentation explicitly identifies the post-v0.0.1 development scope; unpublished shared-pool RAW editor descriptions are excluded. Payments and other business extensions belong to plugins; the current payment extension interface is not implemented. Core and client evidence remains on the earlier baseline below.
 
 Public ZBoard documentation must be changed here, not copied back into the ignored product `docs/` directory. Product release packaging keeps its own release-note artifact under `.github/release-notes/`.
 
-Verification: source and production-output checks passed for 97 Markdown pages, including every sidebar entry, internal link and anchor, JSON examples and rendered HTML. The migration also removes the product release workflow dependency on its local docs directory.
+Initial migration verification: source and production-output checks passed for 97 Markdown pages, including every sidebar entry, internal link and anchor, JSON examples and rendered HTML. The migration also removes the product release workflow dependency on its local docs directory.
+
+Curation correction: removed 11 historical or superseded reference pages, rewrote rule compatibility and publication recovery as usage guides, and removed unpublished RAW editor notes. The manifest marks excluded sources rather than presenting them as live pages.
 
 ## Previous main audit — 2026-09-09
 

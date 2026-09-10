@@ -25,4 +25,4 @@ English installation instructions are available in [First installation](./instal
 | 排查连接和发布错误 | [故障排查](./troubleshooting) |
 | 清理节点 | [节点清理](./node-cleanup) |
 
-日常管理还包括[控制台操作](./daily-operations)、[公告与邮件](./announcements-and-email)、[DNS 与证书](./dns-and-certificates)和[系统维护](./maintenance)。实现契约与开发流程集中在[开发参考](../reference/)中。
+日常管理还包括[控制台操作](./daily-operations)、[公告与邮件](./announcements-and-email)、[DNS 与证书](./dns-and-certificates)和[系统维护](./maintenance)。配置兼容性和发布排障见[运行参考](../reference/)，插件接口见[开发指南](../plugins/development)。

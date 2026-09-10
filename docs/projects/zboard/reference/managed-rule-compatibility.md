@@ -1,43 +1,30 @@
-# Managed rule import and client compatibility
+# 规则导入与客户端兼容性
 
-ZBoard imports independent rule sets, stores their matching conditions, and publishes stable client-specific URLs. Routing actions and ordering belong to subscription templates.
+规则集保存匹配条件，订阅模板负责选择规则、配置动作和排列顺序。导入前先确认规则文件的格式和目标客户端。
 
-## Importing dler-io/Rules
+## 选择导入来源
 
-Use files under `Clash/Provider/` with source format `auto` (recommended) or `clash_classical`. Auto detection accepts Provider YAML, line-oriented Classical rules, domain lists, CIDR lists and canonical JSON. An explicitly selected format is never silently changed.
+导入 Clash Provider 时可使用自动识别或明确选择 `clash_classical`。支持 Provider YAML、Classical 文本、域名列表、CIDR 列表和规范 JSON；明确选择格式后不会自动换成另一种格式。
 
-Supported Classical matchers are `DOMAIN`, `DOMAIN-SUFFIX`, `DOMAIN-KEYWORD`, `IP-CIDR`, `IP-CIDR6`, `PROCESS-NAME` and `PROCESS-PATH`. Process names and paths retain case and spaces. Unknown matchers fail with their position rather than being dropped.
+Clash Classical 支持 `DOMAIN`、`DOMAIN-SUFFIX`、`DOMAIN-KEYWORD`、`IP-CIDR`、`IP-CIDR6`、`PROCESS-NAME` 和 `PROCESS-PATH`。未知条件会报错，不会静默丢弃。
 
-`sing-box/1.12/Head.conf` and `Rule.conf` are configuration fragments, not independent rule sets. They must be adapted in subscription templates; they are not importable as Provider files. Files containing only comments, such as the current `Media/MOO.yaml`, are rejected with an empty-source explanation. A rejected synchronization retains the previous source.
+应选择独立规则集文件。完整客户端配置、配置片段和只有注释的空文件不能作为独立规则集导入。同步失败时保留之前成功导入的内容。
 
-## Storage and publishing
+## 按客户端使用
 
-Existing network-only documents retain the Zero Rule IR v1 shape and continue to compile to ZRS. ZBoard stores client-specific matchers in an optional `client_rules` extension, outside the Zero IR `rules` array:
+| 规则内容 | Zero | Clash / Mihomo | sing-box |
+| --- | --- | --- | --- |
+| 域名、IP / CIDR 条件 | 可生成 ZRS | 可生成规则源 | 可生成规则源 |
+| 进程名称或进程路径 | 不支持 | 保留进程条件 | 保留进程条件 |
 
-```json
-{
-  "version": 1,
-  "rules": [{ "type": "domain_suffix", "value": "example.com" }],
-  "client_rules": [{ "type": "process_name", "value": "Example.exe" }]
-}
-```
+包含进程条件的规则集不能绑定 Zero 模板，也不会生成删掉部分条件的 ZRS。如果规则集已经用于 Zero 模板，更新时加入进程条件会被拒绝，原内容保留。
 
-This extended document is internal ZBoard storage, not a new Zero kernel contract. Client-only sources may have `rules: []`, but the combined document must contain at least one matcher. Their database format is `managed_client_rules`.
+Clash 模板使用 Classical YAML 地址；包含客户端专属条件的规则集，其复制出的公共地址使用 sing-box 源格式。应通过对应订阅模板获取适合客户端的配置。
 
-Clash YAML/text and sing-box source exports preserve both arrays. sing-box uses separate rule objects for different condition types, preserving the imported set's OR semantics. The sing-box artifact cache has a new format revision so previously generated files cannot bypass the corrected encoder.
+## 常见问题
 
-Zero currently cannot evaluate process rules. A source containing any client rules does not produce ZRS, is excluded from the Zero template picker, and is rejected if explicitly bound to a Zero template. Updates adding client rules to a source already bound by Zero templates are rejected before changing its content. There is no partial ZRS export that silently drops process conditions.
+- **导入失败**：检查是否选择独立规则集、格式是否正确、内容是否为空，以及错误提示中的条件位置。
+- **Zero 模板无法选择规则集**：检查是否包含进程名称或路径条件。
+- **客户端没有命中进程规则**：确认客户端及平台支持进程识别。转发其他设备的流量并不能获取那台设备上的进程身份。
 
-The copied public URL for client-only sources selects sing-box source format. Clash templates automatically select the Classical YAML endpoint. Actual process detection remains a client/platform capability; forwarding a remote device's traffic does not provide its process identity.
-
-## Verification
-
-Normal backend tests cover parsing, canonical round trips, client exports, public downloads, Zero compatibility guards and rejected updates. To validate a checked-out external Provider corpus with a real sing-box binary:
-
-```sh
-ZBOARD_RULE_PROVIDER_TEST_DIR=/path/to/Rules/Clash/Provider \
-ZBOARD_SING_BOX_VALIDATE_BIN=/path/to/sing-box \
-go test ./internal/handler -run TestManagedRuleProviderRepositoryCompatibility -v
-```
-
-Run from `backend/`. The optional corpus test performs no network downloads. It imports each nonempty YAML source, round-trips through Clash YAML, and compiles the sing-box output to SRS.
+继续阅读[订阅配置与流量](../guides/subscriptions-and-traffic)。

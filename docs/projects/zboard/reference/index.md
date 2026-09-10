@@ -1,21 +1,10 @@
-# 技术参考
+# 配置与运行参考
 
-这里面向维护者和集成开发者，说明面板的数据、配置交付与内核接口。首次部署请从[安装教程](/projects/zboard/guides/installation)开始。
+这里补充当前使用中需要的规则兼容性和配置发布说明。项目定位、安装和插件入口见 [ZBoard 首页](/projects/zboard/)。
 
-- [核心能力与边界](/projects/zboard/reference/core-baseline)
-- [数据模型](/projects/zboard/reference/data-model)与[数据库迁移](/projects/zboard/reference/database-migrations)
-- [节点配置交付](/projects/zboard/reference/node-config-delivery)与[内核生命周期](/projects/zboard/reference/node-kernel-lifecycle)
-- [规则兼容性](/projects/zboard/reference/managed-rule-compatibility)
-- [Mieru 内核契约](/projects/zboard/reference/mieru-kernel-contract)
-- [插件开发](/projects/zboard/plugins/development)与[身份接口](/projects/zboard/plugins/identity-reference)
+- [规则导入与客户端兼容性](./managed-rule-compatibility)
+- [配置发布与故障恢复](./node-config-delivery)
+- [系统维护与数据库切换](../guides/maintenance)
+- [插件开发接口](../plugins/development)与[身份接口](../plugins/identity-reference)
 
-## 设计与历史资料
-
-以下资料保留设计依据和当时的验收范围。计划项不代表当前版本已经实现，历史版本编号也不作为新安装的版本要求。
-
-- [插件架构设计](/projects/zboard/reference/plugin-system-design)
-- [插件市场设计](/projects/zboard/reference/plugin-marketplace-design)
-- [0.0.1 发布记录](/projects/zboard/reference/history/v0.0.1)
-- [核心 RC 验收记录](/projects/zboard/reference/history/core-rc)
-- [历史发布检查清单](/projects/zboard/reference/history/launch-checklist)
-- [历史路线图](/projects/zboard/reference/history/roadmap)
+开发方案、迁移过程记录、临时契约和验收日志不作为公开使用文档。版本发布信息请查阅 [ZBoard Releases](https://github.com/zerodenet/zboard/releases)。
