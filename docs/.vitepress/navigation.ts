@@ -138,25 +138,59 @@ const sinkSidebar: DefaultTheme.SidebarItem[] = [
 ]
 
 const zboardSidebar: DefaultTheme.SidebarItem[] = [
-  page('Zboard 文档', '/projects/zboard/'),
+  page('ZBoard 基础面板', '/projects/zboard/'),
   group('开始使用', [
-    page('用户指南入口', '/projects/zboard/guides/'),
+    page('用户指南', '/projects/zboard/guides/'),
     page('安装与部署', '/projects/zboard/guides/installation'),
     page('首次初始化', '/projects/zboard/guides/first-setup'),
-    page('后台导航与日常运营', '/projects/zboard/guides/daily-operations'),
+    page('日常管理', '/projects/zboard/guides/daily-operations'),
+    page('数据存储与备份', '/projects/zboard/guides/storage-and-backups'),
   ], false),
-  group('功能说明', [
-    page('节点与协议服务管理', '/projects/zboard/guides/node-management'),
-    page('协议服务配置', '/projects/zboard/guides/protocol-services'),
-    page('套餐、订单与用户交付', '/projects/zboard/guides/plans-and-orders'),
-    page('订阅交付与流量展示', '/projects/zboard/guides/subscriptions-and-traffic'),
-    page('公告、注册验证与邮件', '/projects/zboard/guides/announcements-and-email'),
-    page('系统维护与数据库迁移', '/projects/zboard/guides/maintenance'),
-    page('DNS 与证书管理', '/projects/zboard/guides/dns-and-certificates'),
+  group('基础功能', [
+    page('节点管理', '/projects/zboard/guides/node-management'),
+    page('协议服务', '/projects/zboard/guides/protocol-services'),
+    page('网络前置与共享代理池', '/projects/zboard/guides/network-fronting'),
+    page('套餐与订单', '/projects/zboard/guides/plans-and-orders'),
+    page('订阅与流量', '/projects/zboard/guides/subscriptions-and-traffic'),
+    page('订阅筛选', '/projects/zboard/guides/subscription-filtering'),
+    page('公告与邮件', '/projects/zboard/guides/announcements-and-email'),
+    page('DNS 与证书', '/projects/zboard/guides/dns-and-certificates'),
+    page('系统维护', '/projects/zboard/guides/maintenance'),
+    page('节点清理', '/projects/zboard/guides/node-cleanup'),
     page('故障排查', '/projects/zboard/guides/troubleshooting'),
   ]),
-  group('参与项目', [
-    page('参与 Zboard', '/projects/zboard/contributing/'),
+  group('插件市场与使用', [
+    page('插件能力与边界', '/projects/zboard/plugins/'),
+    page('配置市场与安装插件', '/projects/zboard/plugins/marketplace'),
+    page('启用第三方登录', '/projects/zboard/plugins/login'),
+    page('安装安全与信任', '/projects/zboard/plugins/trust'),
+  ], false),
+  group('开发与技术参考', [
+    page('参与项目', '/projects/zboard/contributing/'),
+    page('本地开发', '/projects/zboard/contributing/development'),
+    page('插件开发', '/projects/zboard/plugins/development'),
+    page('身份接口', '/projects/zboard/plugins/identity-reference'),
+    page('插件治理', '/projects/zboard/plugins/governance'),
+    page('技术参考入口', '/projects/zboard/reference/'),
+    page('核心边界', '/projects/zboard/reference/core-baseline'),
+    page('数据模型', '/projects/zboard/reference/data-model'),
+    page('数据库迁移', '/projects/zboard/reference/database-migrations'),
+    page('节点配置交付', '/projects/zboard/reference/node-config-delivery'),
+    page('内核生命周期', '/projects/zboard/reference/node-kernel-lifecycle'),
+    page('规则兼容性', '/projects/zboard/reference/managed-rule-compatibility'),
+    page('Mieru 内核契约', '/projects/zboard/reference/mieru-kernel-contract'),
+  ]),
+  group('设计与历史资料', [
+    page('插件架构设计', '/projects/zboard/reference/plugin-system-design'),
+    page('插件市场设计', '/projects/zboard/reference/plugin-marketplace-design'),
+    page('0.0.1 发布记录', '/projects/zboard/reference/history/v0.0.1'),
+    page('核心 RC 验收记录', '/projects/zboard/reference/history/core-rc'),
+    page('历史发布清单', '/projects/zboard/reference/history/launch-checklist'),
+    page('历史路线图', '/projects/zboard/reference/history/roadmap'),
+  ]),
+  group('English', [
+    page('Installation', '/projects/zboard/guides/installation-en'),
+    page('Plugin installation trust', '/projects/zboard/plugins/trust-en'),
   ]),
 ]
 
@@ -172,6 +206,6 @@ export const sidebar: DefaultTheme.Sidebar = {
     page('实现与文档进度', '/progress'),
     group('应用', [page('ZNet Sink', '/projects/znet-sink/')]),
     group('内核', [page('Zero Core', '/projects/core/')]),
-    group('运营平台', [page('Zboard', '/projects/zboard/')]),
+    group('基础面板', [page('ZBoard', '/projects/zboard/')]),
   ],
 }

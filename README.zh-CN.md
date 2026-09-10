@@ -189,3 +189,7 @@ pnpm create:project -- \
 ## License
 
 本仓库中的文档内容按照仓库所声明的许可协议发布。各项目代码的许可协议以对应项目仓库为准。
+
+## ZBoard 文档维护
+
+ZBoard 的安装、插件使用与技术参考统一维护在 `docs/projects/zboard/`。产品仓库保留入口说明和构建使用的发布文案，历史资料在文档站单独归档。迁移来源记录在 `zboard-document-migration.json`。

@@ -42,7 +42,11 @@ TUN、DNS/Fake-IP 和多协议能力已提供配置与控制接口；具体协�
 
 0.0.1 已发布 Windows x86_64、macOS Intel/Apple Silicon 和 Linux x86_64 安装包。该版本的[发布记录](https://github.com/zerodenet/znet-sink/blob/6d822fb96140be87cdccdd0bea472ba0b089cf04/docs/releases/v0.0.1.md)明确保留四个平台安装运行验收的豁免：DNS 与接管模式组合、升级中断恢复、退出清理及跨资源故障注入等仍待补验。不能把发布成功写成这些场景已经安装验收通过。
 
-## Zboard
+## ZBoard
+
+::: info 文档迁移与开发版补充（2026-09-10）
+以下表格保留 2026-09-09 的 main 核对记录。新迁入的[插件说明](/projects/zboard/plugins/)覆盖 0.0.1 发布后的开发分支能力；不代表原始 0.0.1 安装包已包含插件运行时。ZBoard 定位为基础面板，在线支付等业务扩展通过插件实现，当前尚未开放支付业务接口。
+:::
 
 | 已实现能力 | 对运营者的实际作用 | 使用说明与源码依据 |
 | --- | --- | --- |
@@ -52,7 +56,7 @@ TUN、DNS/Fake-IP 和多协议能力已提供配置与控制接口；具体协�
 | 本地删除与独立远端清理 | 节点或供应商不可达时可清理面板记录；远端停机另行执行 | [节点清理](/projects/zboard/guides/node-management#删除节点与远端清理)；[删除实现](https://github.com/zerodenet/zboard/blob/e1b7246cc4ef805bf39b22d634ba209114eb3b14/backend/internal/handler/node_delete_cascade.go) |
 | 规则集按客户端能力交付 | Clash/sing-box 可保留进程条件，Zero 模板拒绝不支持的规则集 | [规则兼容](/projects/zboard/guides/subscriptions-and-traffic#规则集与客户端兼容性)；[兼容检查](https://github.com/zerodenet/zboard/blob/e1b7246cc4ef805bf39b22d634ba209114eb3b14/backend/internal/handler/managed_rule_client_compatibility.go) |
 
-当前提供用户、节点、订阅、基础订单和流量计量闭环。在线支付集成与插件运行时仍是后续方向，不作为 main 已交付能力；详见[当前范围](https://github.com/zerodenet/zboard/blob/e1b7246cc4ef805bf39b22d634ba209114eb3b14/docs/core-baseline.md)。[0.0.1 发布记录](https://github.com/zerodenet/zboard/blob/e1b7246cc4ef805bf39b22d634ba209114eb3b14/docs/release/v0.0.1.md)也未将 24 小时长稳、500 events/s 突发或完整多节点恢复标为验收完成。
+当前提供用户、节点、订阅、基础订单和流量计量闭环。此 main 快照尚未包含后来在开发分支实现的插件运行时。在线支付属于插件扩展范围，支付业务接口仍待实现；历史范围见[当前范围](https://github.com/zerodenet/zboard/blob/e1b7246cc4ef805bf39b22d634ba209114eb3b14/docs/core-baseline.md)。[0.0.1 发布记录](https://github.com/zerodenet/zboard/blob/e1b7246cc4ef805bf39b22d634ba209114eb3b14/docs/release/v0.0.1.md)也未将 24 小时长稳、500 events/s 突发或完整多节点恢复标为验收完成。
 
 ## 本轮核对范围
 

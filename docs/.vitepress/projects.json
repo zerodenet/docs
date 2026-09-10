@@ -30,9 +30,9 @@
   },
   {
     "id": "zboard",
-    "name": "Zboard",
-    "tagline": "代理服务运营管理",
-    "description": "基础设施、协议服务、节点组、商品、订单、订阅、配置交付和流量管理。",
+    "name": "ZBoard",
+    "tagline": "基础面板与插件扩展",
+    "description": "管理 Zero 节点、用户、订阅和流量，按需通过插件扩展。",
     "kind": "application",
     "status": "active",
     "repository": "https://github.com/zerodenet/zboard",
