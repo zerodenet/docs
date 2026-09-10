@@ -1,6 +1,5 @@
 # 插件安装信任
 
-[English](/projects/zboard/plugins/trust-en) · **简体中文**
 
 ZBoard 在接受签名身份前校验安装包。包可通过 `signature.json.public_key` 附带 Ed25519 公钥；这能证明签名、清单和文件摘要匹配，本身不能证明发布者身份。
 

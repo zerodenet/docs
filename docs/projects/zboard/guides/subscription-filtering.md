@@ -1,6 +1,6 @@
-# Public subscription filtering
+# 订阅节点筛选
 
-Every public subscription URL is bound to exactly one subscription. Query parameters can derive read-only client views from that subscription without changing its authorization boundary:
+每个订阅链接只对应一份订阅。可以通过查询参数筛选客户端收到的节点，筛选不会改变原订阅的权限范围。
 
 ```text
 /api/v1/client/subscription/{subscription-token}
@@ -15,53 +15,46 @@ Every public subscription URL is bound to exactly one subscription. Query parame
   &q=日本
 ```
 
-## Authorization boundary
+## 权限范围
 
-Filtering is an output projection, not an authorization mechanism:
+面板先检查链接绑定的订阅是否属于当前用户、是否有效、是否到期以及是否还有流量，再从该订阅已经授权的节点中筛选结果。
 
-1. Zboard resolves the token to one `subscription_id` and verifies that the same user owns both records.
-2. Zboard verifies that exact subscription is active, unexpired, and has remaining traffic.
-3. `plan`, `sku`, and `node_group` may remove that source, but they cannot select a different subscription owned by the same account.
-4. Zboard resolves protocol endpoints and credentials only from the token-bound subscription.
-5. Endpoint filters reduce that authorized endpoint set again.
-6. The result is ordered by the configured protocol delivery order and sent to the selected renderer.
+筛选只能减少节点，不能添加节点组、协议服务、凭据、套餐或其他订阅。即使同一账号有多份订阅，`plan`、`sku` 和 `node_group` 也不能把当前链接切换到另一份订阅。
 
-A filter can only remove endpoints authorized by the token-bound subscription. It cannot add a node group, endpoint, credential, plan, SKU, or another subscription.
+`Subscription-Userinfo` 响应头中的流量与到期时间始终对应这份订阅，不会汇总整个账号的数据。
 
-The `Subscription-Userinfo` response header and manifest quota metadata always describe the token-bound subscription only. Traffic totals and expiry are never accumulated across the account.
+## 筛选参数
 
-## Account access API
-
-Authenticated users manage credentials from the target subscription:
-
-| Method | Path | Meaning |
+| 参数 | 含义 | 匹配方式 |
 | --- | --- | --- |
-| `GET` | `/api/v1/account/subscriptions/{id}/access` | Read or lazily provision the link for one active subscription |
-| `POST` | `/api/v1/account/subscriptions/{id}/access/rotate` | Replace only that subscription's token |
-| `DELETE` | `/api/v1/account/subscriptions/{id}/access` | Revoke only that subscription's token |
+| `template` | 已有订阅模板标识或 `native` | 精确匹配 |
+| `plan` | 套餐的稳定标识 | 多个值满足任意一个 |
+| `sku` | 套餐规格代码 | 多个值满足任意一个 |
+| `node_group` | 节点组代码 | 多个值满足任意一个 |
+| `protocol` | 协议代码 | 多个值满足任意一个 |
+| `region` | 节点区域 | 多个值满足任意一个 |
+| `tag` | 协议服务标签 | 包含任意指定标签 |
+| `exclude_tag` | 需要排除的协议服务标签 | 命中任意标签即排除 |
+| `q` | 协议服务名称关键词 | 不区分大小写的包含匹配 |
 
-The legacy account-level `/api/v1/subscription/access` routes are removed. Existing aggregate tokens without a `subscription_id` are invalidated during schema reconciliation, and one independent token is provisioned for each usable subscription.
+不同参数需要同时满足。同一参数的多个值可以用逗号分隔，也可以重复传入查询参数；面板会规范化、去重，并限制数量与长度。
 
-## Parameters
+例如，`protocol=vless,hysteria2&region=jp` 表示保留日本区域的 VLESS 或 Hysteria2 节点。
 
-| Parameter | Meaning | Matching |
+无效代码、不支持的协议、过长的值或控制字符会返回 HTTP 400。合法筛选没有匹配节点时，返回有效的空订阅，仍保留该订阅的额度信息，并使用 `Cache-Control: no-store`。
+
+## 排序和服务状态
+
+筛选后的节点继续遵循管理员设置的交付顺序。关闭协议服务会同时停止其订阅交付和运行配置发布；重新启用后，通过正常发布流程恢复。
+
+## 订阅链接接口
+
+已登录用户可以针对指定订阅读取、轮换或撤销链接：
+
+| 方法 | 路径 | 作用 |
 | --- | --- | --- |
-| `template` | Existing renderer slug or `native` | Exact |
-| `plan` | Stable plan slug | OR within the parameter |
-| `sku` | Stable plan SKU code | OR within the parameter |
-| `node_group` | Stable node-group code | OR within the parameter |
-| `protocol` | Supported protocol code | OR within the parameter |
-| `region` | Node region | OR within the parameter |
-| `tag` | Structured protocol-service tag | Any requested tag |
-| `exclude_tag` | Structured protocol-service tag to remove | Any match excludes |
-| `q` | Protocol-service name keyword | Case-insensitive substring |
+| `GET` | `/api/v1/account/subscriptions/{id}/access` | 读取有效订阅的链接，尚未生成时按需创建 |
+| `POST` | `/api/v1/account/subscriptions/{id}/access/rotate` | 仅更换该订阅的令牌 |
+| `DELETE` | `/api/v1/account/subscriptions/{id}/access` | 仅撤销该订阅的令牌 |
 
-Different dimensions use AND semantics. Values can be supplied as comma-separated items or repeated query parameters. Values are normalized, deduplicated, and bounded in count and length.
-
-Malformed stable codes, unsupported protocol values, overlong values, and control characters return HTTP 400. A valid filter that removes the token-bound source or matches no endpoint returns a valid empty subscription while keeping that subscription's quota metadata and `Cache-Control: no-store`.
-
-## Delivery order and service state
-
-All native renderers consume the same ordered manifest. The administrator's protocol delivery order remains authoritative within the token-bound subscription. Endpoint identity is only a deterministic tie-breaker.
-
-`ProtocolEndpoint.is_active` is the protocol-service delivery switch. Disabled services are removed from public subscription output and from node runtime publication; re-enabling the service restores both through the existing runtime publish flow.
+继续阅读[订阅配置与流量](./subscriptions-and-traffic)。
