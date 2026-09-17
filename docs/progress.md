@@ -34,6 +34,10 @@ TUN、DNS/Fake-IP 和多协议能力已提供配置与控制接口；具体协�
 
 ## ZNet Sink
 
+::: info 开发版插件宿主补充（2026-09-17）
+以下表格继续保留 2026-09-09 的 `main` 与 `0.0.1` 核对记录。新增的[插件实现说明](/projects/znet-sink/plugins/)、[SDK v1](/projects/znet-sink/plugins/sdk)和[客户端 UI 规范](/projects/znet-sink/contributing/ui-guidelines)按 `develop@912d1dc` 整理，不代表 `0.0.1` 安装包已经包含这些能力。
+:::
+
 | 已实现能力 | 对使用者的实际作用 | 使用说明与源码依据 |
 | --- | --- | --- |
 | 网络设置中的统一绕过策略 | 一次维护本地网络、IP/CIDR 和域名例外，生成系统代理、TUN 与内核路由设置 | [统一绕过](/projects/znet-sink/guides/proxy-and-probes#统一绕过规则)；[策略投影](https://github.com/zerodenet/znet-sink/blob/6d822fb96140be87cdccdd0bea472ba0b089cf04/src-tauri/src/services/bypass.rs) |

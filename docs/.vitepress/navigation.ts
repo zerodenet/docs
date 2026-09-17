@@ -128,12 +128,17 @@ const sinkSidebar: DefaultTheme.SidebarItem[] = [
     page('迁移设置与管理内核', '/projects/znet-sink/guides/settings-transfer'),
     page('本地代理与节点测速', '/projects/znet-sink/guides/proxy-and-probes'),
   ], false),
+  group('插件', [
+    page('插件实现与宿主边界', '/projects/znet-sink/plugins/'),
+    page('插件 SDK v1', '/projects/znet-sink/plugins/sdk'),
+  ], false),
   group('帮助与诊断', [
     page('故障排查', '/projects/znet-sink/guides/troubleshooting'),
     page('数据与诊断', '/projects/znet-sink/guides/data-and-diagnostics'),
   ]),
   group('参与项目', [
     page('参与 ZNet Sink', '/projects/znet-sink/contributing/'),
+    page('客户端 UI 规范', '/projects/znet-sink/contributing/ui-guidelines'),
   ]),
 ]
 

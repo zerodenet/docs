@@ -15,7 +15,7 @@
 
 ## 贡献代码
 
-代码变更从 [ZNet Sink 仓库](https://github.com/zerodenet/znet-sink) 发起。提交拉取请求时，请说明用户可见变化、验证范围和已知限制；涉及界面行为时，同时检查桌面与窄屏窗口下的交互。
+代码变更从 [ZNet Sink 仓库](https://github.com/zerodenet/znet-sink) 发起。提交拉取请求时，请说明用户可见变化、验证范围和已知限制；涉及界面行为时，遵循[客户端 UI 规范与实现标准](./ui-guidelines)，同时检查桌面与窄屏窗口下的交互。
 
 ## 修改文档
 
