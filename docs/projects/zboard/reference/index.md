@@ -4,6 +4,7 @@
 
 - [规则导入与客户端兼容性](./managed-rule-compatibility)
 - [配置发布与故障恢复](./node-config-delivery)
+- [核心模块与交付边界（开发分支）](./core-modules)
 - [系统维护与数据库切换](../guides/maintenance)
 - [插件开发接口](../plugins/development)与[身份接口](../plugins/identity-reference)
 

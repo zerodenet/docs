@@ -172,6 +172,7 @@ const zboardSidebar: DefaultTheme.SidebarItem[] = [
     page('身份接口', '/projects/zboard/plugins/identity-reference'),
     page('插件治理', '/projects/zboard/plugins/governance'),
     page('配置与运行参考', '/projects/zboard/reference/'),
+    page('核心模块与交付边界', '/projects/zboard/reference/core-modules'),
     page('节点配置交付', '/projects/zboard/reference/node-config-delivery'),
     page('规则兼容性', '/projects/zboard/reference/managed-rule-compatibility'),
   ]),
