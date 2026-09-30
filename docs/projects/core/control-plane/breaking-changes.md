@@ -16,16 +16,16 @@
 
 升级时同时核对发行 tag、提交和实际 capability。产品版本、配置 `schema_version`、API V1 和事件 V1 是不同标识。
 
-## 已发布版本的升级注意事项
+## v0.0.2-rc.202609290540 升级注意事项 {#已发布版本的升级注意事项}
 
-截至 2026-09-30，通用使用说明按已发布 RC [v0.0.2-rc.202609290540 / 2d75265](https://github.com/zerodenet/core/tree/2d7526596e91ea1259c3692501a02672ca826cfd)核对；[v0.0.1](https://github.com/zerodenet/core/releases/tag/v0.0.1)仍是正式发行版。
+从较早版本切换到 [v0.0.2-rc.202609290540](https://github.com/zerodenet/core/releases/tag/v0.0.2-rc.202609290540) 时，检查以下配置和行为变化：
 
 - RC 的 VMess 历史私有 `cipher: zero` 需迁移为 `zero-plus`；当前 `zero` 为 Xray 标准 NONE 无分块语义，升级前协调两端
 - RC 的 VLESS Vision 不再只有早期 REALITY TCP 路径，UDP/443 策略和传输限制见[能力参考](../reference/protocol-capabilities#vless-组合边界)
 - RC 的 URLTest 测速成功不等于业务隔离已解除；单节点诊断不修改策略，见[探测语义](../guides/proxy-and-urltest#自动策略与单节点诊断)
 - WireGuard 仅在已发布 dev `v0.0.3-dev.202609281319` 中提供实验能力，RC 没有该 feature；配置 V1 未变不代表两者支持相同协议
 
-以目标发行物的配置校验和[RC 发布兼容记录](https://github.com/zerodenet/core/blob/2d7526596e91ea1259c3692501a02672ca826cfd/release/breaking-changes.md)为准。未发布 develop 修复不能计入下载包的升级结果。
+切换前用目标二进制校验配置，并保留旧二进制与配置备份。其他版本的变化见对应[发行说明](https://github.com/zerodenet/core/releases)。
 
 ## 消费者如何判断兼容性
 
@@ -76,6 +76,6 @@ Connector 不提供节点注册、套餐、支付、订阅或中心私有命令 
 
 同一主体策略下的并发 TCP/UDP 会话共享双向速率控制；不能把主体限速理解为每条连接都各自获得完整额度。没有 `principal_key` 的入站默认限速仍按会话执行。验收主体限速时应覆盖并发连接。
 
-## 后续文档维护
+<span id="后续文档维护"></span>
 
-后续兼容性变更应根据实际发布记录注明产品版本、影响的通道、契约标识、可检测条件和操作步骤，并附实现与测试依据。未发布实现使用提交标识说明范围，不推测发行编号；功能可用性始终结合实际构建能力判断。
+遇到未知构建时，先查询实际能力，再决定是否使用相关配置与接口。

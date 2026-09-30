@@ -1,8 +1,8 @@
 # 配置模型参考
 
-控制面与事件投递配置位于 `api` 键下。本文以已发布的 Core `v0.0.2-rc.202609290540`（`2d752659`）为基准，记录 API 配置字段。
+控制接口、Flow 钩子和事件投递配置位于 `api` 键下。本页列出各字段的默认值与使用约束。
 
-完整的配置模型（inbounds、outbounds、route、runtime）请参阅 [config.md](/projects/core/configuration/)。
+完整的配置模型（inbounds、outbounds、route、runtime）请参阅[配置参考](/projects/core/configuration/)。
 
 ## 完整示例
 
@@ -129,7 +129,7 @@ Flow 生命周期钩子，按数组顺序执行。
 
 **CLI 覆盖**：`--ipc-hook-socket /run/billing/hook.sock` 优先级高于配置文件。
 
-钩子协议详情：参见 [已发布实现中的 IPC hook 协议](https://github.com/zerodenet/core/blob/2d7526596e91ea1259c3692501a02672ca826cfd/src/hooks/ipc.rs)。
+钩子协议详情：参见 [IPC hook 协议实现](https://github.com/zerodenet/core/blob/2d7526596e91ea1259c3692501a02672ca826cfd/src/hooks/ipc.rs)。
 
 ## `api.event_sinks`
 
@@ -242,4 +242,4 @@ Webhook 接收端必须用 `event_id` 建立唯一约束并幂等返回 `2xx`。
 | `domain_regex` | `route.rules[*].condition` | 按正则表达式匹配域名的条件类型 |
 | `up_bps` / `down_bps` | `inbounds[*].protocol`（Hysteria2、Shadowsocks、Trojan） | 每入站的 GCRA 速率限制 |
 
-完整详情参见 [config.md](/projects/core/configuration/)。
+完整详情参见[配置参考](/projects/core/configuration/)。

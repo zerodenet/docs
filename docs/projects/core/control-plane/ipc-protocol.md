@@ -1,7 +1,5 @@
 # IPC 协议
 
-本文以已发布的 Core `v0.0.2-rc.202609290540`（`2d752659`）为基准。
-
 本地进程间通信使用 JSON-line 帧协议，底层传输在 Unix 上为 Domain Socket，Windows 上为 Named Pipe。协议语义完全一致。
 
 ## 连接
@@ -44,7 +42,7 @@ IPC 不使用 HTTP Bearer Token；能够连接到 socket/pipe 的调用方会获
 
 ### Query
 
-`request` 字段是 `QueryRequest` 枚举，使用 **externally-tagged** 格式（serde 默认）。每个变体名是 snake_case，值是查询参数对象（无参数时为空对象 `{}`）。
+`request` 字段使用 `QueryRequest` 的 **externally-tagged** 格式。每个变体名是 snake_case，值是查询参数对象（无参数时为空对象 `{}`）。
 
 ```
 → {"type":"query","id":1,"request":{"health":{}}}
@@ -70,7 +68,7 @@ IPC 不使用 HTTP Bearer Token；能够连接到 socket/pipe 的调用方会获
 | `{"sinks":{}}` | 事件接收器状态 |
 | `{"tun_status":{}}` | TUN 虚拟网卡状态 |
 
-连接页的新实现应订阅 flow 生命周期事件，以 `flow.snapshot` 重建活动连接，并在本地消费 `flow.completed` 维护历史。`recent_flows` 只保留为既有诊断兼容面，不用于断线重建或持久历史。
+连接页应订阅 flow 生命周期事件，以 `flow.snapshot` 重建活动连接，并在本地消费 `flow.completed` 维护历史。`recent_flows` 只保留为既有诊断兼容面，不用于断线重建或持久历史。
 
 ### Command
 
@@ -105,7 +103,7 @@ IPC 不使用 HTTP Bearer Token；能够连接到 socket/pipe 的调用方会获
 
 命令成功时 `response.result.accepted` 表示接受，业务负载位于 `response.result.result`。`diagnostics.probe_outbound` 的目标不存在、URL 无效或网络探测失败也可能是成功命令信封，需继续检查业务负载的 `reachable`、`terminal_status` 和 `error_code`。探测的 `operation_id`、动态超时及合并语义见 [HTTP 命令](./http-api#policies-probe)。
 
-> **实现说明：** IPC Command 和 HTTP `POST /api/v1/commands` 共用同一条 serde 反序列化路径（`CommandRequest` 的 `#[serde(tag = "method", content = "params")]`）。新增 command 只需修改 `zero_api::CommandRequest`，传输层无需单独适配。
+IPC Command 的 `command` 对象与 HTTP `POST /api/v1/commands` 的请求体使用相同格式：`method` 指定命令，`params` 提供参数。完整参数和响应说明见 [HTTP 命令参考](./http-api#command-端点)。
 
 ### Subscribe
 

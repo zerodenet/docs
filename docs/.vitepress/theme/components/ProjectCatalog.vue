@@ -5,7 +5,6 @@ import { projectKindLabels, projectStatusLabels, projects } from '../../projects
 defineProps<{ compact?: boolean }>()
 
 const displayAddress = (url: string) => url.replace(/^https?:\/\//, '')
-const quickStartLabel = (kind: string) => kind === 'application' ? '安装与使用' : '快速开始'
 const downloadHref = (project: (typeof projects)[number]) => (
   project.downloadPage ? withBase(project.downloadPage) : project.download
 )
@@ -47,8 +46,8 @@ const downloadHref = (project: (typeof projects)[number]) => (
         </p>
 
         <nav class="project-catalog__actions" :aria-label="`${project.name} 常用入口`">
-          <a class="project-link project-link--primary" :href="withBase(project.docsRoot)">进入文档 <span aria-hidden="true">→</span></a>
-          <a v-if="!compact && project.quickStart" class="project-link" :href="withBase(project.quickStart)">{{ quickStartLabel(project.kind) }}</a>
+          <a class="project-link project-link--primary" :href="withBase(project.quickStart || project.docsRoot)">开始使用 <span aria-hidden="true">→</span></a>
+          <a v-if="!compact" class="project-link" :href="withBase(project.docsRoot)">项目介绍</a>
           <template v-if="!compact">
             <a
               v-if="downloadHref(project)"

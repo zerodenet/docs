@@ -1,13 +1,13 @@
 # HTTP JSON API
 
-本文以已发布的 Core `v0.0.2-rc.202609290540`（`2d752659`）为基准。接入不同构建时先查询 `capabilities`，不要将开发分支行为当作已发布合同。
+通过 HTTP 查询运行状态、执行控制命令和订阅 SSE 事件。接入时先查询 `capabilities`，确认实际可用的功能与限制。
 
 ## 基础信息
 
 - 稳定前缀：`/api/v1/`
 - 认证：`Authorization: Bearer <token>` 或 `X-Zero-Api-Key: <token>`；通过 `api.control` 启用时必须配置凭证。CLI `--status-listen` 是无认证调试入口，必须只绑定 loopback，不能暴露到不可信网络
 - CORS：所有端点返回 `Access-Control-Allow-Origin: *`
-- 限流：Query 100/s，Command 10/s，SSE 新建请求 5/s（该 RC 不以此限制同时在线连接数）
+- 限流：Query 100/s，Command 10/s，SSE 新建请求 5/s（并非同时在线连接数上限）
 
 ## 通用响应格式
 
@@ -65,9 +65,9 @@ HTTP/IPC 错误信封不包含内部 `ApiError.cause`；配置字段诊断读取
 
 > **HTTP 和 IPC 的 Query `result` 格式不同**：HTTP 的 `result` 直接包含端点数据（如 `{engine_build_id:"build-id",...}`）。IPC 的 `result` 包含一个变体名 key 包裹（如 `{"health":{engine_build_id:"build-id",...}}`）。详见 [ipc-protocol.md](/projects/core/control-plane/ipc-protocol)。
 
-以下是命令错误的 HTTP 状态映射。该 RC 的 Query 查询错误（例如不存在的 flow 或 policy）仍可能返回 HTTP `200`，但信封为 `ok: false`；客户端必须检查 `ok` 和 `error.code`，不能只靠状态码判断成功。
+以下是命令错误的 HTTP 状态映射。Query 查询错误（例如不存在的 flow 或 policy）仍可能返回 HTTP `200`，但信封为 `ok: false`；客户端必须检查 `ok` 和 `error.code`，不能只靠状态码判断成功。
 
-错误码（snake_case，与 JSON serde 格式一致）：
+错误码（snake_case）：
 
 | code | HTTP | 说明 |
 |------|------|------|
@@ -88,7 +88,7 @@ HTTP/IPC 错误信封不包含内部 `ApiError.cause`；配置字段诊断读取
 
 ### GET /api/v1/capabilities
 
-API 能力列表。当前响应还包含独立版本范围 `contracts`、稳定 `error_codes` 和 `global_limitations`。按[通用契约](./contract#v1-契约版本)匹配版本与功能，不能仅凭构建版本推断能力；下例只展示部分字段。
+API 能力列表。响应包含独立版本范围 `contracts`、稳定 `error_codes` 和 `global_limitations`。按[通用契约](./contract#v1-契约版本)匹配版本与功能，不能仅凭构建版本推断能力；下例只展示部分字段。
 
 ```json
 {
@@ -122,7 +122,7 @@ API 能力列表。当前响应还包含独立版本范围 `contracts`、稳定 
 }
 ```
 
-`protocols` 是供 GUI 和外部控制面消费者使用的机器可读协议矩阵。`zero-api` 定义此线路模型；代理运行时会从当前二进制的编译协议清单中填充该字段。当前 TCP/UDP 能力模型和限制码详见 [protocol-capabilities.md](/projects/core/reference/protocol-capabilities)。
+`protocols` 按当前二进制编译的协议提供机器可读能力矩阵，供 GUI 和外部控制器判断可用功能与限制。TCP/UDP 能力模型和限制码详见[协议能力参考](/projects/core/reference/protocol-capabilities)。
 
 ### GET /api/v1/health
 
@@ -209,7 +209,7 @@ API 能力列表。当前响应还包含独立版本范围 `contracts`、稳定 
   "log_level": "info",
   "log_files": ["logs/zero.log"],
   "pid": 12345,
-  "config_path": "examples/v0.0.1/basic.json",
+  "config_path": "config.json",
   "started_at_unix_ms": 1713500000000,
   "active_sessions": [],
   "recent_completed_sessions": []
@@ -248,7 +248,7 @@ API 能力列表。当前响应还包含独立版本范围 `contracts`、稳定 
 
 ### GET /api/v1/flows/{flow_id}
 
-单流详情。不存在时返回 `ok: false`、`error.code: "not_found"`；该 RC 的 HTTP 状态仍为 `200`。
+单流详情。不存在时返回 `ok: false`、`error.code: "not_found"`；HTTP 状态可能仍为 `200`，应以响应信封判断结果。
 
 ### GET /api/v1/policies
 
@@ -256,7 +256,7 @@ API 能力列表。当前响应还包含独立版本范围 `contracts`、稳定 
 
 ### GET /api/v1/policies/{policy_tag}
 
-单个 policy 详情。不存在时返回 `ok: false`、`error.code: "not_found"`；该 RC 的 HTTP 状态仍为 `200`。
+单个 policy 详情。不存在时返回 `ok: false`、`error.code: "not_found"`；HTTP 状态可能仍为 `200`，应以响应信封判断结果。
 
 ### GET /api/v1/sinks
 
@@ -308,7 +308,7 @@ TUN 虚拟网卡运行状态。
 | `addr` | 网卡地址（运行时返回） |
 | `tag` | 入站 tag（运行时返回） |
 
-当前状态还包含以下运行事实；可选字段及空 CIDR 列表可能省略：
+状态还包含以下运行事实；可选字段及空 CIDR 列表可能省略：
 
 | 字段 | 说明 |
 | --- | --- |
@@ -619,7 +619,7 @@ Response（探测失败——超时/拒绝，属于**结果**而非命令错误�
 }
 ```
 
-该 RC 中，目标不存在、URL 非法和探测失败均返回成功命令信封（`ok: true`、`accepted: true`），业务结果为 `reachable: false`、`terminal_status: "failed"`。检查 `error_code`，例如 `target_not_found`、`invalid_probe_url`、`unsupported_target`、`probe_timeout`；不要只检查 `ok`。命令 JSON 无法解析、鉴权等错误仍使用失败信封。
+目标不存在、URL 非法和探测失败均返回成功命令信封（`ok: true`、`accepted: true`），业务结果为 `reachable: false`、`terminal_status: "failed"`。检查 `error_code`，例如 `target_not_found`、`invalid_probe_url`、`unsupported_target`、`probe_timeout`；不要只检查 `ok`。命令 JSON 无法解析、鉴权等错误仍使用失败信封。
 
 成功与失败结果都还包含 `operation_id`、`core_instance_id`、`config_revision`、`operation_kind: "diagnostic_outbound"`、起止时间和 `duration_ms`，以及 `timeout_ms`、`dns_budget_ms`、`transport_budget_ms`、`deadline_capped`。`affects_policy_selection` 和 `affects_outbound_health` 为 `false`，`bypasses_outbound_health_quarantine` 为 `true`。以上 Response 示例只展示部分业务字段。
 
@@ -763,7 +763,7 @@ event: flow.completed
 data: {"schema_id":"zero.event.v1","event_id":"...","event_type":"flow.completed",...}
 ```
 
-连接断开后可使用 `Last-Event-ID` 请求追赶，服务端先发送保留的追赶事件再切回实时流。该 RC 单次最多追赶 256 条；事件环有容量限制，缺口只记录服务端警告，SSE 不提供完整历史保证。跨进程重启必须丢弃旧序号（用 `core_instance_id` 区分）；需要可靠完成记录时使用带 outbox 的 sink。详见 [events.md](/projects/core/control-plane/events)。
+连接断开后可使用 `Last-Event-ID` 请求追赶，服务端先发送保留的追赶事件再切回实时流。单次最多追赶 256 条；事件环有容量限制，缺口只记录服务端警告，SSE 不提供完整历史保证。跨进程重启必须丢弃旧序号（用 `core_instance_id` 区分）；需要可靠完成记录时使用带 outbox 的 sink。详见 [events.md](/projects/core/control-plane/events)。
 
 实时订阅阶段会生成 `flow.snapshot` 作为当前活动连接基线；它不在事件环中，因此不会被 `?since=` 回放，也不会出现在下面的一次性 `/events` 结果中。带断点续传的连接会先收到事件环中的追赶事件，再进入包含新快照的实时阶段。消费者应以快照的 `records` 替换活动集合，并按 `revision` 合并后续生命周期事件。
 

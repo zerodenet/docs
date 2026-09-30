@@ -1,23 +1,19 @@
-# 配置基础
+---
+prev:
+  text: 第一次使用
+  link: /projects/core/guides/quickstart
+next:
+  text: 运行与观测
+  link: /projects/core/guides/operations
+---
 
-Zero 使用 JSON 配置。推荐从一个能够通过 `zero validate` 的完整文件开始，每次只修改一个部分并重新校验。
+# 接入远程节点与分流 {#配置基础}
+
+完成[第一次使用](./quickstart)后，本页继续把本地直连测试改成远程代理，并加入一条内网直连规则。保持 `127.0.0.1:7890` 入口不变，应用无需重新配置代理地址。
 
 ## 配置由什么组成
 
-最常用的顶层字段：
-
-| 字段 | 用途 |
-|------|------|
-| `schema_version` | 配置契约版本；省略按 `1`，未知版本会拒绝 |
-| `inbounds` | Zero 在哪里接收连接，以及使用什么入站协议 |
-| `outbounds` | 直连、阻断或远程代理节点 |
-| `outbound_groups` | selector、url_test、fallback、relay 和负载均衡 |
-| `mode` | direct、global 或 rule |
-| `route` | 匹配条件与最终去向 |
-| `runtime` | 日志、DNS、超时和网络参数 |
-| `api` | 控制接口、事件 sink、outbox 和 hooks |
-
-字段名和嵌套层级必须准确。未知字段通常会被拒绝，而不是静默忽略。
+第一次使用中的 `inbounds` 是应用连接的本地入口，`route` 决定请求去哪。现在增加 `outbounds`，把远程代理节点命名为 `proxy`，再让默认路由指向它。
 
 ## 加入一个代理出站
 
@@ -56,31 +52,20 @@ Zero 使用 JSON 配置。推荐从一个能够通过 `zero validate` 的完整�
 
 这里 `mixed-in` 是应用连接的本地入口，`proxy` 是 Zero 要连接的远程服务器，`route.final` 把未匹配其他规则的流量交给它。示例地址和 UUID 不能用于真实连接，也不要通过关闭证书校验来掩盖服务名错误。
 
+如果第一次使用的实例仍占用 7890 端口，先在它的终端按 `Ctrl+C` 停止。后续用 `zero` 简写程序路径；未加入 `PATH` 时仍使用 `./zero` 或 `.\zero.exe`。校验成功后再启动：
+
 ```bash
 zero validate proxy.json
 zero run proxy.json
 ```
 
-如果快速开始的实例仍在使用 7890 端口，先停止旧实例，或按[热更新流程](./hot-reload)将完整配置应用给旧实例。另开终端运行 `curl --proxy socks5h://127.0.0.1:7890 https://example.com/`，并用 `zero flows` / `zero events` 确认使用了 `proxy` 出站。
+另开终端运行 `curl --proxy socks5h://127.0.0.1:7890 https://example.com/`（Windows 使用 `curl.exe`）。想核对实际出站，可以先运行 `zero events` 再重试请求；已结束的请求不会一直留在 `zero flows` 活动列表中。
 
 对端使用 REALITY、WebSocket、Trojan 或其他协议时，保留这份配置的入口和路由结构，用[协议配置示例](../protocols/configuration)替换 `outbounds` 中的协议条目。不要把单个条目保存为完整配置。
 
 ## 选择流量去向
 
-以下是需要合并到完整配置的顶层片段。先保留上一步的 `inbounds` 和 `outbounds`，再替换对应字段。
-
-全部走某个出站：
-
-```json
-{
-  "mode": {
-    "type": "global",
-    "outbound": "proxy"
-  }
-}
-```
-
-按规则分流：
+上面的配置已把请求全部交给 `proxy`。如果希望内网域名直连、其他目标仍走代理，用下面的顶层片段替换完整配置中的 `mode` 和 `route`，保留 `inbounds` 与 `outbounds`。将 `internal.example` 换成自己的内网域名：
 
 ```json
 {
@@ -109,6 +94,22 @@ zero run proxy.json
 
 `route.final` 必须明确表达未命中规则时的行为。引用的出站 tag 必须存在。
 
+## 修改配置的安全顺序
+
+把加入分流规则后的完整配置另存为 `candidate.json`，保持刚才的代理进程运行，然后执行：
+
+```bash
+zero validate candidate.json
+zero reload candidate.json
+zero status --json
+```
+
+`reload` 提交完整候选配置，不是局部补丁。成功响应会等待监听器和相关应用服务完成重建；失败时会尝试恢复上一份运行配置。控制接口自身的监听地址和凭证不能在线自替换，需要显式重启。
+
+修改后再发起新请求确认分流结果。更新失败时的检查顺序见[安全热更新配置](./hot-reload)。
+
+::: details 配置涉及证书或其他文件时
+
 ## 路径如何解析
 
 证书、规则文件、outbox 和日志等相对路径以主配置文件所在目录为基准。生产部署建议把配置和状态分开：
@@ -122,16 +123,8 @@ zero run proxy.json
 
 私钥、API key 和 Webhook header 不应进入公开仓库。控制 API key 优先使用 `api_key_env` 从环境变量读取。
 
-## 修改配置的安全顺序
+:::
 
-```bash
-zero validate candidate.json
-zero reload candidate.json
-zero status --json
-```
+## 继续使用
 
-`reload` 提交完整候选配置，不是局部补丁。成功响应会等待监听器和相关应用服务完成重建；失败时会尝试恢复上一份运行配置。控制接口自身的监听地址和凭证不能在线自替换，需要显式重启。
-
-详细流程见[安全热更新配置](./hot-reload)，所有字段见[配置参考](/projects/core/configuration/)。
-
-需要 DNS 分流或 Fake-IP 时使用[命名服务器参数](../configuration/dns)，不要沿用旧的 `runtime.dns.fake_ip` 形状；应配置 `runtime.dns.answer.type: "fake_ip"`。透明代理的安装、网段接管与验证见[运行 TUN 与 DNS](./tun-and-dns)。
+接下来用[运行与观测](./operations)查看连接、切换节点和处理日志。只有需要接管未设置代理的应用时，才继续配置 [TUN](./tun-and-dns)。

@@ -241,7 +241,7 @@ Mixed 同时接受 SOCKS5 TCP、SOCKS5 UDP ASSOCIATE、HTTP CONNECT 和标准 HT
 
 此示例要求对端开启对应 REALITY/Vision 服务，并替换服务器、UUID、公钥、short ID 和服务名。示例公钥仅用于展示字段，不能用于连接真实节点。
 
-按已发布 `v0.0.2-rc.202609290540` 实现：
+配置 Vision 时注意：
 
 - Vision 可以使用原始 TLS 1.3、REALITY 或 VLESS Encryption 提供的可切换承载；TLS 1.2 不提供 Vision 直通；
 - 不能与普通 TCP `mux_concurrency` 组合；
@@ -253,7 +253,7 @@ Mixed 同时接受 SOCKS5 TCP、SOCKS5 UDP ASSOCIATE、HTTP CONNECT 和标准 HT
 
 ### VMess
 
-对第三方 VMess 节点使用双方支持的标准 cipher。已发布 RC 中的 `zero` 为 Xray 标准无分块 NONE 语义；历史 Zero 私有格式已命名为 `zero-plus`，升级旧 Zero 对端时必须协调两端，不能直接混用。
+对第三方 VMess 节点使用双方支持的标准 cipher。`zero` 为 Xray 标准无分块 NONE 语义；历史 Zero 私有格式已命名为 `zero-plus`，升级旧 Zero 对端时必须协调两端，不能直接混用。
 
 ```json
 {

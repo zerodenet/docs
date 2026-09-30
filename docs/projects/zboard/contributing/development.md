@@ -4,7 +4,7 @@
 
 ## 工具链 {#toolchain}
 
-以所检出版本的 `backend/go.mod`、`frontend/package.json` 和 Dockerfile 为准。当前 RC 使用 Go 1.26.8、Node 22 构建环境及 pnpm 11.9.0；默认启动脚本使用 MySQL 8。
+以所检出版本的 `backend/go.mod`、`frontend/package.json` 和 Dockerfile 为准。默认启动脚本使用 MySQL 8。
 
 先运行 `./scripts/verify-env.sh`；Windows 使用 `scripts/verify-env.ps1`。不要为了本机可运行而降低生产密钥要求。
 

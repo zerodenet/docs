@@ -1,12 +1,51 @@
-# 启动第一个 Zero 节点
+---
+prev:
+  text: Zero Core
+  link: /projects/core/
+next:
+  text: 接入远程节点与分流
+  link: /projects/core/guides/configuration-basics
+---
 
-本页使用一个仅监听本机、直接出站的配置验证安装结果。它不需要准备远程服务器、UUID 或密码，因此可以先确认 Zero 本身工作正常，再添加真实代理节点。
+# 第一次使用 Zero Core {#启动第一个-zero-节点}
 
-先按[安装指南](./installation)下载并解压 Zero。以下命令在可执行文件所在目录运行；源码构建用户把 `./zero` 换成 `./target/release/zero`，Windows 对应使用 `.\target\release\zero.exe`。
+这份教程会让一条请求经过你本机的 Zero。你不需要远程服务器或管理员权限；先用直连出口验证程序，再接入自己的代理节点。
 
-## 1. 创建配置
+## 1. 下载并解压 {#下载发行包}
 
-在同一目录新建 `config.json`（不是 `config.json.txt`）：
+打开 [Core Releases](https://github.com/zerodenet/core/releases)，在所选发行页下载与你的系统和 CPU 匹配的压缩包，以及同名 `.sha256` 校验文件。发行页会标明是否为预发布版本。
+
+| 系统 | 压缩包 |
+|------|--------|
+| Linux x86_64，GNU/glibc | `zero-linux-x86_64.tar.gz` |
+| Linux x86_64，musl | `zero-linux-x86_64-musl.tar.gz` |
+| macOS，Apple Silicon | `zero-darwin-aarch64.tar.gz` |
+| macOS，Intel | `zero-darwin-x86_64.tar.gz` |
+| Windows x86_64 | `zero-windows-x86_64.zip` |
+
+确认压缩包的 SHA-256 与校验文件一致，然后用系统解压工具解压到自己可写的固定目录。Windows 可右键选择“全部解压”，并保留整个包内的文件，包括 `wintun.dll` 和许可证。
+
+::: details 如何查看 SHA-256
+
+将下列文件名换成你下载的包，并与同名 `.sha256` 文件中的值比较：
+
+- Linux：`sha256sum zero-linux-x86_64.tar.gz`
+- macOS：`shasum -a 256 zero-darwin-aarch64.tar.gz`
+- Windows PowerShell：`Get-FileHash .\zero-windows-x86_64.zip -Algorithm SHA256`
+
+不一致时不要运行该包，重新从发行页下载。
+:::
+
+在 `zero` 或 `zero.exe` 所在目录打开终端，确认程序能运行：
+
+- Linux/macOS：`./zero build-info`
+- Windows PowerShell：`.\zero.exe build-info`
+
+能看到构建信息即可继续。后续命令都在这个目录执行，不必先把程序加入 `PATH`。
+
+## 2. 创建配置 {#_1-创建配置}
+
+在同一目录新建 `config.json`，复制下面的完整内容。Windows 注意文件名不要变成 `config.json.txt`。
 
 ```json
 {
@@ -14,77 +53,39 @@
   "inbounds": [
     {
       "tag": "mixed-in",
-      "listen": {
-        "address": "127.0.0.1",
-        "port": 7890
-      },
-      "protocol": {
-        "type": "mixed"
-      }
+      "listen": { "address": "127.0.0.1", "port": 7890 },
+      "protocol": { "type": "mixed" }
     }
   ],
-  "outbounds": [
-    {
-      "tag": "direct",
-      "protocol": {
-        "type": "direct"
-      }
-    },
-    {
-      "tag": "block",
-      "protocol": {
-        "type": "block"
-      }
-    }
-  ],
-  "route": {
-    "rules": [
-      {
-        "condition": {
-          "type": "domain",
-          "values": ["blocked.example"]
-        },
-        "action": {
-          "type": "route",
-          "outbound": "block"
-        }
-      }
-    ],
-    "final": {
-      "type": "route",
-      "outbound": "direct"
-    }
-  }
+  "route": { "final": { "type": "direct" } }
 }
 ```
 
-这个 Mixed 入站同时接受 SOCKS5、HTTP CONNECT 和普通 HTTP 代理请求。它只监听 `127.0.0.1:7890`，不会向局域网公开代理端口。出口是本机直连，因此这一步验证代理入口，不会隐藏或改变你的公网出口。
+这份配置在本机 `127.0.0.1:7890` 提供 SOCKS5 和 HTTP 代理入口，并由本机直接连接目标。它不会改变你的公网出口，也不会自动修改系统代理或接管其他应用。
 
-## 2. 先校验
+## 3. 校验并启动 {#_2-先校验}
 
-Linux/macOS：
+先校验配置：
 
 ```bash
 ./zero validate config.json
 ```
 
-Windows PowerShell：
+Windows PowerShell 使用：
 
 ```powershell
 .\zero.exe validate .\config.json
 ```
 
-成功时会显示：
+看到下面的成功信息后再启动；有错误时，先按提示修正文件：
 
 ```text
-config valid: 1 inbounds, 2 outbounds, 0 groups, 1 rules
+config valid: 1 inbounds, 0 outbounds, 0 groups, 0 rules
 ```
 
-如果校验失败，不要直接启动。根据错误中的字段路径修正配置，或查看[配置错误处理](./config-failure-examples)。
+<span id="_3-启动"></span>
 
-## 3. 启动
-
-Linux/macOS：
+Linux/macOS 启动命令：
 
 ```bash
 ./zero run config.json
@@ -96,43 +97,32 @@ Windows PowerShell：
 .\zero.exe run .\config.json
 ```
 
-Zero 默认以前台进程运行。保持这个终端开启，再打开第二个终端进行验证。
+保持这个终端开启。Zero 在前台运行不是卡住了；下面的测试请另开一个终端。
 
-## 4. 验证代理和状态
+## 4. 发出第一条请求 {#_4-验证代理和状态}
 
-通过 Mixed 入站发起一次 SOCKS5 请求：
+Linux/macOS：
 
 ```bash
 curl --proxy socks5h://127.0.0.1:7890 https://example.com/
 ```
 
-看到目标网页内容即表示这一条请求已经过 Mixed 入站并成功直连。Windows PowerShell 请使用 `curl.exe` 运行相同参数。
-
-也可以把应用的 HTTP 或 SOCKS5 代理设置为 `127.0.0.1:7890`。Zero 启动不会自动修改系统代理；未设置代理的应用仍走原来的网络。
-
-查看运行状态：
-
-```bash
-./zero status
-```
-
-Windows：
+Windows PowerShell：
 
 ```powershell
-.\zero.exe status
+curl.exe --proxy socks5h://127.0.0.1:7890 https://example.com/
 ```
 
-CLI 会自动连接本地 IPC。Linux/macOS 默认使用可执行文件旁的 `control.sock`（无法定位可执行目录时才回退到 `~/.zero/control.sock`），Windows 默认使用 `\\.\pipe\zero-control`。
+看到目标网页内容，就说明这条请求已通过 Zero 的本地入口并成功直连。若提示连接被拒绝，检查运行终端是否退出、端口是否为 7890；若目标超时，检查本机能否访问该网站及 Zero 的错误日志。
 
-如果请求失败，先看运行终端的第一条错误：连接被拒绝通常需要检查 Zero 是否运行、端口是否相同；配置校验成功不代表外网目标一定可达。更多检查见[故障排查](./troubleshooting)。
+你也可以把应用的 HTTP 或 SOCKS5 代理设为 `127.0.0.1:7890`。未设置代理的应用仍使用原来的网络。想接管系统流量，需要另外配置 TUN，先不要为这次测试修改系统路由。
 
-## 5. 停止
+需要确认实例状态时，在另一终端运行 `./zero status`；Windows 使用 `.\zero.exe status`。其他常见问题见[故障排查](./troubleshooting)。
 
-如果为应用设置了代理，先关闭该应用的代理设置，再回到运行 Zero 的终端并按 `Ctrl+C`。生产环境应由 systemd、Windows 服务管理器或其他进程管理器负责启动、停止和崩溃重启。
+## 5. 停止 {#_5-停止}
+
+如果为应用设置了代理，先关闭该应用的代理设置，再回到运行 `zero run` 的终端按 `Ctrl+C`。否则应用可能继续连接已经停止的本地代理。
 
 ## 下一步
 
-- [配置基础](./configuration-basics)：加入真实代理出站和路由。
-- [协议配置](/projects/core/protocols/)：选择 VLESS、VMess、Trojan、Shadowsocks、Hysteria2 等协议。
-- [运行与观测](./operations)：查看 flow、事件、日志和策略状态。
-- [使用控制 API](./control-api)：为脚本或外部服务启用 HTTP/gRPC。
+继续[接入自己的远程节点](./configuration-basics)：保留本地入口，填入服务端提供的地址、协议和凭证，再把默认路由指向该节点。该教程提供完整配置，并接着说明如何让内网目标直连。

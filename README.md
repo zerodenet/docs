@@ -38,7 +38,7 @@ Internal design notes, temporary investigations, development plans, test records
 
 Organize the reading path around user tasks: choose a project, install it, complete the first working setup, operate it, and troubleshoot it. Guides state prerequisites, actions, the expected result, and the next step if something fails. Implementation inventories do not replace instructions. Keep contributor guidance focused on project conventions and contribution requirements; configuration and public API references are optional lookups.
 
-Distinguish released artifacts, release candidates, and source-only changes. Matching version numbers do not imply matching capabilities across projects or builds. Record the evidence and verification scope in [CONTENT_SYNC.md](./CONTENT_SYNC.md).
+Distinguish released artifacts, release candidates, and source-only changes. Matching version numbers do not imply matching capabilities across projects or builds. Record evidence and verification scope in the pull request; follow the [documentation maintenance principles](./CONTENT_SYNC.md).
 
 ## Repository Structure
 

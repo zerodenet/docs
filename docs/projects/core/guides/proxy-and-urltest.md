@@ -1,6 +1,6 @@
 # HTTP / Mixed 代理入口与 URLTest
 
-本页先说明怎样让应用连接 Zero，再解释节点测速为什么可能与实际请求结果不同。URLTest 部分按已发布 RC 核对，不把开发分支的新行为当作安装包现状。
+应用已经能连接本地代理后，本页帮助你理解 HTTP/Mixed 的连接方式，以及为什么节点测速和实际请求可能得到不同结果。需要配置自动选节点时，先使用[出站组示例](../configuration/modes-and-groups#url-test-自动测速)。
 
 ## HTTP 与 Mixed 入站
 
@@ -67,16 +67,14 @@ Hysteria2 和 VLESS QUIC 出站的 `server` 可以填写域名。连接时会解
 
 ## 自动策略与单节点诊断
 
-以下说明对应已发布 [v0.0.2-rc.202609290540 的探测与隔离语义](https://github.com/zerodenet/core/blob/2d7526596e91ea1259c3692501a02672ca826cfd/docs/project/urltest-selection.md)。
-
 URLTest 与单节点诊断共用探测执行器，但作用不同：
 
 - URLTest 组探测可以绕过已有业务隔离进行测量，更新组内健康、选择和 `policy.probe.completed`；它不直接清除通用业务隔离
 - 单节点 `diagnostics.probe_outbound` 不改变 URLTest 的选择、测速记录或业务隔离
-- 实际流量仍受该发行版的业务健康检查约束；组内没有可用成员时可能返回 `no_usable_urltest_member`
+- 实际流量仍受业务健康检查约束；组内没有可用成员时可能返回 `no_usable_urltest_member`
 - DNS、本地网络/接口失败和客户端取消不应被累加为远端节点故障
 
-所以“测速成功但真实请求仍被隔离”在该 RC 中可能发生。先看日志中的失败阶段和隔离状态，再确认自动组当前选中哪个成员；不要把重复单节点测速当成清除隔离操作。60 秒冷却结束后，实际连接的半开尝试仍可能失败或重新进入冷却。手动 selector 不会被自动改成另一个节点。
+因此，测速成功后，真实请求仍可能受到已有隔离的影响。先看日志中的失败阶段和隔离状态，再确认自动组当前选中哪个成员；不要把重复单节点测速当成清除隔离操作。60 秒冷却结束后，实际连接的半开尝试仍可能失败或重新进入冷却。手动 selector 不会被自动改成另一个节点。
 
 URLTest 使用 `tolerance_ms` 决定切换：当前成员本轮健康时，只有 `当前延迟 > 最佳延迟 + 容差` 才切换；差值等于容差仍保留当前成员。当前成员不健康时立即选本轮健康候选；全部失败时保留原选择。日志以 `operation_kind=policy_urltest` 和 `diagnostic_outbound` 区分两类探测。
 
