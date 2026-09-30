@@ -10,11 +10,11 @@ ZNet Sink 是 Tauri 2/SvelteKit 桌面客户端；Zero Core 是单独维护的�
 
 ## 贡献代码
 
-先阅读仓库的 [AGENTS.md](https://github.com/zerodenet/znet-sink/blob/3aa5c7fe36b3cc0966e417482fa13813119b31f9/AGENTS.md)和[提交规范](https://github.com/zerodenet/znet-sink/blob/3aa5c7fe36b3cc0966e417482fa13813119b31f9/COMMIT_CONVENTION.md)，按对应分支的 package.json、Cargo 配置和检查脚本准备环境；不要仅按旧 README 的最低版本推断当前依赖。
+先阅读仓库的 [AGENTS.md](https://github.com/zerodenet/znet-sink/blob/main/AGENTS.md)和[提交规范](https://github.com/zerodenet/znet-sink/blob/main/COMMIT_CONVENTION.md)，按对应分支的 package.json、Cargo 配置和检查脚本准备环境；不要仅按旧 README 的最低版本推断当前依赖。
 
 提交变更时说明用户可见变化、验证命令和未验证的平台。界面变更需检查简约/专业模式、窄窗口、重复操作和失败恢复；涉及代理、TUN、更新或退出清理时，自动化测试不能代替实际安装环境验证。
 
-插件作者从源码仓库的[插件包格式](https://github.com/zerodenet/znet-sink/blob/3aa5c7fe36b3cc0966e417482fa13813119b31f9/docs/gui/plugin-package-v1.md)和[插件 SDK](https://github.com/zerodenet/znet-sink/blob/3aa5c7fe36b3cc0966e417482fa13813119b31f9/docs/gui/plugin-sdk.md)查阅当前契约。实现计划不等于已发布能力；以对应版本代码和实际校验结果为准。
+插件作者从源码仓库的[插件包格式](https://github.com/zerodenet/znet-sink/blob/main/docs/gui/plugin-package-v1.md)和[插件 SDK](https://github.com/zerodenet/znet-sink/blob/main/docs/gui/plugin-sdk.md)查阅当前契约。实现计划不等于已发布能力；以对应版本代码和实际校验结果为准。
 
 ## 修改文档
 

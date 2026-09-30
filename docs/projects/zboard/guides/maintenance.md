@@ -6,7 +6,7 @@
 
 升级前核对当前与目标的完整版本，阅读目标 [Release](https://github.com/zerodenet/zboard/releases) 的迁移说明，保存[一致备份](./storage-and-backups)。不要用重新生成密钥或覆盖环境文件的方式“重新安装”。
 
-当前文档对应的 `v0.0.2-rc.202609291405` 包含数据库迁移，建议按下列顺序：
+涉及数据库迁移的升级，按下列顺序操作：
 
 1. 安排维护窗口，停止所有应用写入实例，保存数据库、规则、事件队列、插件目录、配置和原镜像。
 2. 使用目标标签对应的部署文件，把 `.env.release` 中镜像标签改为目标版本，保留现有数据库连接、密钥与持久目录。
@@ -24,10 +24,10 @@ docker compose -f docker-compose.release.yml --env-file .env.release up -d
 
 SQLite 部署每条命令都增加 `-f docker-compose.sqlite.yml`。仅执行 `restart` 不会加载已修改的镜像或 Compose 环境变量。
 
-::: warning RC 数据库迁移与回滚
-该 RC 包含 `0024_traffic_usage_hourly`、`0025_traffic_hourly_application` 和 `0027_external_forward_entries` 等迁移。MySQL 旧小时统计触发器会被替换；从这个版本回滚需要**升级前数据库快照和旧程序一起恢复**，不能只切换镜像。已有旧触发器的库需要正常 schema 级 TRIGGER 权限移除它们，不需授予 SUPER。
+::: warning 小时统计与外部转发的迁移兼容性
+从早期版本升级到 `v0.0.2-rc.202609291405` 及包含相同迁移的后续版本时，需要关注 `0024_traffic_usage_hourly`、`0025_traffic_hourly_application` 和 `0027_external_forward_entries` 等迁移。MySQL 旧小时统计触发器会被替换；回滚到依赖旧表结构或触发器的版本时，需要**升级前数据库快照和旧程序一起恢复**，不能只切换镜像。已有旧触发器的库需要正常 schema 级 TRIGGER 权限移除它们，不需授予 SUPER。
 
-遇到 MySQL `1419` 后接 `1050` 的部分迁移状态，按该 RC 的修复路径重新执行迁移；不要删除原始流量账本、手工标记迁移完成或打开全局函数信任。先保存错误日志与备份，详见[发布说明](https://github.com/zerodenet/zboard/releases/tag/v0.0.2-rc.202609291405)。
+遇到 MySQL `1419` 后接 `1050` 的部分迁移状态，使用包含该修复的目标版本重新执行迁移；不要删除原始流量账本、手工标记迁移完成或打开全局函数信任。先保存错误日志与备份，详见[发布说明](https://github.com/zerodenet/zboard/releases/tag/v0.0.2-rc.202609291405)。
 :::
 
 下面的数据库切换用于 MySQL 与 SQLite 之间迁移，和日常版本升级是两件事。

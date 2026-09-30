@@ -1,16 +1,19 @@
+---
+prev:
+  text: 接入远程节点与分流
+  link: /projects/core/guides/configuration-basics
+next:
+  text: 故障排查
+  link: /projects/core/guides/troubleshooting
+---
+
 # 运行与观测
 
 代理启动后，日常最常做的是确认请求经过哪里、切换出站、更新配置以及安全停止。本页使用同机 CLI，不要求开放 HTTP API。
 
-## 启动前
+## 连接运行中的实例 {#启动前}
 
-```bash
-zero build-info
-zero validate config.json
-zero run config.json
-```
-
-`run` 保持在前台；另开终端执行下面的查询。未加入 `PATH` 时使用 `./zero`、`.\zero.exe` 或可执行文件的完整路径。自定义 IPC 的实例在查询命令后附加相同的 `--socket PATH`。
+以下命令在代理运行时的另一个终端执行。还没有运行实例时，先完成[第一次使用](./quickstart)。未加入 `PATH` 时用 `./zero`、`.\zero.exe` 或可执行文件的完整路径替代 `zero`；自定义 IPC 的实例在查询命令后附加相同的 `--socket PATH`。
 
 ## 基础健康检查
 

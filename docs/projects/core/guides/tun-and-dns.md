@@ -95,7 +95,7 @@ Windows strict route 包含 DHCP 客户端流量放行，用于地址续租和�
 
 ## 严格路由的保护范围
 
-`strict_route` 除启动事务回滚外，也管理平台防漏规则。以下限制按已发布 RC 核对，不能仅凭“已开启严格模式”判定防泄漏已通过：
+`strict_route` 除启动事务回滚外，也管理平台防漏规则。不能仅凭“已开启严格模式”判定防泄漏已通过，还要注意以下边界：
 
 - Linux 检查受管 nftables 表是否存在，但不能保证表内单条规则被删改后恢复；macOS 在捕获/排除配置未变化时，也不能保证 PF 规则被清空后恢复
 - 系统路由与出口有周期协调；检测和恢复存在窗口，不是持续防篡改或零泄漏保证
@@ -104,8 +104,6 @@ Windows strict route 包含 DHCP 客户端流量放行，用于地址续租和�
 - 双栈捕获不代表 IPv6 物理出口、应用加密 DNS或 NAT64 已可用
 
 需要防泄漏时，按实际平台验证应用的 DNS、TCP、UDP/STUN 和网络切换，并查看 `healthy`、各地址族出口与 `last_error`，不能只看 `running`。不要通过清空防火墙来尝试修复代理。
-
-版本依据：[RC Linux 防护实现](https://github.com/zerodenet/core/blob/2d7526596e91ea1259c3692501a02672ca826cfd/crates/tun/src/route/leak/linux.rs)与 [RC macOS 防护实现](https://github.com/zerodenet/core/blob/2d7526596e91ea1259c3692501a02672ca826cfd/crates/tun/src/route/leak/macos.rs)。开发分支中的后续规则完整性修复不能视作此下载包已具备的保证。
 
 ## 更新与停止
 

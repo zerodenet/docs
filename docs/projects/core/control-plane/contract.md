@@ -1,6 +1,6 @@
 # API 契约
 
-本文档描述面向外部消费者的当前控制面契约。
+本页说明控制面通用的命名、响应、事件和能力发现规则。
 
 版本之间的行为、时序和恢复语义变化记录在[控制面兼容性与破坏性变更](/projects/core/control-plane/breaking-changes)。即使 `api_id` / `schema_id` 未变化，消费者也应根据 `health.engine_build_id` 检查登记的语义边界。
 
@@ -42,7 +42,7 @@ HTTP 和 IPC 响应使用 `zero_api::ApiResponse`。
 | `result` | 成功的响应负载 |
 | `error` | 结构化的错误负载 |
 
-消费者应先判断 `ok`，再解析 `result` 或 `error`。已发布 RC 的 HTTP GET 查询错误可能仍返回 HTTP 200，不能只看 HTTP 状态码。命令成功时 `result` 是 `CommandResponse`：检查 `result.accepted`，再读取嵌套的 `result.result` 载荷；查询结果则按对应查询形状解析。
+消费者应先判断 `ok`，再解析 `result` 或 `error`。HTTP GET 查询错误可能仍返回 HTTP 200，不能只看 HTTP 状态码。命令成功时 `result` 是 `CommandResponse`：检查 `result.accepted`，再读取嵌套的 `result.result` 载荷；查询结果则按对应查询形状解析。
 
 ## 事件信封
 
@@ -80,7 +80,7 @@ HTTP 和 IPC 响应使用 `zero_api::ApiResponse`。
 
 ### V1 契约版本
 
-当前能力响应增加 `contracts`，分别报告 `capabilities`、`control_api`、`config_schema` 和 `error_codes` 的 `current` 与 `minimum_supported`。客户端支持区间与内核区间相交时才启用对应能力；旧响应没有此字段时视为版本未知，不能默认当作 V1。
+能力响应通过 `contracts` 分别报告 `capabilities`、`control_api`、`config_schema` 和 `error_codes` 的 `current` 与 `minimum_supported`。客户端支持区间与内核区间相交时才启用对应能力；旧响应没有此字段时视为版本未知，不能默认当作 V1。
 
 完整配置顶层 `schema_version` 默认为 `1`，内核导出时显式携带。未知版本在构造运行资源前拒绝，不通过删除字段静默降级。
 

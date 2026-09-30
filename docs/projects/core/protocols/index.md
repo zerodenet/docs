@@ -23,7 +23,7 @@
 | Hysteria2 | QUIC 上的 TCP/UDP | password、证书、UDP 网络质量 |
 | Mieru | Mieru 客户端/服务端互通 | username、password、端口 |
 | SOCKS5 | 连接已有上游 SOCKS 服务 | server、port、可选认证 |
-| WireGuard（仅已发布 dev，实验） | 基于认证 peer 的 IP 隧道及 TCP/UDP 转换 | 显式构建 feature、密钥、allowed IP、地址和 MTU |
+| WireGuard（实验构建） | 基于认证 peer 的 IP 隧道及 TCP/UDP 转换 | 显式构建 feature、密钥、allowed IP、地址和 MTU |
 
 配置片段见[协议配置示例](./configuration)。每个二进制可以通过 Cargo feature 裁剪协议，部署前运行：
 

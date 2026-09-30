@@ -37,7 +37,7 @@ curl -H "Authorization: Bearer $ZERO_API_KEY" \
 
 ## 当前能力摘要
 
-下表常用协议按已发布 [v0.0.2-rc.202609290540](https://github.com/zerodenet/core/tree/2d7526596e91ea1259c3692501a02672ca826cfd) 的 metadata 核对，表示启用对应 feature 后的实现声明。WireGuard 一行仅属于已发布 dev，RC 不提供。正式版和裁剪构建请读取各自的响应。
+下表帮助你选择协议方向。实际是否可用还取决于二进制的编译选项；以 `build-info` 的响应为准。WireGuard 需要专门的实验构建，范围见下方说明。
 
 | 协议 | 总体状态 | 入站 TCP | 入站 UDP | 出站 TCP | 出站 UDP | MUX |
 |------|----------|----------|----------|----------|----------|-----|
@@ -52,13 +52,13 @@ curl -H "Authorization: Bearer $ZERO_API_KEY" \
 | `trojan` | `supported` | 支持 | 支持 | 支持 | 支持 | 支持 |
 | `vmess` | `supported` | 支持 | 支持 | 支持 | 支持 | 支持 |
 | `mieru` | `partial` | 支持 | 支持 | 支持 | 支持 | 支持 |
-| `wireguard`（仅 dev） | `experimental` | 实验 | 实验 | 实验 | 实验 | 不适用 |
+| `wireguard`（实验构建） | `experimental` | 实验 | 实验 | 实验 | 实验 | 不适用 |
 
 Mieru 的 UDP 载体中继需要支持数据报的承载，长时间运行与恢复仍有验收限制。VLESS 独立 QUIC 传输保留上游已弃用的限制提示。MUX 一栏表示协议导出的逻辑复用能力，不等于把 QUIC 自带多流功能再配置成 `mux_concurrency`。
 
 ## VLESS 组合边界
 
-已发布 RC 的 VLESS 已不再沿用早期的“仅 REALITY TCP Vision”限制：
+选择 VLESS 传输与 flow 时，按以下边界配置：
 
 | 组合 | 使用边界 |
 |------|----------|
@@ -72,11 +72,15 @@ Mieru 的 UDP 载体中继需要支持数据报的承载，长时间运行与恢
 
 REALITY 的示例使用 `client_fingerprint: "chrome"`。当前实现还提供版本化指纹等选项；升级时不要假定短名称永远对应同一个浏览器版本。指纹不改变证书校验要求，也不保证流量不可识别。
 
-字段示例见[协议配置](../protocols/configuration)。对应源码依据：[VLESS metadata](https://github.com/zerodenet/core/blob/2d7526596e91ea1259c3692501a02672ca826cfd/protocols/vless/src/metadata.rs)与 [flow 校验](https://github.com/zerodenet/core/blob/2d7526596e91ea1259c3692501a02672ca826cfd/protocols/vless/src/validation.rs)。
+字段示例见[协议配置](../protocols/configuration)。
 
 ## WireGuard 与 ICMP
 
-本节对应已发布 [v0.0.3-dev.202609281319](https://github.com/zerodenet/core/releases/tag/v0.0.3-dev.202609281319)，不属于 RC 或 v0.0.1。WireGuard 需显式启用 `wireguard` feature，仍为实验能力，未加入默认 `full`。已实现 UDP 端点、认证 peer、原始 IP 转发，以及供普通代理入站使用的 TCP/UDP 转换；它不是尚未接线的配置占位符。
+WireGuard 需要显式启用 `wireguard` feature，仍为实验能力，不在默认 `full` 中。它提供 UDP 端点、认证 peer、原始 IP 转发，以及供普通代理入站使用的 TCP/UDP 转换。
+
+::: warning 发行物兼容性
+已发布的 [v0.0.3-dev.202609281319](https://github.com/zerodenet/core/releases/tag/v0.0.3-dev.202609281319) 包含这项实验能力；`v0.0.1` 和 `v0.0.2-rc.202609290540` 不包含 WireGuard。其他构建请先检查 `compiled`，不要仅凭配置格式相同就启用。
+:::
 
 部署前仍需注意：
 
@@ -87,7 +91,7 @@ REALITY 的示例使用 `client_fingerprint: "chrome"`。当前实现还提供�
 
 ICMP 不能经任意 TCP/UDP 代理转发。原始 Packet 路径可以保留 ICMP；`direct` Echo 使用宿主 raw/ping socket，需要对应系统权限。`translate` 的 Echo 地址转换是受限路径，不等于通用 NAT 或任意 ICMP 支持。普通代理请求成功或 `ping` 失败都不能单独证明另一种流量路径的状态。
 
-实验边界以 [WireGuard capability](https://github.com/zerodenet/core/blob/e0c078f3786e2ed60ace43613c47d3b98ae3f5c8/crates/proxy/src/adapters/wireguard.rs) 和实际节点为准；不要据此推定已发布 RC 或正式包包含相同实现。
+启用前检查实际节点的 WireGuard capability 和限制，并验证所需的流量路径。
 
 ## 部署时如何判断
 

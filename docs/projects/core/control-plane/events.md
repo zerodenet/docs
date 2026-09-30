@@ -1,6 +1,6 @@
 # 事件目录
 
-本文以已发布的 Core `v0.0.2-rc.202609290540`（`2d752659`）为基准。示例省略部分可选或新增字段；消费者应允许未知字段与事件类型。
+事件示例省略部分可选字段；消费者应允许未知字段与事件类型。
 
 所有事件以归一化信封格式输出，通过 SSE、IPC 流、CLI 或 Sink 投递消费。`flow.snapshot` 是实时订阅建立时生成的同步基线，不写入事件环，也不投递到 JSONL/Webhook sink；其余 flow 生命周期事件按正常事件路径投递。
 
@@ -35,7 +35,7 @@
 | `principal_key` | 关联的主体标识 |
 | `payload` | 事件负载（类型相关） |
 
-引擎生成的事件 ID 当前包含随机启动 epoch 和事件本地标识，用于避免进程重启后 flow ID、序号和毫秒时间戳复用造成消费者或 Sink 去重碰撞。该组成方式不是公共协议；所有消费者必须把完整字符串作为不透明幂等键。
+去重时使用完整的 `event_id` 字符串，不要自行组合 flow ID、序号或时间戳；这些值在进程重启后可能复用。事件 ID 的内部格式不属于公共协议。
 
 ## 事件类型总览
 
@@ -61,7 +61,7 @@
 
 ## 统一连接记录 `FlowRecord`
 
-`flow.started`、`flow.routed`、`flow.updated` 和 `flow.completed` 保留原有顶层兼容字段，并在 `payload.record` 中携带统一的连接记录。新消费者应优先解析 `record`：
+`flow.started`、`flow.routed`、`flow.updated` 和 `flow.completed` 保留原有顶层兼容字段，并在 `payload.record` 中携带统一的连接记录。消费者应优先解析 `record`：
 
 ```json
 {
@@ -433,8 +433,6 @@ IPC/SSE 实时订阅支持 `event_type` 白名单过滤：
 | `"events": ["*"]` | 接收所有事件（等价于省略或传空数组） |
 | `"events": null` / 省略 | IPC 接收所有事件；SSE 省略 `types` 接收所有 |
 
-内部 `EventFilter` 的 `event_types` 为空数组时即不过滤，`*` 作为特殊值等价于空数组。
-
 配置文件中的 `event_sinks[].events` 使用更严格的校验：省略或 `[]` 表示全部；非空数组只能包含已知事件名，不接受 `"*"`、`null`、重复名或未知名。即使订阅全部，持久 sink 也不接收实时 `flow.snapshot`。
 
 ### ipc.connected
@@ -471,13 +469,13 @@ IPC/SSE 实时订阅支持 `event_type` 白名单过滤：
 
 IPC 和 SSE 的**事件 JSON 格式完全相同**（都是 `ApiEvent<P>` 信封），消费者只需一套解析代码。
 
-GUI 的 IPC/HTTP/gRPC 连接和 EventDispatcher 都消费统一的 `EventSource` 语义，但前者面向交互式实时状态，后者面向 JSONL/Webhook 的持久投递。中心通过 Zero API/gRPC 的 `config.apply` 注册 Webhook，Connector 只负责把筛选后的 `zero.event.v1` envelope 投递到完整 URL 并处理 HTTP 确认。组件边界见 [Connector](/projects/core/control-plane/connector)。
+GUI 可通过 IPC/HTTP/gRPC 获取交互式实时状态；需要持久投递时使用 JSONL/Webhook sink。中心通过 Zero API/gRPC 的 `config.apply` 注册 Webhook，Connector 只负责把筛选后的 `zero.event.v1` envelope 投递到完整 URL 并处理 HTTP 确认。组件边界见 [Connector](/projects/core/control-plane/connector)。
 
 | 方式 | 过滤 | 回放 | 格式 |
 |------|------|------|------|
-| SSE (`GET /api/v1/events/stream?types=...`) | event_type 白名单，`*` = 全部 | `?since=<seq>` / `Last-Event-ID`；该 RC 单次最多 256 条，受内存环容量限制；实时阶段含 `flow.snapshot` 基线 | SSE frame: `id` + `event` + `data: <ApiEvent JSON>` |
+| SSE (`GET /api/v1/events/stream?types=...`) | event_type 白名单，`*` = 全部 | `?since=<seq>` / `Last-Event-ID`；单次最多 256 条，受内存环容量限制；实时阶段含 `flow.snapshot` 基线 | SSE frame: `id` + `event` + `data: <ApiEvent JSON>` |
 | IPC (`{"type":"subscribe","events":[...]}`) | event_type 白名单，`*` = 全部 | 不回放历史事件；ACK 后发送 `flow.snapshot` 基线 | JSON line: `<ApiEvent JSON>\n` |
 | CLI (`zero events`) | 无 | 不支持；启动时含 `flow.snapshot` 基线 | stdout: JSON line |
 | Sink (`event_sinks[].events`) | event_type 白名单 | 持久投递生命周期增量；不接收 `flow.snapshot` | JSONL / Webhook |
 
-SSE 追赶不等于可靠历史恢复：该 RC 遇到事件淘汰只记录服务端警告，不把 replay gap 信息作为 SSE 控制帧返回。断线后用新的 `flow.snapshot` 重建活动集合；跨 `core_instance_id` 丢弃旧游标，长期完成记录使用配置了 outbox 的 sink 并按 `event_id` 幂等处理。
+SSE 追赶不等于可靠历史恢复：事件淘汰只记录服务端警告，不把 replay gap 信息作为 SSE 控制帧返回。断线后用新的 `flow.snapshot` 重建活动集合；跨 `core_instance_id` 丢弃旧游标，长期完成记录使用配置了 outbox 的 sink 并按 `event_id` 幂等处理。

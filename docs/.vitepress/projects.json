@@ -8,7 +8,7 @@
     "status": "active",
     "repository": "https://github.com/zerodenet/znet-sink",
     "docsRoot": "/projects/znet-sink/",
-    "quickStart": "/projects/znet-sink/guides/installation",
+    "quickStart": "/projects/znet-sink/guides/first-connection",
     "download": "https://github.com/zerodenet/znet-sink/releases/latest",
     "downloadPage": "/download",
     "platforms": ["Windows", "macOS", "Linux"],
@@ -37,7 +37,7 @@
     "status": "active",
     "repository": "https://github.com/zerodenet/zboard",
     "docsRoot": "/projects/zboard/",
-    "quickStart": "/projects/zboard/guides/installation",
+    "quickStart": "/projects/zboard/guides/",
     "audiences": ["operator", "contributor"]
   }
 ]
