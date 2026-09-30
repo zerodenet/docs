@@ -1,6 +1,15 @@
 # 故障排查
 
-按“配置 → 构建能力 → 监听器 → 控制面 → 出站 → 事件投递”的顺序检查，可以避免只盯着最后一条错误。
+先找到最接近的现象，再按该节检查。保留运行终端中的第一条错误；反复重启或重装会丢失线索。
+
+| 现象 | 先检查 |
+|------|--------|
+| 命令无法运行或找不到 `zero` | 在解压目录使用 `./zero` 或 `.\zero.exe`，见[安装](./installation) |
+| 启动立即退出 | 执行 `zero validate config.json`，查看首条配置或绑定错误 |
+| curl 成功，浏览器没有走代理 | 浏览器是否设置了 `127.0.0.1:7890`，或是否真正启用了 TUN |
+| 停止 Zero 后应用无法联网 | 关闭应用/系统中仍指向 Zero 的代理设置 |
+| TUN 显示运行但无法联网 | 查 `healthy`、DNS 和各地址族出口，不能只看运行标志 |
+| 测速成功，某个目标仍失败 | 查实际 flow 的目标、路由、所选节点和失败阶段 |
 
 ## 配置无法通过校验
 
@@ -48,7 +57,7 @@ cargo build --release --features connector,grpc-api
 
 ## TUN 无法启动或启动后断网
 
-Zero Core 0.0.1 会自动协调 Windows、Linux 和 macOS 的 TUN 捕获路由，并将代理出站绑定到当前物理 underlay egress。出现问题时先区分“创建 TUN 失败”和“路由已经接管但出口不可用”。
+当前实现会协调 Windows、Linux 和 macOS 的 TUN 捕获路由，并将受管出站绑定到物理出口；不同发行物的修复范围不同，先记录 `zero build-info`。出现问题时先区分“创建 TUN 失败”和“路由已经接管但出口不可用”。
 
 依次检查：
 
@@ -60,15 +69,15 @@ Zero Core 0.0.1 会自动协调 Windows、Linux 和 macOS 的 TUN 捕获路由�
 
 Windows 官方发布产物已经携带 Wintun 运行组件。使用官方压缩包时通常不需要另外下载 DLL；如果日志明确提示权限失败，应先以管理员权限运行，而不是把权限错误误判为缺少配置。自行重新打包 Zero 时仍要确认 Wintun 组件被一并分发。
 
-macOS 会保留物理出口的 scoped route 语义；Linux/macOS/Windows 都会在默认出口变化后重新协调捕获路由。升级到该版本后不建议继续依赖为每个代理服务器手工添加静态 host route 来避免 TUN 回环。
+macOS 会保留物理出口的 scoped route 语义；Linux/macOS/Windows 都会在默认出口变化后重新协调捕获路由。不要在没有确认当前路由与版本的情况下，为每个代理服务器反复添加静态 host route。
 
-如果通过控制面关闭 TUN，`tun.stop` 必须发送标准空对象参数：`{"method":"tun.stop","params":{}}`。
+配置管理的 TUN 要删除 `runtime.tun` 并应用完整配置后才会关闭。临时 TUN 可用 `zero tun stop`；控制 API 参数为 `{"method":"tun.stop","params":{}}`。严格路由、macOS 同 UID 例外和恢复窗口见[TUN 使用指南](./tun-and-dns#严格路由的保护范围)。
 
 ## CLI 找不到运行中的 Zero
 
 CLI 默认连接：
 
-- Linux/macOS：`~/.zero/control.sock`
+- Linux/macOS：可执行文件旁的 `control.sock`；无法定位可执行目录时才回退到 `~/.zero/control.sock`
 - Windows：`\\.\pipe\zero-control`
 
 如果运行时使用了自定义路径，CLI 也要传同一个路径：
@@ -77,7 +86,7 @@ CLI 默认连接：
 zero status --socket /run/zero/control.sock
 ```
 
-还应确认 Zero 进程仍在运行，以及当前用户有权限访问 socket 或 Named Pipe。
+还应确认 Zero 进程仍在运行，以及当前用户有权限访问 socket 或 Named Pipe。Unix 的默认目录必须可写；若程序安装在不可写的系统目录，启动时用 `--control-socket` 指向当前用户可写的受控目录，再让 CLI 使用同一 `--socket`。
 
 ## HTTP 返回 401 或 403
 
@@ -109,7 +118,7 @@ zero status --socket /run/zero/control.sock
 5. UDP 请求是否使用了当前协议支持的路径；
 6. 中继链中的每一跳是否可达。
 
-如果只有经 HTTP forward proxy 的明文 HTTP 请求异常，而 HTTPS CONNECT 正常，先确认使用 Zero Core 0.0.1 的完整构建，并核对 HTTP 请求解析和转发日志。仍可稳定复现时，保留原始请求边界、构建信息和 flow 日志报告问题。
+如果只有经 HTTP forward proxy 的明文 HTTP 请求异常，而 HTTPS CONNECT 正常，先确认当前构建启用 `http` 或 `mixed`，并核对 HTTP 请求解析和转发日志。仍可稳定复现时，保留原始请求边界、构建信息和 flow 日志报告问题。
 
 先使用[快速开始](./quickstart)的本地 direct 配置确认入站正常，再逐步加入真实代理出站。
 

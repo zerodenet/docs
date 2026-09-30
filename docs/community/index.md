@@ -18,6 +18,8 @@
 | Zboard | [zerodenet/zboard/issues](https://github.com/zerodenet/zboard/issues) |
 | 文档 | [zerodenet/docs/issues](https://github.com/zerodenet/docs/issues) |
 
+<span id="赞助广告与友情链接"></span>
+
 ## 赞助、广告与友情链接
 
 合作联系：[Telegram](https://t.me/zerodenet)。

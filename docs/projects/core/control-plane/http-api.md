@@ -1,11 +1,13 @@
 # HTTP JSON API
 
+本文以已发布的 Core `v0.0.2-rc.202609290540`（`2d752659`）为基准。接入不同构建时先查询 `capabilities`，不要将开发分支行为当作已发布合同。
+
 ## 基础信息
 
 - 稳定前缀：`/api/v1/`
-- 认证：`Authorization: Bearer <token>` 或 `X-Zero-Api-Key: <token>`（未配置时无认证模式，默认所有权限）
+- 认证：`Authorization: Bearer <token>` 或 `X-Zero-Api-Key: <token>`；通过 `api.control` 启用时必须配置凭证。CLI `--status-listen` 是无认证调试入口，必须只绑定 loopback，不能暴露到不可信网络
 - CORS：所有端点返回 `Access-Control-Allow-Origin: *`
-- 限流：Query 100/s，Command 10/s，SSE 5 并发
+- 限流：Query 100/s，Command 10/s，SSE 新建请求 5/s（该 RC 不以此限制同时在线连接数）
 
 ## 通用响应格式
 
@@ -41,7 +43,6 @@ HTTP 和 IPC 共享相同的响应信封格式（定义在 `zero_api::ApiRespons
   "error": {
     "code": "invalid_argument",
     "message": "config validation failed",
-    "cause": "`inbounds[0] `socks-in`: password must not be empty",
     "details": [
       { "field_path": "inbounds[0]", "message": "`inbounds[0] `socks-in`: password must not be empty" }
     ]
@@ -52,15 +53,19 @@ HTTP 和 IPC 共享相同的响应信封格式（定义在 `zero_api::ApiRespons
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `api_id` | string | 协议标识，始终为 `"zero.api.v1"` |
-| `id` | string \| number \| null | 请求关联 ID，不透明原样回显（客户端可用任意标量作配对令牌：数字、字符串如 UUID/标签）；IPC 多路复用时使用，HTTP 通常为 null |
+| `id` | string \| number | IPC 请求关联 ID；HTTP 适配器不回显请求中的 `id`，响应省略此字段 |
 | `ok` | bool | 成功标志 |
-| `result` | object? | 成功时的响应数据 |
+| `result` | JSON value | 成功时的响应数据；可以是对象、数组或其他 JSON 值，失败时省略 |
 | `error.code` | string | 机器可读错误码（snake_case） |
 | `error.message` | string | 人类可读错误信息 |
 | `error.field_path` | string? | 参数校验错误时的字段路径 |
 | `error.details` | array? | 结构化、字段级诊断；每项 `{field_path?, message}`。配置校验错误时填充，含如 `inbounds[0]`、`runtime.udp_upstream_idle_timeout_seconds` 等字段路径。非校验错误省略此字段 |
 
-> **HTTP 和 IPC 的 `result` 格式不同**：HTTP 的 `result` 直接包含端点数据（如 `{engine_build_id:"build-id",...}`）。IPC 的 `result` 包含一个变体名 key 包裹（如 `{"health":{engine_build_id:"build-id",...}}`）。详见 [ipc-protocol.md](/projects/core/control-plane/ipc-protocol)。
+HTTP/IPC 错误信封不包含内部 `ApiError.cause`；配置字段诊断读取 `error.details`。认证失败、限流、未知路径等 HTTP 传输层错误可能只返回 `{"error":"..."}`，先检查 HTTP 状态，再检查存在时的 `ok`。
+
+> **HTTP 和 IPC 的 Query `result` 格式不同**：HTTP 的 `result` 直接包含端点数据（如 `{engine_build_id:"build-id",...}`）。IPC 的 `result` 包含一个变体名 key 包裹（如 `{"health":{engine_build_id:"build-id",...}}`）。详见 [ipc-protocol.md](/projects/core/control-plane/ipc-protocol)。
+
+以下是命令错误的 HTTP 状态映射。该 RC 的 Query 查询错误（例如不存在的 flow 或 policy）仍可能返回 HTTP `200`，但信封为 `ok: false`；客户端必须检查 `ok` 和 `error.code`，不能只靠状态码判断成功。
 
 错误码（snake_case，与 JSON serde 格式一致）：
 
@@ -78,6 +83,8 @@ HTTP 和 IPC 共享相同的响应信封格式（定义在 `zero_api::ApiRespons
 ---
 
 ## Query 端点
+
+以下 JSON 示例仅展示成功响应的 `response.result`，外层仍有 `api_id` 和 `ok`；较大的快照示例省略部分字段。
 
 ### GET /api/v1/capabilities
 
@@ -124,6 +131,8 @@ API 能力列表。当前响应还包含独立版本范围 `contracts`、稳定 
 ```json
 {
   "engine_build_id": "build-id",
+  "core_instance_id": "instance-id",
+  "config_revision": 1,
   "started_at_unix_ms": 1713500000000,
   "healthy": true
 }
@@ -131,11 +140,12 @@ API 能力列表。当前响应还包含独立版本范围 `contracts`、稳定 
 
 ### GET /api/v1/config
 
-当前配置快照。所有类型定义在 `zero-api::snapshot` 模块，外部消费者可直接依赖 `zero-api` crate。
+当前配置摘要，不是可直接提交给 `config.apply` 的完整配置；不返回凭证、完整路由或协议配置。控制器应保存自己的完整配置文件。所有类型定义在 `zero-api::snapshot` 模块，外部消费者可直接依赖 `zero-api` crate。
 
 ```json
 {
-  "mode": { "kind": "rule", "outbound": null },
+  "config_revision": 1,
+  "mode": { "kind": "rule" },
   "rule_count": 5,
   "listeners": [
     { "tag": "socks-in", "protocol": "socks5", "listen_address": "0.0.0.0", "listen_port": 1080 }
@@ -171,7 +181,7 @@ API 能力列表。当前响应还包含独立版本范围 `contracts`、稳定 
 | 字段 | 说明 |
 |------|------|
 | `mode.kind` | 路由模式：`rule` / `global` / `direct` |
-| `mode.outbound` | global 模式的出站 tag（其他模式为 null） |
+| `mode.outbound` | global 模式的出站 tag（其他模式省略） |
 | `rule_count` | 规则数量 |
 | `listeners` | 入站监听列表（tag, protocol, listen_address, listen_port） |
 | `outbounds` | 出站列表（tag, protocol, server?, port?） |
@@ -222,9 +232,13 @@ API 能力列表。当前响应还包含独立版本范围 `contracts`、稳定 
 
 轻量统计摘要。`active_sessions`, `total_started`, `completed_sessions`, `failed_sessions`, `bytes_up`, `bytes_down` 等。
 
+### GET /api/v1/principal_flows
+
+按主体查询活跃流数量，返回 `core_instance_id`、`session_registry_revision` 和 `principals`。用于与 flow 事件中的主体计数同步；不是历史流量或计费数据库。
+
 ### GET /api/v1/flows
 
-活动流列表，返回 `active_flows`（强类型 `FlowSnapshot` 数组）。支持过滤。
+活动流列表，`response.result` 直接是 `FlowSnapshot` 数组，例如 `{"api_id":"zero.api.v1","ok":true,"result":[]}`；没有 `active_flows` 包装键。支持过滤。
 
 | 参数 | 默认 | 说明 |
 |------|------|------|
@@ -234,7 +248,7 @@ API 能力列表。当前响应还包含独立版本范围 `contracts`、稳定 
 
 ### GET /api/v1/flows/{flow_id}
 
-单流详情。不存在返回 404。
+单流详情。不存在时返回 `ok: false`、`error.code: "not_found"`；该 RC 的 HTTP 状态仍为 `200`。
 
 ### GET /api/v1/policies
 
@@ -242,7 +256,7 @@ API 能力列表。当前响应还包含独立版本范围 `contracts`、稳定 
 
 ### GET /api/v1/policies/{policy_tag}
 
-单个 policy 详情。不存在返回 404。
+单个 policy 详情。不存在时返回 `ok: false`、`error.code: "not_found"`；该 RC 的 HTTP 状态仍为 `200`。
 
 ### GET /api/v1/sinks
 
@@ -310,10 +324,7 @@ TUN 虚拟网卡运行状态。
 
 查询失败表示无法确认状态，不应构造 `running: false`。缺少新字段的旧响应也不能用于确认新参数已应用。
 
-未启动时所有字段为零值 / null：
-```json
-{ "running": false, "name": null, "addr": null, "tag": null }
-```
+未启动时 `running` 为 `false`，`name`、`addr`、`tag` 等可选字段省略；状态还会包含布尔值、计数及地址族状态。不要将缺少可选字段当作解析错误。
 
 ---
 
@@ -321,11 +332,10 @@ TUN 虚拟网卡运行状态。
 
 ### POST /api/v1/commands
 
-统一命令入口。
+统一命令入口。HTTP 请求只需 `method` 和 `params`；此适配器不回显额外的 `id`。
 
 ```json
 {
-  "id": "req-123",
   "method": "policies.select",
   "params": {
     "policy_tag": "proxy",
@@ -333,6 +343,21 @@ TUN 虚拟网卡运行状态。
   }
 }
 ```
+
+成功响应有两层结果：外层 `response.result` 是 `CommandResponse`，包含 `accepted` 以及可选的业务 `result`。例如：
+
+```json
+{
+  "api_id": "zero.api.v1",
+  "ok": true,
+  "result": {
+    "accepted": true,
+    "result": { "policy_tag": "proxy", "selected": "direct" }
+  }
+}
+```
+
+下文有业务数据的 Response 示例展示 `response.result.result`；仅 `{ "accepted": true }` 的示例展示 `response.result`。IPC Command 使用相同的两层结构，并回显 IPC 请求 `id`。
 
 支持的方法：
 
@@ -377,19 +402,28 @@ Response：
 
 触发 `url_test` 立即执行一轮探测（**异步**：命令仅触发，不等探测完成）。
 
-Params：`policy_tag` (string)
+Params：`policy_tag` (string)、`operation_id` (string，可选；省略或空字符串时由内核生成)
 
 Response（同步返回的只是"已触发"，**不含延迟**）：
 ```json
-{ "policy_tag": "auto", "probe_triggered": true }
+{
+  "policy_tag": "auto",
+  "probe_triggered": true,
+  "operation_id": "probe-123",
+  "coalesced": false,
+  "core_instance_id": "instance-id",
+  "config_revision": 1
+}
 ```
+
+重复手动请求可能合并到同一轮，届时 `coalesced: true`，应使用 ACK 返回的有效 `operation_id` 配对完成事件，不能假定请求中的值一定生效。
 
 延迟结果通过两种途径获取（GUI 二选一）：
 
 1. **事件推送**（推荐）—— 探测完成后发射 `policy.probe.completed` 事件，payload 含每个成员的 `latency_ms`（见 [events.md](/projects/core/control-plane/events#policy-probe-completed)）。
 2. **查询拉取** —— `GET /api/v1/policies/{policy_tag}` 返回 `PolicySnapshot`，其中 `latency_ms`（整组，= 选中节点延迟）与 `url_test_members[].latency_ms`（每成员）、`last_checked_unix_ms`、`last_error`。
 
-> 单成员探测 5s 超时、N 个成员并发/串行跑完可能十几秒，故采用"触发 + 异步取结果"模式，不阻塞命令响应。
+> 单成员预算为 5 秒传输预算加节点 DNS 主/备用服务器的去重超时预算，上限 60 秒；并发队列等待不在该预算内。整组耗时取决于成员数及并发情况，不能假定 5 秒内结束。
 
 错误：`not_found` — policy 不存在或不是 `url_test` 类型
 
@@ -421,13 +455,13 @@ Response：
 { "valid": true }
 ```
 
-错误：`invalid_argument` — 配置无效（cause 字段包含详情）
+错误：`invalid_argument` — 配置无效；读取 `error.message` 和 `error.details`，HTTP/IPC 信封不传递内部 `cause`
 
 权限：`config`
 
 #### config.apply
 
-持久化并热加载完整运维配置。响应会等待 proxy listener、flow hooks 和 EventDispatcher 等进程级服务完成 reconciliation；任一步失败都会恢复上一份运行态和源文件。
+持久化并热加载完整运维配置。响应会等待 proxy listener、flow hooks 和 EventDispatcher 等进程级服务完成 reconciliation；失败时尝试恢复上一份运行态和源文件。回滚本身也可能失败，应检查错误消息并重新查询实际状态。
 
 Params：`config` (object, 完整配置)
 
@@ -509,15 +543,21 @@ Response：
 
 权限：`admin`
 
+#### tun.recover
+
+立即审计并尝试恢复运行中的 TUN 网络路由。请求为 `{"method":"tun.recover","params":{}}`；成功的 `response.result` 为 `{ "accepted": true }`。执行后查询 `tun_status` 确认健康状态与出口，不把命令接受等同于端到端联网成功。
+
+权限：`admin`
+
 #### diagnostics.probe_target
 
 对指定出站的 `server:port` 做一次 **直连 TCP 可达性探测**（**同步**返回）。
 
-> ⚠️ 这是诊断用途：从内核所在主机**直接** `TcpStream::connect_timeout` 到出站配置里的 server:port，**不经过代理协议、不做 TLS 握手、不发协议请求**。`latency_ms` 仅反映"本机 → 服务器 TCP 端口"的 RTT，不等于经代理的端到端延迟。2 秒超时。
+> ⚠️ 这是诊断用途：从内核所在主机通过 direct connector **直接连接**到出站配置里的 server:port，**不经过代理协议、不做 TLS 握手、不发协议请求**。`latency_ms` 仅反映"本机 → 服务器 TCP 端口"的 RTT，不等于经代理的端到端延迟。2 秒超时。
 >
-> 真正的"经代理测单节点延迟"目前由 `url_test` 组承载（把该节点放进一个 `url_test` 组再 `policies.probe`，结果经 `policy.probe.completed` / `policies` 查询拿）。
+> 经代理的单节点延迟使用下面的 `diagnostics.probe_outbound`；组成员探测和选择使用 `policies.probe`。
 
-Params：`target_tag` (string)
+Params：`target_tag` (string)、`operation_id` (string，可选)
 
 Response：
 ```json
@@ -548,9 +588,11 @@ Response：
 | `diagnostics.probe_target` | ✅ | ❌ 直连 TCP | 本机→server:port TCP RTT |
 | **`diagnostics.probe_outbound`** | **✅** | **✅** | **单节点经代理首字节延迟** |
 
-实现复用 `url_test` 的探测逻辑：经出站建立连接（含 TLS + 协议握手）→ 发 `HEAD {url}` → 读首字节，返回 `elapsed` 毫秒。单成员 ≤5s 超时，故可同步阻塞返回，适合 GUI"点一个节点测速"。仅支持 `http://` URL（明文，延迟不含 TLS 握手，与 `url_test` 一致）。
+经出站建立连接（包括适用的代理 TLS 和协议握手）→ 发 HTTP `HEAD` → 读首字节，返回毫秒耗时。仅支持 `http://` 目标 URL，因此没有目标网站的 HTTPS 握手；代理自身的 TLS 握手仍计入。传输预算为 5 秒，另加配置的节点 DNS 主/备用服务器超时预算，去重后合计、最高 60 秒；等待并发名额还可能增加命令总耗时。
 
-Params：`target_tag` (string)、`url` (string, 兼容性可选参数)。配置了
+这是诊断操作，不改变策略选择或出站健康状态，并绕过已有的出站健康隔离；不能把诊断成功当作 selector 已切换或 url_test 已更新。
+
+Params：`target_tag` (string)、`operation_id` (string，可选)、`url` (string, 兼容性可选参数)。配置了
 `runtime.latency_test_url` 时始终使用全局地址；否则使用命令中的 `url`，两者都未提供时默认
 `http://www.gstatic.com/generate_204`。
 
@@ -577,7 +619,9 @@ Response（探测失败——超时/拒绝，属于**结果**而非命令错误�
 }
 ```
 
-错误：`not_found` — target 不存在；`invalid_argument` — URL 非法（非 `http://` 等）
+该 RC 中，目标不存在、URL 非法和探测失败均返回成功命令信封（`ok: true`、`accepted: true`），业务结果为 `reachable: false`、`terminal_status: "failed"`。检查 `error_code`，例如 `target_not_found`、`invalid_probe_url`、`unsupported_target`、`probe_timeout`；不要只检查 `ok`。命令 JSON 无法解析、鉴权等错误仍使用失败信封。
+
+成功与失败结果都还包含 `operation_id`、`core_instance_id`、`config_revision`、`operation_kind: "diagnostic_outbound"`、起止时间和 `duration_ms`，以及 `timeout_ms`、`dns_budget_ms`、`transport_budget_ms`、`deadline_capped`。`affects_policy_selection` 和 `affects_outbound_health` 为 `false`，`bypasses_outbound_health_quarantine` 为 `true`。以上 Response 示例只展示部分业务字段。
 
 权限：`admin`
 
@@ -719,7 +763,7 @@ event: flow.completed
 data: {"schema_id":"zero.event.v1","event_id":"...","event_type":"flow.completed",...}
 ```
 
-连接断开后可使用 `Last-Event-ID` 续传，服务端先发送追赶事件再切回实时流。详见 [events.md](/projects/core/control-plane/events)。
+连接断开后可使用 `Last-Event-ID` 请求追赶，服务端先发送保留的追赶事件再切回实时流。该 RC 单次最多追赶 256 条；事件环有容量限制，缺口只记录服务端警告，SSE 不提供完整历史保证。跨进程重启必须丢弃旧序号（用 `core_instance_id` 区分）；需要可靠完成记录时使用带 outbox 的 sink。详见 [events.md](/projects/core/control-plane/events)。
 
 实时订阅阶段会生成 `flow.snapshot` 作为当前活动连接基线；它不在事件环中，因此不会被 `?since=` 回放，也不会出现在下面的一次性 `/events` 结果中。带断点续传的连接会先收到事件环中的追赶事件，再进入包含新快照的实时阶段。消费者应以快照的 `records` 替换活动集合，并按 `revision` 合并后续生命周期事件。
 

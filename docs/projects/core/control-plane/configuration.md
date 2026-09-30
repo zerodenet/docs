@@ -1,6 +1,6 @@
 # 配置模型参考
 
-控制面与事件投递配置位于 `api` 键下。本文档记录当前 API 配置字段。
+控制面与事件投递配置位于 `api` 键下。本文以已发布的 Core `v0.0.2-rc.202609290540`（`2d752659`）为基准，记录 API 配置字段。
 
 完整的配置模型（inbounds、outbounds、route、runtime）请参阅 [config.md](/projects/core/configuration/)。
 
@@ -56,7 +56,7 @@
 |------|------|------|------|
 | `enabled` | bool | `false` | 是否启动 HTTP 控制服务器 |
 | `listen` | object | -- | 监听地址；`enabled=true` 时必填 |
-| `listen.address` | string | -- | 绑定 IP，`127.0.0.1` 仅本地，`0.0.0.0` 公网 |
+| `listen.address` | string | -- | 绑定 IP，`127.0.0.1` 仅本地，`0.0.0.0` 监听所有 IPv4 接口；实际可达性由网络和防火墙决定 |
 | `listen.port` | u16 | -- | 监听端口 |
 | `api_key` | string | -- | Bearer token；启用控制面时与 `api_key_env` 二选一 |
 | `api_key_env` | string | -- | 从环境变量读取 api_key；与 `api_key` 二选一 |
@@ -67,7 +67,7 @@
 | `grpc.tls.key_path` | string | -- | 原生 gRPC 服务端私钥 PEM；相对路径以主配置目录为基准 |
 | `grpc.tls.client_ca_cert_path` | string | -- | 可选客户端 CA PEM；配置后启用 mTLS |
 
-**CLI 覆盖**：`--status-listen 127.0.0.1:9090` 优先级高于配置文件。两者不能同时使用。
+**CLI 覆盖**：`--status-listen 127.0.0.1:9090` 与启用的 `api.control` 互斥；同时使用会启动失败，不存在覆盖优先级。该 CLI 入口没有认证，仅用于 loopback 调试。
 
 `config.apply` 不允许在线替换 `api.control` 的监听地址或鉴权来源。该命令正由现有控制面承载，在事务中自替换会产生失联和权限切换歧义，因此这类变更会在写入配置文件前被拒绝，需显式重启进程。其他可重建字段仍可热应用。
 
@@ -111,7 +111,7 @@ Bearer 与 TLS 解决的问题不同：Bearer 用于调用方认证，TLS 用于
 |------|------|------|
 | 查询 (GET) | 100 req/s | 429 Too Many Requests |
 | 命令 (POST) | 10 req/s | 429 Too Many Requests |
-| SSE 并发 | 5 连接 | 429 Too Many Requests |
+| SSE 新建请求 | 5 req/s（并非同时在线连接数上限） | 429 Too Many Requests |
 
 ## `api.hooks`
 
@@ -129,7 +129,7 @@ Flow 生命周期钩子，按数组顺序执行。
 
 **CLI 覆盖**：`--ipc-hook-socket /run/billing/hook.sock` 优先级高于配置文件。
 
-钩子协议详情：参见 [hooks.md](https://github.com/zerodenet/core/blob/develop/docs/control-plane-api/hooks.md)。
+钩子协议详情：参见 [已发布实现中的 IPC hook 协议](https://github.com/zerodenet/core/blob/2d7526596e91ea1259c3692501a02672ca826cfd/src/hooks/ipc.rs)。
 
 ## `api.event_sinks`
 
@@ -172,7 +172,7 @@ Flow 生命周期钩子，按数组顺序执行。
 | `type` | string | -- | `"jsonl"` |
 | `tag` | string | -- | 唯一标识 |
 | `path` | string | -- | 文件路径；相对路径相对于配置目录解析 |
-| `events` | string[] | `[]` | 事件类型白名单；空 = 接收所有 |
+| `events` | string[] | `[]` | 事件类型白名单；空或省略 = 接收所有；不接受 `null` 或 `"*"` |
 | `source_id` | string | -- | 覆盖事件 source_id |
 
 ### Webhook
@@ -195,7 +195,7 @@ Flow 生命周期钩子，按数组顺序执行。
 | `type` | string | -- | `"webhook"` |
 | `tag` | string | -- | 唯一标识 |
 | `url` | string | -- | 接收方提供的完整 URL；Zero 不拼接路径 |
-| `events` | string[] | `[]` | 事件类型白名单 |
+| `events` | string[] | `[]` | 事件类型白名单；空或省略 = 接收所有；不接受 `null` 或 `"*"` |
 | `source_id` | string | -- | 覆盖事件来源标识 |
 | `headers` | object | `{}` | 接收方定义的不透明 HTTP headers |
 | `allow_insecure` | bool | `false` | 允许明文 `http://`（仅测试用） |
@@ -229,13 +229,11 @@ Webhook 接收端必须用 `event_id` 建立唯一约束并幂等返回 `2xx`。
 
 ### 投递状态查询
 
-```bash
-zero status  # 包含 sink 投递统计
-```
+使用 HTTP `GET /api/v1/sinks`，或 IPC 查询帧 `{"type":"query","request":{"sinks":{}}}`。`zero status` 不返回 sink 投递统计。
 
 ## 相关运行时字段
 
-以下配置字段位于 `api` 部分之外，但可通过 `GET /api/v1/config` 获取，与控制面消费者相关。
+以下配置字段位于 `api` 部分之外，与控制面消费者相关。`GET /api/v1/config` 只返回配置摘要，不含这些完整字段；请从自己保存的源配置读取，并用完整候选配置进行 validate/apply。
 
 | 字段 | 位置 | 说明 |
 |------|------|------|

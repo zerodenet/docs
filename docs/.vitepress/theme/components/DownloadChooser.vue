@@ -192,7 +192,7 @@ onMounted(async () => {
 
     <div v-if="loading" class="download-chooser__status" role="status">
       <span class="download-chooser__spinner" aria-hidden="true"></span>
-      正在读取最新稳定版…
+      正在读取最新正式版…
     </div>
 
     <div v-else-if="loadFailed" class="download-chooser__status download-chooser__status--error">
@@ -203,7 +203,7 @@ onMounted(async () => {
 
     <template v-else-if="release">
       <div class="download-chooser__release">
-        <span>最新稳定版 {{ release.tag_name }}</span>
+        <span>最新正式版 {{ release.tag_name }}</span>
         <span>{{ releaseDate }}</span>
       </div>
 

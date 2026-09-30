@@ -1,113 +1,107 @@
 # 运行与观测
 
-本页给出节点日常检查顺序。先看进程和配置，再看流量与策略，最后检查事件投递。
+代理启动后，日常最常做的是确认请求经过哪里、切换出站、更新配置以及安全停止。本页使用同机 CLI，不要求开放 HTTP API。
 
 ## 启动前
 
 ```bash
 zero build-info
 zero validate config.json
+zero run config.json
 ```
 
-记录 `git_hash`、`features`、`build_profile` 和 `binary_sha256`，它们用于确认当前实际运行的产物。
+`run` 保持在前台；另开终端执行下面的查询。未加入 `PATH` 时使用 `./zero`、`.\zero.exe` 或可执行文件的完整路径。自定义 IPC 的实例在查询命令后附加相同的 `--socket PATH`。
 
 ## 基础健康检查
-
-同机 CLI：
 
 ```bash
 zero status
 zero status --json
 ```
 
-HTTP：
+先确认这是预期实例：核对构建、当前模式、入站监听和错误。能返回状态只代表进程和控制接口能响应；还要从实际应用发起一次请求。
 
-```bash
-curl \
-  -H "Authorization: Bearer $ZERO_API_KEY" \
-  http://127.0.0.1:9090/api/v1/health
-```
-
-健康检查只能证明进程和控制面可响应。继续检查实际 listener、出站和事件状态。
+使用 TUN 时另查 `zero tun status`，同时看 `running`、`healthy`、地址族出口与 `last_error`。详见[TUN 使用指南](./tun-and-dns)。
 
 ## 查看连接和流量
 
+先开启事件输出，再复现请求：
+
 ```bash
-zero flows
 zero events
 ```
 
-- `flows` 返回当前活动流；
-- `events` 先发送活动流快照，再输出生命周期增量；
-- `flow.completed` 是单个流的最终完成事实，适合外部统计和计费。
+在另一个终端或应用中请求目标。核对 `flow.routed` 的目标、入站标签和最终出站；失败时看对应完成事件的错误。按 `Ctrl+C` 只结束这个事件查看命令，不会停止另一个终端里的 Zero。
 
-HTTP 对应端点：
+查看仍在进行的连接：
 
-- `GET /api/v1/runtime`
-- `GET /api/v1/stats`
-- `GET /api/v1/flows`
-- `GET /api/v1/flows/{flow_id}`
+```bash
+zero flows
+```
+
+很快结束的请求可能已经不在活动列表中，所以“列表为空”不能单独证明请求没经过 Zero。事件订阅先给出当前活动流快照，再输出后续变化。
 
 ## 查看和切换策略
 
 ```bash
 zero policies
-zero select proxy direct
+```
+
+只有配置中存在 `selector` 组时才能手动选它的成员。例如已有 `proxy` 组，且 `node-b` 是其直接成员：
+
+```bash
+zero select proxy node-b
+```
+
+不要照抄不存在的 tag，也不要把普通出站当作 selector。完整组配置见[运行模式与出站组](../configuration/modes-and-groups)。
+
+切换运行模式时，用已经配置的出站或组 tag：
+
+```bash
 zero mode rule
 zero mode global proxy
 ```
 
-`select` 只接受 selector 的直接成员 tag。选择一个 `url_test` 组时，不要把它提前展开为最终节点；组内选择仍由 Zero 的探测状态决定。
+`rule` 按规则分流，`global proxy` 将未命中直连例外的新连接交给 `proxy`。切换后发起新请求确认；现有连接不会自动迁移。若选择的成员本身是 URLTest 组，组内节点仍由内核决定。
+
+## 日志
+
+通常保持 `info`；仅在短时间排查时提高到 `debug` 或 `trace`。`zero status --json` 可查看当前日志级别和文件位置；前台运行的第一条错误也应保留。
+
+共享诊断信息前删除 API key、Webhook token、协议凭证和私钥。报告问题需要的材料见[故障排查](./troubleshooting#仍无法定位)。
+
+## 停止与重启
+
+先关闭仍指向 Zero 的应用/系统代理设置，再在运行 `zero run` 的终端按 `Ctrl+C`。使用 TUN 时检查原路由恢复；不要通过删除系统路由或清空防火墙代替正常停止。
+
+修改配置通常不必重启：
+
+```bash
+zero validate candidate.json
+zero reload candidate.json
+zero status --json
+```
+
+`candidate.json` 必须是完整配置。成功后重试实际请求；失败后先确认旧状态是否保留，见[安全热更新](./hot-reload)。
+
+长时间运行时由合适的进程管理器固定启动参数、保存日志并处理崩溃重启。二进制升级仍需备份并替换程序，不属于配置热更新，见[安装与升级](./installation#更新源码)。
 
 ## 查看 Connector 和事件 sink
 
-运行中查询：
+::: details 仅配置了外部事件投递时需要
+
+运行中可通过已启用的 HTTP API 查询：
 
 ```bash
-curl \
-  -H "Authorization: Bearer $ZERO_API_KEY" \
+curl -H "Authorization: Bearer $ZERO_API_KEY" \
   http://127.0.0.1:9090/api/v1/sinks
 ```
 
-离线检查配置引用的 Connector 状态：
+离线检查配置引用的本地持久投递状态：
 
 ```bash
 zero connector state --json config.json
 ```
 
-重点字段：
-
-| 字段 | 含义 |
-|------|------|
-| `pending` | 尚未持久确认的积压 |
-| `total_delivered` | 成功投递数量 |
-| `total_failed` | 失败尝试数量 |
-| `replay_gaps` | 已检测到的事件序列断档 |
-| `last_error` | 最近一次投递错误 |
-| `outbox_storage.write_blocked` | 磁盘保护是否暂停新的 outbox 写入 |
-
-`pending` 恢复为零不代表 `replay_gaps` 自动消失。出现断档时，外部控制端应使用自己的业务账本对账。
-
-## 日志
-
-开发或首次部署使用 `info`；只在短时间诊断时提高到 `debug` 或 `trace`。日志和事件中不应出现 API key、Webhook token、私钥正文或完整受管材料。
-
-查看当前日志级别和文件位置：
-
-```bash
-zero status --json
-```
-
-HTTP `GET /api/v1/runtime` 也返回 `log_level` 和 `log_files`。
-
-## 停止与重启
-
-前台运行时使用 `Ctrl+C`。生产环境由进程管理器负责：
-
-- 启动参数和配置路径固定；
-- 崩溃后重启；
-- 保存 stdout/stderr 和结构化日志；
-- 升级前归档旧二进制、配置和状态目录；
-- 启动后重新检查 build-info、health、listener 和 sink。
-
-配置热更新与二进制升级是两件事。配置使用[安全热更新](./hot-reload)，二进制升级由部署系统执行。
+关注 `pending`、`last_error`、`outbox_storage.write_blocked` 和 `replay_gaps`。积压变为零不代表历史断档已经补齐；处理方式见[Connector Webhook 接入](./connector-integration)。
+:::

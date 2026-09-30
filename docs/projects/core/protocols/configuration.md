@@ -19,7 +19,7 @@
 }
 ```
 
-Mixed 同时接受 SOCKS5 TCP、SOCKS5 UDP ASSOCIATE 和 HTTP CONNECT。
+Mixed 同时接受 SOCKS5 TCP、SOCKS5 UDP ASSOCIATE、HTTP CONNECT 和标准 HTTP forward-proxy 请求。
 
 ### SOCKS5
 
@@ -239,15 +239,21 @@ Mixed 同时接受 SOCKS5 TCP、SOCKS5 UDP ASSOCIATE 和 HTTP CONNECT。
 }
 ```
 
-`xtls-rprx-vision` 使用 Xray 兼容的 VLESS Addons 和 Vision 数据阶段语义。当前已验证边界是 **REALITY 上的 TCP 出站**：
+此示例要求对端开启对应 REALITY/Vision 服务，并替换服务器、UUID、公钥、short ID 和服务名。示例公钥仅用于展示字段，不能用于连接真实节点。
 
-- 不能与 `mux_concurrency` 组合；
-- UDP 会被配置校验或运行时明确拒绝；
-- `reality.client_fingerprint` 支持 `chrome`、`firefox`、`safari` 和 `edge`，默认 `chrome`；
-- 历史 Zero 私有请求头加密格式只以 `flow: zero-aead-v1` 保留，它不与 Xray Vision 互通；
-- 旧别名 `xtls-rprx-vision-udp443` 已拒绝，必须显式迁移到标准 Vision 或 `zero-aead-v1`。
+按已发布 `v0.0.2-rc.202609290540` 实现：
+
+- Vision 可以使用原始 TLS 1.3、REALITY 或 VLESS Encryption 提供的可切换承载；TLS 1.2 不提供 Vision 直通；
+- 不能与普通 TCP `mux_concurrency` 组合；
+- UDP 使用 XUDP，标准 Vision 默认拒绝 UDP/443；出站 `flow: "xtls-rprx-vision-udp443"` 可允许该端口，线上仍使用标准 Vision flow；
+- `reality.client_fingerprint` 默认 `chrome`，也有其他家族和版本化选项；
+- `zero-aead-v1` 是 Zero 私有迁移格式，不与 Xray Vision 互通。
+
+这些行为不能反推到早期二进制。先查[当前能力与限制](../reference/protocol-capabilities)，再用实际版本执行配置校验和对端测试。
 
 ### VMess
+
+对第三方 VMess 节点使用双方支持的标准 cipher。已发布 RC 中的 `zero` 为 Xray 标准无分块 NONE 语义；历史 Zero 私有格式已命名为 `zero-plus`，升级旧 Zero 对端时必须协调两端，不能直接混用。
 
 ```json
 {

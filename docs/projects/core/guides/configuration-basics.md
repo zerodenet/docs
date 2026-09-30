@@ -21,29 +21,53 @@ Zero 使用 JSON 配置。推荐从一个能够通过 `zero validate` 的完整�
 
 ## 加入一个代理出站
 
-下面是 VLESS TLS 出站片段。把服务器、端口、UUID 和 SNI 换成实际值后加入 `outbounds`：
+下面是一份完整的 VLESS TLS 客户端配置。先向你的服务提供方确认服务器、端口、UUID、传输方式和服务名；不能把其他协议的订阅地址当成 `server` 填入。
+
+把实际参数替换进去，保存为 `proxy.json`：
 
 ```json
 {
-  "tag": "proxy",
-  "protocol": {
-    "type": "vless",
-    "server": "node.example.com",
-    "port": 443,
-    "id": "11111111-2222-3333-4444-555555555555",
-    "tls": {
-      "server_name": "node.example.com",
-      "insecure": false
+  "schema_version": 1,
+  "inbounds": [
+    {
+      "tag": "mixed-in",
+      "listen": { "address": "127.0.0.1", "port": 7890 },
+      "protocol": { "type": "mixed" }
     }
-  }
+  ],
+  "outbounds": [
+    {
+      "tag": "proxy",
+      "protocol": {
+        "type": "vless",
+        "server": "node.example.com",
+        "port": 443,
+        "id": "11111111-2222-3333-4444-555555555555",
+        "tls": {
+          "server_name": "node.example.com",
+          "insecure": false
+        }
+      }
+    }
+  ],
+  "route": { "final": { "type": "route", "outbound": "proxy" } }
 }
 ```
 
-VLESS、VMess、Trojan 等协议只使用各自实际线协议接受的凭证字段，不需要额外创建一套 Connector 用户标识。
+这里 `mixed-in` 是应用连接的本地入口，`proxy` 是 Zero 要连接的远程服务器，`route.final` 把未匹配其他规则的流量交给它。示例地址和 UUID 不能用于真实连接，也不要通过关闭证书校验来掩盖服务名错误。
 
-其他协议的字段和示例见[协议配置](/projects/core/protocols/)。
+```bash
+zero validate proxy.json
+zero run proxy.json
+```
+
+如果快速开始的实例仍在使用 7890 端口，先停止旧实例，或按[热更新流程](./hot-reload)将完整配置应用给旧实例。另开终端运行 `curl --proxy socks5h://127.0.0.1:7890 https://example.com/`，并用 `zero flows` / `zero events` 确认使用了 `proxy` 出站。
+
+对端使用 REALITY、WebSocket、Trojan 或其他协议时，保留这份配置的入口和路由结构，用[协议配置示例](../protocols/configuration)替换 `outbounds` 中的协议条目。不要把单个条目保存为完整配置。
 
 ## 选择流量去向
+
+以下是需要合并到完整配置的顶层片段。先保留上一步的 `inbounds` 和 `outbounds`，再替换对应字段。
 
 全部走某个出站：
 

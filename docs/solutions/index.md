@@ -1,48 +1,58 @@
-# 使用场景
+<span id="使用场景"></span>
+
+# 按任务开始
 
 ## 桌面代理
 
-在 Windows、macOS 或 Linux 上使用代理，可以从 [ZNet Sink](/projects/znet-sink/) 开始。
+**准备好：** 一台 Windows、macOS 或 Linux 电脑，以及可用的订阅链接或代理配置。ZeroDeNet 软件本身不附带可连接的代理服务。
 
-ZNet Sink 提供配置与订阅管理、节点选择、系统代理、连接状态和诊断。默认集成 Zero Core，也可以按适配能力接入其他运行时。
+1. [安装 ZNet Sink](/projects/znet-sink/guides/installation)，确认平台与处理器对应
+2. [完成第一次连接](/projects/znet-sink/guides/first-connection)：导入、选择配置和节点，再验证系统代理
+3. 浏览器能连接后，需要接管不遵循系统代理的应用时再设置 [TUN](/projects/znet-sink/guides/tun)
 
-- [安装 ZNet Sink](/projects/znet-sink/guides/installation)
-- [完成第一次连接](/projects/znet-sink/guides/first-connection)
-- [功能说明](/projects/znet-sink/guides/features)
+**成功结果：** 客户端显示内核运行，测试请求能经过选定节点。只有“内核运行中”还不足以判断应用流量已经走代理。
+
+连接失败时，按[客户端故障排查](/projects/znet-sink/guides/troubleshooting)区分内核、订阅、节点和接管问题。
 
 ## 运行节点
 
-[Zero Core](/projects/core/) 可作为本地网关、边缘节点或服务器运行，提供协议、路由、策略、出站组以及 HTTP、IPC、CLI 等控制接口。
+**准备好：** 可以运行 Zero Core 的电脑或服务器，以及需要使用的协议参数。第一次验证建议先在本机完成。
 
-- [快速开始](/projects/core/guides/quickstart)
-- [配置基础](/projects/core/guides/configuration-basics)
-- [协议配置](/projects/core/protocols/)
+1. [安装 Zero Core](/projects/core/guides/installation)
+2. 按[快速开始](/projects/core/guides/quickstart)运行一个本地 Mixed 代理，用命令行发出测试请求
+3. 再按[配置基础](/projects/core/guides/configuration-basics)加入远程代理出站，或从[协议配置](/projects/core/protocols/)选择服务端协议
+
+**成功结果：** 配置校验通过、指定端口开始监听、测试请求成功。示例中的直连出口用于验证本地链路，不会自动提供远程代理。
+
+向其他设备开放监听前设置认证和防火墙；控制 API 保持本地访问，远程使用前阅读[控制接口安全](/projects/core/guides/control-security)。
+
+## 自用与分享 {#服务运营}
+
+**准备好：** 部署 ZBoard 的机器、可管理的代理节点，以及准备使用这些线路的账户。
+
+1. [部署 ZBoard](/projects/zboard/guides/installation)并创建管理员
+2. 按[首次初始化](/projects/zboard/guides/first-setup)接入节点、选择可分配的线路、创建使用者并开通订阅
+3. 把该使用者的订阅地址导入客户端，检查[订阅交付与用量](/projects/zboard/guides/subscriptions-and-traffic)
+
+**成功结果：** 使用者只能获取被授权的线路，客户端能够连接，面板能够看到对应的用量。节点在线或订单已创建都不等于这条链路已经完成。
+
+按需求逐步增加[前置入口](/projects/zboard/guides/network-fronting)、[备份](/projects/zboard/guides/storage-and-backups)和[插件](/projects/zboard/plugins/)。基础自用与分享流程不要求开通在线支付。
 
 ## 应用集成
 
-应用、GUI 或控制服务可以通过 Zero Core 的 HTTP、IPC、CLI 等控制接口管理运行时。
+已有脚本或应用需要控制 Zero Core 时，从[控制 API 使用说明](/projects/core/guides/control-api)开始；只有实现客户端时才需要查阅完整接口契约。
 
-- [控制接口总览](/projects/core/control-plane/)
-- [GUI 接入](/projects/core/guides/gui-integration)
-- [Connector Webhook](/projects/core/guides/connector-integration)
+修改项目代码时，先看该项目的贡献说明：
 
-## 服务运营
-
-[Zboard](/projects/zboard/) 用于管理 VPS、协议服务、节点组、商品、订单、订阅、配置交付和流量。
-
-Zboard 可以管理 Zero Core 节点，也可以通过适配接入外部节点或运行时。Zboard 当前处于预览阶段。
-
-- [部署 Zboard](/projects/zboard/guides/installation)
-- [节点与协议服务管理](/projects/zboard/guides/node-management)
-- [订阅交付与流量展示](/projects/zboard/guides/subscriptions-and-traffic)
+- [Zero Core](/projects/core/contributing/)
+- [ZNet Sink](/projects/znet-sink/contributing/)
+- [ZBoard](/projects/zboard/contributing/)
 
 ## 常见组合
 
-| 需求 | 入口 |
+| 需求 | 所需项目 |
 | --- | --- |
-| 桌面代理 | ZNet Sink |
-| 自建节点 | Zero Core |
-| 自己开发客户端或控制面 | Zero Core 控制接口 |
-| 管理节点和订阅业务 | Zboard |
-| ZNet Sink 使用 Zero 运行时 | ZNet Sink + Zero Core |
-| Zboard 管理 Zero 节点 | Zboard + Zero Core |
+| 使用已有订阅 | ZNet Sink，按客户端提示安装或选择 Zero Core |
+| 直接运行配置文件 | Zero Core |
+| 管理自己的节点与分享账户 | ZBoard，加上实际运行的节点 |
+| 从节点管理到桌面连接 | ZBoard + Zero Core + ZNet Sink |

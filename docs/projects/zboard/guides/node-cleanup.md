@@ -19,7 +19,7 @@
 
 ## 网站不可用时的停机与卸载
 
-脚本源文件是 `backend/internal/nodecleanup/cleanup-zero-node.sh`，不包含站点地址、Token、SSH 密码，也不需要连接面板或 GitHub。新构建的二进制发布包同时携带 `cleanup-zero-node.sh`。面板的「节点资产 → 内核与运维」提供下载；以后通过面板安装或更新 Zero 时也会安装到 `/usr/local/sbin/zboard-zero-cleanup`。既有节点不会因为本地代码修改而自动获得脚本，需要先下载复制或更新安装。
+脚本源文件是 `backend/internal/nodecleanup/cleanup-zero-node.sh`，不包含站点地址、Token、SSH 密码，也不需要连接面板或 GitHub。新构建的二进制发布包同时携带 `cleanup-zero-node.sh`。面板的「服务器管理 → 内核与运维」提供下载；以后通过面板安装或更新 Zero 时也会安装到 `/usr/local/sbin/zboard-zero-cleanup`。既有节点不会因为本地代码修改而自动获得脚本，需要先下载复制或更新安装。
 
 在 Linux/systemd 节点上使用 POSIX Shell（`/bin/sh`），需要系统常用工具 `systemctl`、`timeout`、`readlink` 等，不依赖 Python 或 Bash。默认只查看状态：
 

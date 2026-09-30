@@ -113,6 +113,6 @@ JSON 语法正确不代表配置能运行。`zero validate` 还会检查引用�
 
 ## 外部控制器的并发规则
 
-当前 `config.apply` 没有外部 revision/CAS 参数。一个节点应由单一配置写入方管理；如果多个界面共享控制权，应在外部控制器中串行化写入并维护版本。
+当前 `config.apply` 没有预期 revision/CAS 条件参数。一个节点应由单一配置写入方管理；如果多个界面共享控制权，应在外部控制器中串行化写入并维护版本。
 
 完整应用流程见[安全热更新配置](./hot-reload)，请求格式见[控制面配置合同](/projects/core/control-plane/configuration)。

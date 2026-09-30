@@ -29,7 +29,7 @@ zero build-info
 | `validate CONFIG` | 校验完整配置，不启动监听、TUN 或业务连接 |
 | `build-info` / `version` / `-V` / `--version` | 查看构建信息 |
 
-不指定 socket 时，Unix 默认 `~/.zero/control.sock`，Windows 默认 `\\.\pipe\zero-control`。管理多个实例时始终明确指定地址。
+不指定 socket 时，Unix 默认使用可执行文件旁的 `control.sock`，无法定位可执行目录时才回退到 `~/.zero/control.sock`，Windows 默认 `\\.\pipe\zero-control`。管理多个实例时始终明确指定地址。
 
 ## 连接运行中的进程
 
@@ -92,10 +92,11 @@ zero tun start --addr 10.0.0.1 --tag my-tun \
   --name tun0 --mask 255.255.255.0 --mtu 1500 \
   --exclude-cidr 192.168.50.0/24
 zero tun status
+zero tun recover
 zero tun stop
 ```
 
-TUN 命令同样可以使用 `--socket PATH` 连接指定实例。
+TUN 命令同样可以使用 `--socket PATH` 连接指定实例。`zero tun recover` 请求对正在运行的自动路由执行一次协调，不替换 TUN 设备，也不是清空系统路由。成功只表示这次协调完成，之后仍需查询状态和验证真实请求；超时不代表自动恢复停止。
 
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
@@ -112,6 +113,8 @@ TUN 命令同样可以使用 `--socket PATH` 连接指定实例。
 | `--no-strict-route` | 不传则严格路由 | 显式关闭严格路由策略 |
 | `--no-dns-hijack` | 不传则劫持 | 没有有效 DNS 配置时显式关闭；不会接管加密应用 DNS |
 | `--socket PATH` | 平台默认 | 目标内核实例 |
+
+配置内声明的 `runtime.tun` 由配置管理，不能通过 `tun stop` 单独关闭；应删除该字段并应用完整配置。上面的 start/stop 示例用于未声明 `runtime.tun` 的实例。
 
 先启动 Zero 进程再执行 TUN 命令。默认启用 DNS 劫持，要求活动配置已有有效 DNS；完整示例及验证步骤见[运行 TUN 与 DNS](../guides/tun-and-dns)。命令超时后先查询状态，避免对未确认结果重复启停。
 
