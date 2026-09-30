@@ -2,6 +2,17 @@
 
 本页供控制端集成与升级使用。Core 的正式版、候选版和开发线独立核对，不能把其他项目的版本号作为内核能力依据。当前下载入口与渠道说明见[版本与使用限制](/progress)。
 
+## v0.0.2-rc.202609290540 升级注意事项 {#已发布版本的升级注意事项}
+
+从较早版本切换到 [v0.0.2-rc.202609290540](https://github.com/zerodenet/core/releases/tag/v0.0.2-rc.202609290540) 时，检查以下配置和行为变化：
+
+- RC 的 VMess 历史私有 `cipher: zero` 需迁移为 `zero-plus`；当前 `zero` 为 Xray 标准 NONE 无分块语义，升级前协调两端
+- RC 的 VLESS Vision 不再只有早期 REALITY TCP 路径，UDP/443 策略和传输限制见[能力参考](../reference/protocol-capabilities#vless-组合边界)
+- RC 的 URLTest 测速成功不等于业务隔离已解除；单节点诊断不修改策略，见[探测语义](../guides/proxy-and-urltest#自动策略与单节点诊断)
+- WireGuard 仅在已发布 dev `v0.0.3-dev.202609281319` 中提供实验能力，RC 没有该 feature；配置 V1 未变不代表两者支持相同协议
+
+切换前用目标二进制校验配置，并保留旧二进制与配置备份。其他版本的变化见对应[发行说明](https://github.com/zerodenet/core/releases)。
+
 ## 0.0.1 配置与能力基线
 
 以下记录 V1 配置与能力发现约定，不表示后续所有修复都进入了 v0.0.1 下载包。
@@ -15,17 +26,6 @@
 - Direct 入站支持 UDP，部署时检查对应构建能力；仅需 TCP 时显式设置 `udp.enabled: false`。
 
 升级时同时核对发行 tag、提交和实际 capability。产品版本、配置 `schema_version`、API V1 和事件 V1 是不同标识。
-
-## v0.0.2-rc.202609290540 升级注意事项 {#已发布版本的升级注意事项}
-
-从较早版本切换到 [v0.0.2-rc.202609290540](https://github.com/zerodenet/core/releases/tag/v0.0.2-rc.202609290540) 时，检查以下配置和行为变化：
-
-- RC 的 VMess 历史私有 `cipher: zero` 需迁移为 `zero-plus`；当前 `zero` 为 Xray 标准 NONE 无分块语义，升级前协调两端
-- RC 的 VLESS Vision 不再只有早期 REALITY TCP 路径，UDP/443 策略和传输限制见[能力参考](../reference/protocol-capabilities#vless-组合边界)
-- RC 的 URLTest 测速成功不等于业务隔离已解除；单节点诊断不修改策略，见[探测语义](../guides/proxy-and-urltest#自动策略与单节点诊断)
-- WireGuard 仅在已发布 dev `v0.0.3-dev.202609281319` 中提供实验能力，RC 没有该 feature；配置 V1 未变不代表两者支持相同协议
-
-切换前用目标二进制校验配置，并保留旧二进制与配置备份。其他版本的变化见对应[发行说明](https://github.com/zerodenet/core/releases)。
 
 ## 消费者如何判断兼容性
 
