@@ -30,7 +30,7 @@ zero run --status-listen 127.0.0.1:9090 config.json
 
 ## 首次连接顺序
 
-1. 查询 `health`，确认进程存活并记录 `engine_build_id`。
+1. 查询 `health`，确认进程存活并记录 `engine_build_id`、`core_instance_id` 和 `config_revision`。
 2. 查询 `capabilities`，按当前发行物实际能力启用界面。
 3. 查询 `config`、`runtime`、`stats` 和 `policies`，建立初始视图。
 4. 建立 `subscribe` 长连接，接收快照和后续事件。
@@ -42,7 +42,7 @@ IPC 一行一个 JSON 请求：
 {"type":"query","id":1,"request":{"health":{}}}
 ```
 
-响应：
+响应节选：
 
 ```json
 {
@@ -52,6 +52,8 @@ IPC 一行一个 JSON 请求：
   "result": {
     "health": {
       "engine_build_id": "build-id",
+      "core_instance_id": "instance-id",
+      "config_revision": 1,
       "healthy": true
     }
   }
@@ -83,7 +85,7 @@ GUI 必须维护自己的完整配置草稿：
 4. 用户确认后调用 `config.apply`，提交相同的完整 JSON。
 5. 成功后重新查询 `config` 和 `runtime`。
 
-`config` 查询是摘要视图，不能反序列化后直接当作完整配置写回。节点本身也没有外部配置 revision/CAS；同一节点应只有一个配置写入协调者。
+`config` 查询是摘要视图，不能反序列化后直接当作完整配置写回。响应中的 `config_revision` 可用于关联状态，但写入命令没有预期 revision/CAS 条件；同一节点应只有一个配置写入协调者。
 
 配置应用是运行时事务。监听形状变化会重建对应监听器；可热更新的凭证变化走协议热更新；失败会返回错误并尝试保留上一份可用状态。控制接口自身的地址和认证变化仍需重启。
 

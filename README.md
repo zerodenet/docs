@@ -17,7 +17,7 @@ The production site is published from `main`, while the development preview is p
 | --- | --- | --- |
 | Zero Core | Documentation for the ZeroDeNet network runtime, protocols, control interfaces, and deployment. | [zerodenet/core](https://github.com/zerodenet/core) |
 | ZNet Sink | Usage, configuration, and platform compatibility documentation for the ZeroDeNet desktop proxy client. | [zerodenet/znet-sink](https://github.com/zerodenet/znet-sink) |
-| Zboard | Installation, basic panel management, and plugin extension documentation. | [zerodenet/zboard](https://github.com/zerodenet/zboard) |
+| ZBoard | A minimal panel for personal use and sharing: deployment, nodes, users, subscriptions, and optional plugins. | [zerodenet/zboard](https://github.com/zerodenet/zboard) |
 
 Each project has its own navigation, page hierarchy, and documentation boundaries so that versions, configuration semantics, and usage guidance remain project-specific.
 
@@ -35,6 +35,10 @@ This repository primarily contains public documentation for users, operators, an
 - public contribution and collaboration guidance.
 
 Internal design notes, temporary investigations, development plans, test records, and unstable implementation proposals should remain in the relevant project repositories.
+
+Organize the reading path around user tasks: choose a project, install it, complete the first working setup, operate it, and troubleshoot it. Guides state prerequisites, actions, the expected result, and the next step if something fails. Implementation inventories do not replace instructions. Keep contributor guidance focused on project conventions and contribution requirements; configuration and public API references are optional lookups.
+
+Distinguish released artifacts, release candidates, and source-only changes. Matching version numbers do not imply matching capabilities across projects or builds. Record the evidence and verification scope in [CONTENT_SYNC.md](./CONTENT_SYNC.md).
 
 ## Repository Structure
 

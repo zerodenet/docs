@@ -22,7 +22,7 @@
 | Mixed 本地代理 | 示例使用 `127.0.0.1:7890` | 由 inbound 配置决定 |
 | HTTP 控制接口 | 示例使用 `127.0.0.1:9090` | 由 `api.control.listen` 或 `--status-listen` 决定 |
 | gRPC 控制接口 | HTTP 控制端口 + 1 | 需要 `grpc-api` |
-| Unix IPC | `~/.zero/control.sock` | 可用 `--control-socket` 覆盖 |
+| Unix IPC | 可执行文件旁的 `control.sock`；无法定位目录时回退到 `~/.zero/control.sock` | 可用 `--control-socket` 覆盖；客户端使用 `--socket` |
 | Windows IPC | `\\.\pipe\zero-control` | Named Pipe |
 
 这些是文档示例，不是必须占用的固定端口。

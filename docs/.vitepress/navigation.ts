@@ -9,12 +9,13 @@ const group = (
 ): DefaultTheme.SidebarItem => ({ text, items, collapsed })
 
 export const nav: DefaultTheme.NavItem[] = [
+  { text: '开始使用', link: '/projects/' },
   { text: '下载客户端', link: '/download' },
   {
     text: '项目',
     items: [
       { text: '全部项目', link: '/projects/' },
-      { text: '实现与文档进度', link: '/progress' },
+      { text: '版本与使用限制', link: '/progress' },
       {
         text: '客户端',
         items: [
@@ -28,14 +29,14 @@ export const nav: DefaultTheme.NavItem[] = [
         ],
       },
       {
-        text: '运营平台',
+        text: '自用与分享',
         items: [
-          { text: 'Zboard', link: '/projects/zboard/', activeMatch: '^/projects/zboard/' },
+          { text: 'ZBoard', link: '/projects/zboard/', activeMatch: '^/projects/zboard/' },
         ],
       },
     ],
   },
-  { text: '使用场景', link: '/solutions/' },
+  { text: '按任务开始', link: '/solutions/' },
   {
     text: '社区',
     items: [
@@ -47,13 +48,13 @@ export const nav: DefaultTheme.NavItem[] = [
 ]
 
 const solutionSidebar: DefaultTheme.SidebarItem[] = [
-  page('使用场景', '/solutions/'),
-  page('实现与文档进度', '/progress'),
+  page('按任务开始', '/solutions/'),
+  page('版本与使用限制', '/progress'),
   group('项目', [
     page('全部项目', '/projects/'),
     page('ZNet Sink', '/projects/znet-sink/'),
     page('Zero Core', '/projects/core/'),
-    page('Zboard', '/projects/zboard/'),
+    page('ZBoard', '/projects/zboard/'),
   ], false),
 ]
 
@@ -67,8 +68,8 @@ const coreSidebar: DefaultTheme.SidebarItem[] = [
   page('Zero Core 使用手册', '/projects/core/'),
   group('开始使用', [
     page('使用指南', '/projects/core/guides/'),
-    page('安装与构建', '/projects/core/guides/installation'),
-    page('启动第一个节点', '/projects/core/guides/quickstart'),
+    page('安装 Zero Core', '/projects/core/guides/installation'),
+    page('运行第一个本地代理', '/projects/core/guides/quickstart'),
     page('配置基础', '/projects/core/guides/configuration-basics'),
     page('运行 TUN 与 DNS', '/projects/core/guides/tun-and-dns'),
   ], false),
@@ -81,36 +82,38 @@ const coreSidebar: DefaultTheme.SidebarItem[] = [
     page('故障排查', '/projects/core/guides/troubleshooting'),
     page('配置错误示例', '/projects/core/guides/config-failure-examples'),
   ], false),
-  group('外部系统接入', [
-    page('Connector Webhook', '/projects/core/guides/connector-integration'),
-    page('GUI 接入', '/projects/core/guides/gui-integration'),
-  ]),
   group('协议配置', [
     page('选择协议', '/projects/core/protocols/'),
     page('配置示例', '/projects/core/protocols/configuration'),
     page('能力与限制', '/projects/core/reference/protocol-capabilities'),
   ]),
-  group('参考', [
+  group('配置与命令速查', [
     page('参考入口', '/projects/core/reference/'),
     page('能力与端口速查', '/projects/core/reference/technical-specifications'),
     page('配置字段', '/projects/core/configuration/'),
     page('DNS 与 Fake-IP 参数', '/projects/core/configuration/dns'),
     page('运行模式与出站组', '/projects/core/configuration/modes-and-groups'),
     page('构建特性', '/projects/core/configuration/features'),
-    page('控制接口总览', '/projects/core/control-plane/'),
     page('CLI 命令', '/projects/core/control-plane/cli'),
+  ]),
+  group('高级接口参考（按需查阅）', [
+    page('控制接口总览', '/projects/core/control-plane/'),
+    page('GUI 接入', '/projects/core/guides/gui-integration'),
+    page('Connector Webhook', '/projects/core/guides/connector-integration'),
     page('HTTP API', '/projects/core/control-plane/http-api'),
     page('本地 IPC', '/projects/core/control-plane/ipc-protocol'),
-    page('Connector 投递合同', '/projects/core/control-plane/connector'),
+    page('Connector 投递约定', '/projects/core/control-plane/connector'),
     page('事件目录', '/projects/core/control-plane/events'),
     page('配置模型', '/projects/core/control-plane/configuration'),
     page('通用契约', '/projects/core/control-plane/contract'),
-    page('协议能力矩阵', '/projects/core/reference/protocol-capabilities'),
-    page('破坏性变更', '/projects/core/control-plane/breaking-changes'),
-    page('Zero Rule IR v1', '/projects/core/reference/zero-rule-ir-v1'),
-    page('ZRS 0.1', '/projects/core/reference/zrs-0.1'),
-    page('ZRS Golden Vector', '/projects/core/reference/zrs-0.1-golden'),
+    page('兼容性约定', '/projects/core/control-plane/breaking-changes'),
+    group('规则格式', [
+      page('Zero Rule IR v1', '/projects/core/reference/zero-rule-ir-v1'),
+      page('ZRS 0.1', '/projects/core/reference/zrs-0.1'),
+      page('ZRS Golden Vector', '/projects/core/reference/zrs-0.1-golden'),
+    ]),
   ]),
+  group('参与项目', [page('规范与贡献指南', '/projects/core/contributing/')]),
 ]
 
 const sinkSidebar: DefaultTheme.SidebarItem[] = [
@@ -127,6 +130,7 @@ const sinkSidebar: DefaultTheme.SidebarItem[] = [
     page('TUN 接管与网络切换', '/projects/znet-sink/guides/tun'),
     page('迁移设置与管理内核', '/projects/znet-sink/guides/settings-transfer'),
     page('本地代理与节点测速', '/projects/znet-sink/guides/proxy-and-probes'),
+    page('安装与使用插件', '/projects/znet-sink/guides/plugins'),
   ], false),
   group('帮助与诊断', [
     page('故障排查', '/projects/znet-sink/guides/troubleshooting'),
@@ -138,15 +142,15 @@ const sinkSidebar: DefaultTheme.SidebarItem[] = [
 ]
 
 const zboardSidebar: DefaultTheme.SidebarItem[] = [
-  page('ZBoard 基础面板', '/projects/zboard/'),
+  page('ZBoard 自用与分享', '/projects/zboard/'),
   group('开始使用', [
     page('用户指南', '/projects/zboard/guides/'),
     page('安装与部署', '/projects/zboard/guides/installation'),
-    page('首次初始化', '/projects/zboard/guides/first-setup'),
+    page('首次初始化与交付', '/projects/zboard/guides/first-setup'),
     page('日常管理', '/projects/zboard/guides/daily-operations'),
     page('数据存储与备份', '/projects/zboard/guides/storage-and-backups'),
   ], false),
-  group('基础功能', [
+  group('按需管理', [
     page('节点管理', '/projects/zboard/guides/node-management'),
     page('协议服务', '/projects/zboard/guides/protocol-services'),
     page('网络前置与共享代理池', '/projects/zboard/guides/network-fronting'),
@@ -159,21 +163,25 @@ const zboardSidebar: DefaultTheme.SidebarItem[] = [
     page('节点清理', '/projects/zboard/guides/node-cleanup'),
     page('故障排查', '/projects/zboard/guides/troubleshooting'),
   ]),
-  group('插件市场与使用', [
+  group('插件扩展', [
     page('插件能力与边界', '/projects/zboard/plugins/'),
     page('配置市场与安装插件', '/projects/zboard/plugins/marketplace'),
     page('启用第三方登录', '/projects/zboard/plugins/login'),
     page('安装安全与信任', '/projects/zboard/plugins/trust'),
-  ], false),
-  group('开发与技术参考', [
-    page('参与项目', '/projects/zboard/contributing/'),
-    page('本地开发', '/projects/zboard/contributing/development'),
-    page('插件开发', '/projects/zboard/plugins/development'),
-    page('身份接口', '/projects/zboard/plugins/identity-reference'),
-    page('插件治理', '/projects/zboard/plugins/governance'),
+  ]),
+  group('参考（按需查阅）', [
     page('配置与运行参考', '/projects/zboard/reference/'),
     page('节点配置交付', '/projects/zboard/reference/node-config-delivery'),
     page('规则兼容性', '/projects/zboard/reference/managed-rule-compatibility'),
+    group('插件接口', [
+      page('插件开发', '/projects/zboard/plugins/development'),
+      page('身份接口', '/projects/zboard/plugins/identity-reference'),
+      page('生命周期与数据', '/projects/zboard/plugins/governance'),
+    ]),
+  ]),
+  group('参与项目', [
+    page('规范与贡献指南', '/projects/zboard/contributing/'),
+    page('本地开发与检查', '/projects/zboard/contributing/development'),
   ]),
 ]
 
@@ -186,7 +194,7 @@ export const sidebar: DefaultTheme.Sidebar = {
   '/projects/zboard/': zboardSidebar,
   '/projects/': [
     page('项目目录', '/projects/'),
-    page('实现与文档进度', '/progress'),
+    page('版本与使用限制', '/progress'),
     group('应用', [page('ZNet Sink', '/projects/znet-sink/')]),
     group('内核', [page('Zero Core', '/projects/core/')]),
     group('基础面板', [page('ZBoard', '/projects/zboard/')]),

@@ -1,44 +1,43 @@
 # 协议能力与限制
 
-不同发行物可以裁剪 Cargo features，因此源码中存在某个协议，不代表当前二进制一定包含它。部署和 GUI 接入应以节点返回的 `capabilities` 为准。
+先确定对端使用的协议、方向和传输，再检查你手中的 Zero 是否支持。源码中存在某个协议，不代表当前二进制已经编译它；`supported` 也不代表所有第三方版本和部署环境都已通过验收。
 
 ## 先查询实际能力
 
-命令行：
+不必启动代理即可查询：
 
 ```bash
 zero build-info
 ```
 
-HTTP：
+在 `protocol_capabilities` 中检查 `compiled`、入站/出站 TCP/UDP、`mux`、`transports` 和 `limitations`。如果要集成控制端，运行中的节点也提供同一类信息：
 
 ```bash
-curl http://127.0.0.1:9090/api/v1/capabilities
+curl -H "Authorization: Bearer $ZERO_API_KEY" \
+  http://127.0.0.1:9090/api/v1/capabilities
 ```
 
-IPC：
+该命令要求已按[控制 API 指南](../guides/control-api)启用 HTTP。IPC 查询形式为：
 
 ```json
 {"type":"query","id":1,"request":{"capabilities":{}}}
 ```
 
-外部消费者应先检查 `compiled`，再分别检查入站/出站、TCP/UDP、MUX、传输和 `limitations`。不要只根据顶层 `status` 做单一布尔判断。
-
 ## 状态含义
 
 | 值 | 含义 |
 |----|------|
-| `supported` | 正常支持，未记录协议级缺口 |
-| `partial` | 基线路径可用，但某些方向、传输或外部互操作覆盖仍有限 |
-| `experimental` | 可以试用，不应默认视为生产能力 |
+| `supported` | 当前构建声明的能力已实现，仍需核对具体组合与对端 |
+| `partial` | 有可用路径，同时保留明确限制 |
+| `experimental` | 试验能力，不默认按生产可用处理 |
 | `unsupported` | 当前方向或能力未实现 |
-| `not_applicable` | 协议本身不定义该方向 |
+| `not_applicable` | 不适用于该协议 |
 
-`partial` 不等于整个协议不可用。应继续读取方向字段和 `limitations`，并验证实际采用的传输组合。
+不要把顶层状态当作一个开关。一个协议可能没有出站方向，或只有部分传输适合所需的 UDP/中继路径。
 
 ## 当前能力摘要
 
-下表用于快速选择，最终以当前节点的机器可读响应为准：
+下表常用协议按已发布 [v0.0.2-rc.202609290540](https://github.com/zerodenet/core/tree/2d7526596e91ea1259c3692501a02672ca826cfd) 的 metadata 核对，表示启用对应 feature 后的实现声明。WireGuard 一行仅属于已发布 dev，RC 不提供。正式版和裁剪构建请读取各自的响应。
 
 | 协议 | 总体状态 | 入站 TCP | 入站 UDP | 出站 TCP | 出站 UDP | MUX |
 |------|----------|----------|----------|----------|----------|-----|
@@ -47,51 +46,64 @@ IPC：
 | `socks5` | `supported` | 支持 | 支持 | 支持 | 支持 | 不适用 |
 | `http` | `supported` | 支持 | 不适用 | 不支持 | 不适用 | 不适用 |
 | `mixed` | `supported` | 支持 | 支持 | 不支持 | 不支持 | 不适用 |
-| `vless` | `partial` | 支持 | 部分 | 支持 | 部分 | 部分 |
-| `hysteria2` | `partial` | 支持 | 部分 | 支持 | 部分 | 不支持 |
-| `shadowsocks` | `partial` | 支持 | 支持 | 支持 | 支持 | 不支持 |
-| `trojan` | `partial` | 支持 | 部分 | 支持 | 部分 | 不支持 |
-| `vmess` | `partial` | 部分 | 部分 | 部分 | 部分 | 部分 |
-| `mieru` | `supported` | 支持 | 支持 | 支持 | 支持 | 不支持 |
+| `vless` | `supported` | 支持 | 支持 | 支持 | 支持 | 支持 |
+| `hysteria2` | `supported` | 支持 | 支持 | 支持 | 支持 | 不支持 |
+| `shadowsocks` | `supported` | 支持 | 支持 | 支持 | 支持 | 不支持 |
+| `trojan` | `supported` | 支持 | 支持 | 支持 | 支持 | 支持 |
+| `vmess` | `supported` | 支持 | 支持 | 支持 | 支持 | 支持 |
+| `mieru` | `partial` | 支持 | 支持 | 支持 | 支持 | 支持 |
+| `wireguard`（仅 dev） | `experimental` | 实验 | 实验 | 实验 | 实验 | 不适用 |
+
+Mieru 的 UDP 载体中继需要支持数据报的承载，长时间运行与恢复仍有验收限制。VLESS 独立 QUIC 传输保留上游已弃用的限制提示。MUX 一栏表示协议导出的逻辑复用能力，不等于把 QUIC 自带多流功能再配置成 `mux_concurrency`。
 
 ## VLESS 组合边界
 
-VLESS 顶层保持 `partial`，因为不同 flow、传输、MUX 和 UDP 路径的成熟度不同。当前开发线中需要特别区分：
+已发布 RC 的 VLESS 已不再沿用早期的“仅 REALITY TCP Vision”限制：
 
-| 组合 | 当前结论 |
+| 组合 | 使用边界 |
 |------|----------|
-| 普通 VLESS TCP + TLS/REALITY | 可用；仍需检查所选传输和发行物 capability |
-| REALITY + `xtls-rprx-vision` + TCP 出站 | 已按 Xray Vision 线协议实现并完成真实进程互操作验证 |
-| `xtls-rprx-vision` + `mux_concurrency` | 不支持，配置必须拆分 |
-| `xtls-rprx-vision` + UDP | 不支持，会明确拒绝 |
-| `zero-aead-v1` | Zero 私有兼容 flow，不是 Xray Vision |
-| `xtls-rprx-vision-udp443` | 已废弃并拒绝，不再作为别名猜测 |
-| Mux.Cool TCP / XUDP | 分别由 `mux_concurrency` / `xudp_concurrency` 启用，不依赖 Vision flow |
-| XHTTP `stream-one` | 支持单条 H2/H2C 双向流；部署前仍需验证对端版本和链路组合 |
+| 普通 TCP + TLS/REALITY | 按对端填写认证、服务名和证书参数 |
+| `xtls-rprx-vision` | 支持提供直通切换能力的原始 TLS 1.3、REALITY 或 VLESS Encryption 承载；TLS 1.2 不提供该能力 |
+| Vision + `mux_concurrency` | 不支持普通 MUX TCP；不要同时启用 |
+| Vision UDP | 通过 XUDP；标准 Vision 默认拒绝 UDP/443 |
+| `xtls-rprx-vision-udp443` | 出站允许 UDP/443 的策略值，线上仍使用标准 Vision flow |
+| `zero-aead-v1` | Zero 私有迁移格式，不能用于 Xray Vision 对端 |
+| XHTTP | 包含多种模式与 HTTP 载体；两端的模式、路径和 TLS 设置必须匹配 |
 
-REALITY 客户端的 `client_fingerprint` 支持 `chrome`、`firefox`、`safari`、`edge`，默认 `chrome`。它只改变 REALITY 客户端 ClientHello；普通 TLS 和 REALITY 入站不读取该字段。
+REALITY 的示例使用 `client_fingerprint: "chrome"`。当前实现还提供版本化指纹等选项；升级时不要假定短名称永远对应同一个浏览器版本。指纹不改变证书校验要求，也不保证流量不可识别。
 
-不要把“某一条真实互操作路径通过”扩大解释为所有传输、UDP、MUX 和中继组合都已具备相同成熟度。配置示例见[协议配置示例](/projects/core/protocols/configuration)。
+字段示例见[协议配置](../protocols/configuration)。对应源码依据：[VLESS metadata](https://github.com/zerodenet/core/blob/2d7526596e91ea1259c3692501a02672ca826cfd/protocols/vless/src/metadata.rs)与 [flow 校验](https://github.com/zerodenet/core/blob/2d7526596e91ea1259c3692501a02672ca826cfd/protocols/vless/src/validation.rs)。
+
+## WireGuard 与 ICMP
+
+本节对应已发布 [v0.0.3-dev.202609281319](https://github.com/zerodenet/core/releases/tag/v0.0.3-dev.202609281319)，不属于 RC 或 v0.0.1。WireGuard 需显式启用 `wireguard` feature，仍为实验能力，未加入默认 `full`。已实现 UDP 端点、认证 peer、原始 IP 转发，以及供普通代理入站使用的 TCP/UDP 转换；它不是尚未接线的配置占位符。
+
+部署前仍需注意：
+
+- 对端的 `allowed_ips`、地址族、密钥、MTU 和回程路由必须匹配
+- WireGuard 入站的 peer 身份不自动映射成 Zero 主体/用户策略
+- 外层 UDP 代理需要双向 packet-path 或由具体成员组成的 relay，不能任意套用动态组
+- 安全审计、真实 TUN、多 peer 故障和持续运行验收不能由一次握手成功代替
+
+ICMP 不能经任意 TCP/UDP 代理转发。原始 Packet 路径可以保留 ICMP；`direct` Echo 使用宿主 raw/ping socket，需要对应系统权限。`translate` 的 Echo 地址转换是受限路径，不等于通用 NAT 或任意 ICMP 支持。普通代理请求成功或 `ping` 失败都不能单独证明另一种流量路径的状态。
+
+实验边界以 [WireGuard capability](https://github.com/zerodenet/core/blob/e0c078f3786e2ed60ace43613c47d3b98ae3f5c8/crates/proxy/src/adapters/wireguard.rs) 和实际节点为准；不要据此推定已发布 RC 或正式包包含相同实现。
 
 ## 部署时如何判断
 
-对于每个节点配置：
-
 1. 确认协议 `compiled: true`。
-2. 确认使用方向的 capability 不是 `unsupported`。
-3. 检查所选 transport 是否出现在 `transports`。
-4. 使用 MUX 或 UDP 时检查对应字段。
-5. 展示并记录 `limitations`，不要在 GUI 中丢弃。
-6. 对实际客户端/服务端版本和传输组合做互操作测试。
+2. 检查使用方向的 TCP/UDP capability。
+3. 核对所选 transport、MUX、UDP 和 relay 组合。
+4. 运行 `zero validate config.json`。
+5. 用实际客户端/服务端版本验证目标请求、UDP 和断开后的新连接。
 
-例如，VLESS 顶层为 `partial`，但并不妨碍使用已支持的 TCP/TLS 路径；它表示不能把某条已验证路径推广为所有 UDP、MUX 和传输组合都已具备相同成熟度。
+`validate` 检查配置，不会替你连接远程服务器或证明生产网络可用。
 
 ## GUI 与控制器建议
 
-- 对 `compiled: false` 的协议隐藏或禁用配置入口。
-- 对 `partial` 和 `experimental` 显示明确提示，不自动拒绝整个协议。
-- 保留未知字段和未知 limitation code，以兼容更新后的内核。
-- 保存用户选择前使用 `config.validate` 再做最终确认。
-- 发行物升级后重新查询，不缓存上一个版本的能力矩阵。
+- 对未编译能力禁用配置入口
+- 对 `partial` 和 `experimental` 显示限制，不丢弃 limitation code
+- 兼容未知可选字段，升级内核后重新查询能力
+- 写入前执行 `config.validate`，不要只比较产品版本号
 
-配置格式见[协议配置示例](/projects/core/protocols/configuration)，构建裁剪见[构建特性](/projects/core/configuration/features)。
+构建裁剪见[构建特性](../configuration/features)，接口契约见[控制接口参考](../control-plane/)。

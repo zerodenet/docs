@@ -1,6 +1,6 @@
 # Zero Core 参考资料
 
-这里收录需要长期保持兼容或可验证的格式与能力契约：
+这是按需查阅的进阶参考。配置节点先看[协议示例](../protocols/configuration)，运行代理先看[使用指南](../guides/)；开发工具或处理规则格式时再查以下契约：
 
 - [协议能力模型](./protocol-capabilities)
 - [Zero Rule IR v1](./zero-rule-ir-v1)

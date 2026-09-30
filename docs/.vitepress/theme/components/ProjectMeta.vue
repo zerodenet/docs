@@ -26,7 +26,7 @@ const displayAddress = (url: string) => url.replace(/^https?:\/\//, '')
         :href="downloadHref"
         :target="project.downloadPage ? undefined : '_blank'"
         :rel="project.downloadPage ? undefined : 'noreferrer'"
-      >下载最新版 <span aria-hidden="true">{{ project.downloadPage ? '→' : '↗' }}</span></a>
+      >下载 <span aria-hidden="true">{{ project.downloadPage ? '→' : '↗' }}</span></a>
       <a v-if="project.quickStart" class="project-link" :href="withBase(project.quickStart)">
         {{ project.kind === 'application' ? '安装指南' : '快速开始' }}
       </a>

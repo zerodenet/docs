@@ -6,15 +6,14 @@
 
 ## 命名规范
 
-所有对外 JSON 字段名、枚举值、功能名称、适配器名称、sink
-名称、命令方法、查询变体和错误码均使用 `snake_case`。
+JSON 字段名、枚举值、API capability 标识、适配器 kind、查询变体和错误码使用 `snake_case`。Cargo 构建 feature 保留 `status-api`、`grpc-api` 等 kebab-case 名称；命令方法和事件类型使用点分隔名称。用户配置的 tag 不应被自动改名。
 
 示例：
 
 ```json
 {
   "error": { "code": "permission_denied" },
-  "features": ["status-api", "config_snapshot", "runtime_snapshot"],
+  "features": ["config_snapshot", "runtime_snapshot"],
   "adapters": [{ "kind": "in_process", "enabled": true }]
 }
 ```
@@ -43,7 +42,7 @@ HTTP 和 IPC 响应使用 `zero_api::ApiResponse`。
 | `result` | 成功的响应负载 |
 | `error` | 结构化的错误负载 |
 
-消费者应先判断 `ok`，再解析 `result` 或 `error`。
+消费者应先判断 `ok`，再解析 `result` 或 `error`。已发布 RC 的 HTTP GET 查询错误可能仍返回 HTTP 200，不能只看 HTTP 状态码。命令成功时 `result` 是 `CommandResponse`：检查 `result.accepted`，再读取嵌套的 `result.result` 载荷；查询结果则按对应查询形状解析。
 
 ## 事件信封
 
@@ -56,6 +55,8 @@ HTTP 和 IPC 响应使用 `zero_api::ApiResponse`。
 | `event_type` | 机器可读的事件名称 |
 | `sequence` | 事件源内的单调递增序号 |
 | `occurred_at_unix_ms` | 事件时间戳 |
+| `core_instance_id` | 可选的运行实例标识，重启后变化 |
+| `config_revision` | 可选的配置代次，关联事件产生时的配置 |
 | `source_id` | 可选的节点/源标识 |
 | `principal_key` | 可选的流量归因键 |
 | `labels` | 可选的外部标签 |
@@ -85,7 +86,7 @@ HTTP 和 IPC 响应使用 `zero_api::ApiResponse`。
 
 `features` 提供正向能力，`global_limitations` 提供跨协议限制，协议局部限制在 `protocols[].limitations`。未知能力和限制条目可忽略；已知限制消失也应结合正向能力判断。TUN 双栈、系统 DNS 自动发现、Fake-IP 持久化及 DNS 地址族策略均应按实际能力启用。
 
-V1 是公开契约版本，与发行编号独立。当前已公开 0.0.1，具体构建与安装验收范围见[实现进度](/progress)。DNS/TUN 的使用及限制见[运行 TUN 与 DNS](../guides/tun-and-dns)。
+V1 是公开契约版本，与产品发行编号独立。正式版、候选版和开发线的区别见[版本与使用限制](/progress)。DNS/TUN 的使用及限制见[运行 TUN 与 DNS](../guides/tun-and-dns)。
 
 ## 错误处理
 

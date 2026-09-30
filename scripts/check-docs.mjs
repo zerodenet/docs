@@ -19,7 +19,9 @@ function projectIdForFile(file) {
   const projectRoot = join(docsRoot, 'projects')
   const projectPath = relative(projectRoot, file)
   if (projectPath.startsWith('..') || projectPath === '') return null
-  return projectPath.split(sep)[0] || null
+  const parts = projectPath.split(sep)
+  // /projects/index.md is the shared project chooser, not a project named index.md.
+  return parts.length > 1 ? parts[0] : null
 }
 
 function walk(directory, predicate) {
@@ -242,9 +244,17 @@ if (!existsSync(navigationFile)) {
 
   for (const match of navigationSource.matchAll(/['"](\/[^'"]+)['"]/g)) {
     const target = resolveLocalTarget(join(docsRoot, 'index.md'), match[1])
+    if (!target) {
+      report(navigationFile, `导航链接不存在：${match[1]}`)
+      continue
+    }
     if (target?.endsWith('.md')) {
       navigationEntries.add(target)
       explicitNavigationEntries.add(target)
+      const hash = decodeHash(match[1].split('#')[1] ?? '')
+      if (hash && !anchorsByFile.get(target)?.has(hash)) {
+        report(navigationFile, `导航锚点不存在：${match[1]}`)
+      }
     }
   }
 

@@ -1,50 +1,44 @@
 # Content synchronization baseline
 
-## ZBoard documentation migration — 2026-09-10
+## User-first, released-capability reconstruction — 2026-09-30
 
-ZBoard documentation is now authored in `docs/projects/zboard/`. Product introductions, installation, basic management, and plugin usage lead the navigation; only current usage and integration references are published. Development plans, temporary contracts, schema snapshots and historical acceptance records are excluded. `zboard-document-migration.json` records each source, destination and source digest.
+The public site now starts with choosing a project, a first working setup, daily tasks and troubleshooting. ZBoard is presented as a minimal panel for personal use and sharing, with optional plugins. Contributor sections stay short; detailed configuration and public interface contracts remain available as lookup references rather than prerequisite reading. Existing routes and heading anchors are retained.
 
-This migration uses ZBoard develop `37d1716c466ce16a1198399ac91c9de3e2c0c4f8` plus local documentation revisions. It is not a claim that every feature is in the published v0.0.1 artifact. Plugin runtime and marketplace documentation explicitly identifies the post-v0.0.1 development scope; unpublished shared-pool RAW editor descriptions are excluded. Payments and other business extensions belong to plugins; the current payment extension interface is not implemented. Core and client evidence remains on the earlier baseline below.
+### Published evidence
 
-Public ZBoard documentation must be changed here, not copied back into the ignored product `docs/` directory. Product release packaging keeps its own release-note artifact under `.github/release-notes/`.
+| Project / channel | Published tag | Source commit |
+| --- | --- | --- |
+| Core RC (general tutorials and API reference) | `v0.0.2-rc.202609290540` | `2d7526596e91ea1259c3692501a02672ca826cfd` |
+| Core dev (explicitly experimental WireGuard section only) | `v0.0.3-dev.202609281319` | `e0c078f3786e2ed60ace43613c47d3b98ae3f5c8` |
+| ZNet Sink RC | `v0.0.2-rc.202609291414` | `3aa5c7fe36b3cc0966e417482fa13813119b31f9` |
+| ZBoard RC | `v0.0.2-rc.202609291405` | `cf6f2cf0838880615063e94d7f5af3113ea03d9f` |
 
-Initial migration verification: source and production-output checks passed for 97 Markdown pages, including every sidebar entry, internal link and anchor, JSON examples and rendered HTML. The migration also removes the product release workflow dependency on its local docs directory.
+GitHub release metadata was checked on 2026-09-30. All three latest non-prerelease releases remain `v0.0.1`; the tags above are prereleases. The automatic client download chooser still reads the non-prerelease channel, and the download page now explicitly links the audited RC. Matching product numbers are not a compatibility contract.
 
-Curation correction: removed 11 historical or superseded reference pages, rewrote rule compatibility and publication recovery as usage guides, and removed unpublished RAW editor notes. The manifest marks excluded sources rather than presenting them as live pages.
+Core `main` matches the RC commit above. Unreleased develop `4ad1b09ab5a59b5b673d1c28b05faf9a7a9735e4` was compared but is not the tutorial baseline: its URLTest and strict-route recovery fixes must not be attributed to earlier artifacts. The RC has no WireGuard feature. Sink's audited develop `080a635df3549449694038e7ce6e531ce376fb15` has exactly the RC tree `7b16a6a2d83c1e20b00aecae3ab952f5fb57821c`; public source links use the released commit. ZBoard `main`, `develop` and the RC tag all resolve to the listed commit.
 
-## Previous main audit — 2026-09-09
+### Material corrections
 
-Public guides were checked on 2026-09-09 against freshly fetched GitHub `main` revisions. None of the three product repositories has a `master` branch. Source was read from immutable Git archives, excluding develop, feature branches and uncommitted changes. In particular, the client checkout contains ongoing uncommitted work and the panel checkout is on a feature branch; neither is the documentation baseline.
+- Core: download-first installation, runnable local Mixed-proxy example, explicit TUN permission and recovery limits, accurate published VLESS/VMess capabilities, RC URLTest isolation semantics, and experimental dev-only WireGuard. HTTP/IPC/event contracts were cross-checked against the RC implementation, not just copied from an earlier source document.
+- Sink: a concrete first connection using professional mode and system proxy; Lite's power button actually requests both system proxy and TUN. Current RC settings use per-configuration local changes; portable export is v3 and does not back up configuration-bound overrides or subscriptions. Linux system proxy targets GNOME. Plugin installation, permission approval, updates and destructive uninstall effects are explained as user tasks.
+- ZBoard: installation is pinned to the released RC; first delivery includes a user, protocol, access group, product/specification, zero-amount assignment, explicit confirmation and client verification. Forwarding-only authorization now issues the parent credential with only the authorized entry address. External forwarding, proxy pools, released plugin business interfaces and migration/rollback constraints replace stale claims.
+- Navigation: guides lead, advanced references are collapsed, contribution guidance is separated. The shared project chooser may link into each project's start page; its old false classification as a project named `index.md` is fixed in the documentation checker. The checker now rejects missing navigation targets and anchors; a pre-existing community sidebar anchor mismatch is repaired without removing the old anchor.
 
-| Repository | Main revision |
-| --- | --- |
-| core | `503229562ef5854e3be6be3a9c8e7cbc5efffc61` |
-| znet-sink | `6d822fb96140be87cdccdd0bea472ba0b089cf04` |
-| zboard | `e1b7246cc4ef805bf39b22d634ba209114eb3b14` |
-| docs develop before this update | `8e00ddfeec94707c1c2dd2d587f68ed23386c3ef` |
+### Relationship to existing work
 
-GitHub release API responses confirmed public, non-draft, non-prerelease `v0.0.1` releases for all three products. This verifies publication, not installed behavior or every main change in a downloaded artifact. The public [implementation progress page](docs/progress.md) links the pinned evidence and release records.
+This change starts from docs `develop` / `main` commit `dcae2357323c1352aa6554fd0e5162921aef9bce`. Existing PR #36 remains separate and unmodified. Its module-ownership proposal overlaps navigation and ZBoard reference entry points; the user-facing subscription/forwarding explanations here follow the now-published RC rather than the proposal's earlier “unreleased” wording. Review that overlap before integrating both PRs.
 
-## Evidence and changes
+### Verification scope
 
-- Core: inspected `crates/config/src/model/route.rs`, route compilation/validation, `crates/engine/src/runtime/route.rs`, `crates/proxy/src/adapters/direct/{inbound,udp}.rs`, and management, validation-isolation and URLTest implementation notes/test references. Added `route.bypass` precedence, management-only startup, Direct UDP capability and bind semantics, validation isolation, and the distinction between policy probes and read-only diagnostics. Corrected the old Direct UDP matrix entry and develop-only version notices.
-- Client: inspected `src-tauri/src/services/bypass.rs`, `services/bypass/rules.rs`, `services/kernel_settings.rs`, `models/app_config.rs`, Network/TUN settings components, kernel integration and v0.0.1 qualification records. Updated the shared bypass editor, TUN exclusions, portable settings v2, lifecycle semantics and the shared 0.0.1 installation/recovery baseline. The four-platform installed-E2E waiver remains an outstanding acceptance boundary.
-- Panel: inspected `backend/internal/handler/{admin_order_assignment,node_publish_worker,node_delete_cascade,dns_deletion,certificate_deletion,network_entry_delivery,network_entry_capabilities,managed_rule_client_compatibility,kernel_automation}.go`, related tests and implementation notes. Updated fronting and explicit landing authorization, shared proxy pools, durable publication, administrator order confirmation, client-specific rules, the shared 0.0.1 capability baseline, and database-only deletion versus independent remote cleanup. The compiler still injects a bootstrap listener even though Core now supports management-only operation.
-- Release and scope records distinguish existing main implementation from plans, including panel online payment/plugin runtime and product installed/long-running acceptance. No product code, live network settings or remote node state was changed.
+- `pnpm check:build` passes all 86 Markdown pages and production output (Node 24.19.0, pnpm 11.19.0; CI uses Node 22 and pnpm 11.9.0).
+- A separate rendered-output check resolves 5,662 local links/assets across 87 HTML files. All 568 previous anchors in changed pages are retained; all 36 new pinned product-source targets resolve.
+- The navigation checker rejects injected missing-page and missing-anchor cases, then passes with the real navigation restored. `git diff --check` passes.
+- Thirty complete/assembled Core configuration examples pass `zero validate` with the existing audit binary reporting `c71a7c22`, not the exact RC binary. Two Python examples parse, two JavaScript examples pass syntax checks, and 23 ZBoard shell examples pass syntax checks.
 
-## Version terminology
+Product code and release artifacts were inspected; this work does not deploy ZBoard, modify system proxy/TUN/firewall settings, send payments or operate live nodes. Local browser preview is unavailable in this environment (`ERR_BLOCKED_BY_CLIENT` for localhost), so no visual or installed-platform acceptance is claimed. Earlier audits are historical records, not the current public feature baseline.
 
-All three product versions are 0.0.1. Public guides no longer use pre-reset release matrices, minimum-version thresholds, package names or User-Agent examples. Git tags, download URLs and image tags retain the actual `v0.0.1` spelling. API V1, client settings v2 and ZRS 0.1 remain independent protocol/data-format versions. The public compatibility page describes the current 0.0.1 contract rather than reconstructing historical release claims.
+## Historical provenance
 
-## Verification
+The [September 9–10 audit and ZBoard migration record](https://github.com/zerodenet/docs/blob/dcae2357323c1352aa6554fd0e5162921aef9bce/CONTENT_SYNC.md) remains available in Git history. `zboard-document-migration.json` records the original migration sources and digests; it is provenance, not a claim that today's guide still matches those old files verbatim.
 
-- `pnpm check:build` passed for 69 Markdown pages: links, anchors, JSON examples, project boundaries, navigation, reachability and production output. Local tools were Node 24.19.0 and pnpm 11.19.0; repository CI independently uses Node 22 and pnpm 11.9.0.
-- `git diff --check` passed. The progress page and three project entry pages contain 23 pinned source references, checked against the archived trees.
-- The final `/progress` development route returned HTTP 200. No browser visual acceptance was performed.
-- Existing dependencies were reused; the package manifest, lockfile and hosting/workflow configuration remain unchanged; the discussion question template now uses the 0.0.1 example.
-
-This task did not run Rust/Go product suites, installed clients, live TUN changes, payment/email delivery or node cleanup.
-
-## Delivery
-
-The target is docs `develop` through a `codex/*` pull request. Current GitHub branch rules require a pull request and the `validate` status check. GitHub Pages listens to develop pushes; this documentation PR does not itself deploy a product or publish the separate Sites preview.
+Public ZBoard documentation is maintained here. Do not copy these guides back into the product's ignored local documentation directory; its release packaging keeps its own release-note artifact under `.github/release-notes/`.

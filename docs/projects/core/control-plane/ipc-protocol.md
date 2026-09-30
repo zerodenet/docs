@@ -1,14 +1,20 @@
 # IPC 协议
 
+本文以已发布的 Core `v0.0.2-rc.202609290540`（`2d752659`）为基准。
+
 本地进程间通信使用 JSON-line 帧协议，底层传输在 Unix 上为 Domain Socket，Windows 上为 Named Pipe。协议语义完全一致。
 
 ## 连接
 
 | 平台 | 默认路径 | 传输 |
 |------|---------|------|
-| Linux/macOS | `~/.zero/control.sock` | Unix Domain Socket (0600) |
+| Linux/macOS | 优先为 `zero` 可执行文件所在目录的 `control.sock`；无法取得可执行文件目录时才回退到 `~/.zero/control.sock` | Unix Domain Socket (0600) |
 | Windows | `\\.\pipe\zero-control` | Named Pipe |
 | CLI 覆盖 | `--control-socket /path/to/sock` | |
+
+自定义客户端应显式约定同一路径，不要直接假定 Home 目录回退路径。以下 Unix 客户端示例使用 `~/.zero/control.sock`，请先用 `zero run config.json --control-socket "$HOME/.zero/control.sock"` 启动，或把示例中的路径改为实际地址。CLI 查询可用 `--socket PATH` 指定相同地址。
+
+IPC 不使用 HTTP Bearer Token；能够连接到 socket/pipe 的调用方会获得管理权限，因此应限制本地端点的 OS 访问权限。
 
 ## 帧格式
 
@@ -18,7 +24,7 @@
 
 ```
 → {"type":"query","id":1,"request":{"health":{}}}\n
-← {"api_id":"zero.api.v1","ok":true,"id":1,"result":{"engine_build_id":"build-id",...}}\n
+← {"api_id":"zero.api.v1","ok":true,"id":1,"result":{"health":{"engine_build_id":"build-id",...}}}\n
 ```
 
 ## 请求类型
@@ -54,6 +60,7 @@
 | `{"config":{}}` | 配置快照 |
 | `{"runtime":{}}` | 运行时状态（含统计、日志配置、活动流） |
 | `{"stats":{}}` | 统计摘要 |
+| `{"principal_flows":{}}` | 按主体的活跃流计数与会话注册表代次 |
 | `{"active_flows":{"limit":100,"filter":{}}}` | 活动流列表 |
 | `{"recent_flows":{"limit":100,"filter":{}}}` | 既有有限诊断窗口（兼容接口，不应作为 GUI 历史数据库） |
 | `{"flow":{"flow_id":"42"}}` | 单流详情 |
@@ -79,21 +86,24 @@
 | method | params | 说明 |
 |--------|--------|------|
 | `policies.select` | `policy_tag`, `target_tag` | 切换 selector 出站 |
-| `policies.probe` | `policy_tag` | 探测 url_test 组延迟（异步，结果经事件/查询取） |
+| `policies.probe` | `policy_tag`, `operation_id?` | 探测 url_test 组延迟（异步，结果经事件/查询取） |
 | `flows.close` | `flow_id` | 关闭指定流 |
 | `config.validate` | `config` (完整 JSON) | 验证配置 |
 | `config.apply` | `config` (完整 JSON) | 持久化并等待 proxy 与进程级服务热重建；失败回滚 |
 | `config.apply_runtime` | `config` (完整 JSON) | 不写回源文件，并等待 proxy 与进程级服务热重建；失败回滚 |
 | `mode.set` | `mode`, `outbound?` | 设置全局模式 |
 | `tun.start` | `addr`, `tag`, `name?`, `mask?`, `secondary_addr?`, `mtu?`, `include_cidrs?`, `exclude_cidrs?`, `auto_route?`, `dual_stack?`, `strict_route?`, `dns_hijack?` | 启动 TUN，约束见 [HTTP 命令](./http-api#tun-start) |
-| `tun.stop` | — | 停止 TUN |
-| `diagnostics.probe_target` | `target_tag` | 直连 TCP 可达性（不走代理，仅本机→server:port RTT） |
-| `diagnostics.probe_outbound` | `target_tag`, `url?` | 同步经代理单节点延迟；全局 `runtime.latency_test_url` 优先 |
+| `tun.stop` | `{}` | 停止 TUN |
+| `tun.recover` | `{}` | 立即审计并尝试恢复 TUN 路由，随后查询实际状态 |
+| `diagnostics.probe_target` | `target_tag`, `operation_id?` | 直连 TCP 可达性（不走代理，仅本机→server:port RTT） |
+| `diagnostics.probe_outbound` | `target_tag`, `url?`, `operation_id?` | 同步经代理单节点延迟；全局 `runtime.latency_test_url` 优先 |
 | `diagnostics.dns_lookup` | `hostname` | DNS 查询 |
 | `diagnostics.dns_cache` | `domain?`, `limit?` | 查询普通 DNS 缓存 |
 | `diagnostics.fakeip_lookup` | `domain` 或 `ip` | 查询已有 Fake-IP 映射 |
 | `fakeip.clear` | `domain?` 或 `ip?`；均省略清空全部 | 清理 Fake-IP 映射与持久状态 |
 | `diagnostics.trace_route` | `target`, `port`, `protocol?`, `inbound_tag?` | 路由追踪 |
+
+命令成功时 `response.result.accepted` 表示接受，业务负载位于 `response.result.result`。`diagnostics.probe_outbound` 的目标不存在、URL 无效或网络探测失败也可能是成功命令信封，需继续检查业务负载的 `reachable`、`terminal_status` 和 `error_code`。探测的 `operation_id`、动态超时及合并语义见 [HTTP 命令](./http-api#policies-probe)。
 
 > **实现说明：** IPC Command 和 HTTP `POST /api/v1/commands` 共用同一条 serde 反序列化路径（`CommandRequest` 的 `#[serde(tag = "method", content = "params")]`）。新增 command 只需修改 `zero_api::CommandRequest`，传输层无需单独适配。
 
@@ -217,8 +227,8 @@ IPC server 在以下事件输出结构化日志，每条日志携带 `active=N` 
 
 | 事件 | 级别 | 示例 |
 |------|------|------|
-| 客户端连接 | `info` | `ipc client connected active=1` |
-| 客户端正常断开 | `info` | `ipc client disconnected cleanly active=0` |
+| 客户端连接 | `debug` | `ipc client connected active=1` |
+| 客户端正常断开 | `debug` | `ipc client disconnected cleanly active=0` |
 | 客户端异常断开 | `warn` | `ipc client disconnected error=BrokenPipe active=0` |
 | 连接处理失败 | `warn` | `ipc connection failed error=... active=0` |
 | 连接 task panic | `error` | `ipc connection task panicked` |
@@ -255,14 +265,20 @@ import json, socket, os
 SOCK = os.path.expanduser("~/.zero/control.sock")
 
 def ipc_request(req):
-    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    s.connect(SOCK)
-    s.sendall((json.dumps(req) + "\n").encode())
-    resp = b""
-    while b"\n" not in resp:
-        resp += s.recv(4096)
-    s.close()
-    return json.loads(resp.split(b"\n")[0])
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+        s.settimeout(90)  # 探测预算与排队可能超过 5 秒
+        s.connect(SOCK)
+        s.sendall((json.dumps(req) + "\n").encode())
+        resp = b""
+        while b"\n" not in resp:
+            chunk = s.recv(4096)
+            if not chunk:
+                raise EOFError("IPC closed before a complete response")
+            resp += chunk
+        result = json.loads(resp.split(b"\n", 1)[0])
+        if not result.get("ok"):
+            raise RuntimeError(result.get("error"))
+        return result
 
 # 查询健康状态（注意 request 格式：externally-tagged）
 health = ipc_request({"type": "query", "id": 1, "request": {"health": {}}})
@@ -291,16 +307,19 @@ PIPE = r"\\.\pipe\zero-control"
 
 def ipc_request(req):
     # Windows Named Pipe 用普通文件操作即可
-    with open(PIPE, "r+b") as f:
+    with open(PIPE, "r+b", buffering=0) as f:
         f.write((json.dumps(req) + "\n").encode())
         f.flush()
         resp = b""
         while b"\n" not in resp:
             chunk = f.read(4096)
             if not chunk:
-                break
+                raise EOFError("IPC closed before a complete response")
             resp += chunk
-        return json.loads(resp.split(b"\n")[0])
+        result = json.loads(resp.split(b"\n", 1)[0])
+        if not result.get("ok"):
+            raise RuntimeError(result.get("error"))
+        return result
 
 # 用法与 Unix 示例完全相同
 health = ipc_request({"type": "query", "id": 1, "request": {"health": {}}})
@@ -356,18 +375,39 @@ const SOCK = process.platform === 'win32'
 
 function ipcRequest(req) {
   return new Promise((resolve, reject) => {
+    let buffer = '';
+    let settled = false;
     const client = net.createConnection(SOCK, () => {
       client.write(JSON.stringify(req) + '\n');
     });
-    client.on('data', (data) => {
+    const fail = (err) => {
+      if (settled) return;
+      settled = true;
       client.destroy();
-      const parsed = JSON.parse(data.toString().split('\n')[0]);
-      resolve(parsed);
+      reject(err);
+    };
+    client.setEncoding('utf8');
+    client.setTimeout(90000, () => fail(new Error('IPC response timed out')));
+    client.on('data', (data) => {
+      buffer += data;
+      const end = buffer.indexOf('\n');
+      if (settled || end === -1) return; // 一个 JSON 帧可以跨多个 data 事件
+      try {
+        const parsed = JSON.parse(buffer.slice(0, end));
+        if (!parsed.ok) return fail(new Error(JSON.stringify(parsed.error)));
+        settled = true;
+        client.destroy();
+        resolve(parsed);
+      } catch (err) {
+        fail(err);
+      }
     });
-    client.on('error', reject);
+    client.on('end', () => fail(new Error('IPC closed before a complete response')));
+    client.on('error', fail);
   });
 }
 
+async function main() {
 // 查询运行时状态
 const resp = await ipcRequest({ type: 'query', id: 1, request: { runtime: {} } });
 console.log(`活跃连接: ${resp.result.runtime.stats.active_sessions}`);
@@ -385,7 +425,12 @@ await ipcRequest({
   method: 'policies.select',
   params: { policy_tag: 'proxy', target_tag: 'direct' }
 });
+}
+
+main().catch(console.error);
 ```
+
+这些客户端示例只处理单次请求。订阅/多路复用客户端应持续缓冲到换行，先忽略空行与 `:` 心跳，再按顶层 `ok` 分发响应或事件，并用 `id` 配对响应。超时表示结果未知，尤其不能据此假定配置或 TUN 命令未执行。
 
 ## 错误处理
 
@@ -433,4 +478,4 @@ Subscribe 请求的第一条响应是确认帧（`ok:true, result:"subscribed"`�
 }
 ```
 
-错误码列表：`not_found`, `invalid_argument`, `permission_denied`, `feature_disabled`, `conflict`, `unsupported`, `internal`。
+错误码列表：`not_found`, `invalid_argument`, `permission_denied`, `insufficient_os_privilege`, `feature_disabled`, `conflict`, `unsupported`, `internal`。

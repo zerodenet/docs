@@ -38,14 +38,14 @@ Linux/macOS：
 
 ```bash
 export ZERO_API_KEY='replace-with-a-long-random-value'
-./target/release/zero run config.json
+./zero run config.json
 ```
 
 Windows PowerShell：
 
 ```powershell
 $env:ZERO_API_KEY = 'replace-with-a-long-random-value'
-.\target\release\zero.exe run .\config.json
+.\zero.exe run .\config.json
 ```
 
 ## 查询状态
@@ -100,10 +100,11 @@ curl \
 - `config.apply_runtime`
 - `tun.start`
 - `tun.stop`
+- `tun.recover`
 - `diagnostics.probe_target`
 - `diagnostics.probe_outbound`
 
-字段和响应见[HTTP API 参考](/projects/core/control-plane/http-api)。
+命令响应需要先检查外层 `ok`，再看 `result.accepted`；实际载荷在 `result.result`。HTTP 200 不保证业务操作成功。字段和响应见[HTTP API 参考](/projects/core/control-plane/http-api)。
 
 ## 应用完整配置
 
@@ -132,14 +133,14 @@ curl \
 1. 在自身存储中维护完整期望配置；
 2. 先调用 `config.validate`；
 3. 再调用 `config.apply`；
-4. 等待 `reconciled: true`；
+4. 检查响应 `ok`、`result.accepted` 和嵌套载荷中的 `reconciled: true`；
 5. 查询运行状态确认预期 listener、policy 和 sink 已生效。
 
-不要由多个独立写入者各自基于旧副本修改整份配置。Zero 会串行执行本地 apply 并在重建失败时回滚，但当前命令合同没有对外提供 revision/CAS 字段；写入协调属于控制端职责。
+不要由多个独立写入者各自基于旧副本修改整份配置。Zero 会串行执行本地 apply 并在重建失败时尝试回滚，但当前写入命令没有预期 revision/CAS 条件；写入协调属于控制端职责。
 
 ## 显式管理 TUN
 
-没有在配置中声明 `runtime.tun` 时，GUI 或守护程序可以使用 `tun.start` 和 `tun.stop` 管理 TUN 生命周期。Zero Core 0.0.1 的 `tun.start` 支持完整的自动路由与双栈参数：
+没有在配置中声明 `runtime.tun` 时，GUI 或守护程序可以使用 `tun.start` 和 `tun.stop` 管理 TUN 生命周期。当前 `tun.start` 提供以下自动路由与双栈参数；兼容性按实际节点能力判断：
 
 ```json
 {

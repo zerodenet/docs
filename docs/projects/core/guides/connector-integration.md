@@ -117,7 +117,7 @@ zero reload config.json
 
 外部控制端通过 HTTP `config.validate` 和 `config.apply`，或 gRPC `Control.Execute` 提交同一份完整配置。外部控制端必须拥有自己的完整期望配置；`GET /api/v1/config` 只是观测摘要，不能作为可回写的完整配置读取接口。
 
-当前合同没有 revision/CAS 字段，因此同一节点应只有一个配置写入所有者，避免旧副本覆盖较新的修改。
+当前写入命令没有预期 revision/CAS 条件，因此同一节点应只有一个配置写入所有者，避免旧副本覆盖较新的修改。
 
 ## 6. 检查投递
 

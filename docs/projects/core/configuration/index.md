@@ -206,16 +206,18 @@ zero validate config.json
 
 主地址可使用 IP 或 CIDR，第二地址必须是另一地址族的 CIDR；MTU 范围为 `576–65535`。单栈时不设置第二地址。接管/排除 CIDR 依赖 `auto_route: true`；使用 Fake-IP 时还需接管合成池地址。`strict_route` 除失败回滚外，还使用平台提供的路由/防漏策略；Windows 的严格路由允许 DHCP 客户端流量以支持地址续租。
 
+已发布 RC 的 Linux/macOS 防漏规则完整性检查有边界；不能保证单条 nftables 规则被删改或 PF 规则被清空后自动恢复。macOS 有效 UID 放行例外也会覆盖同 UID 的其他程序，不能当作零泄漏或同用户进程隔离保证。具体范围见[TUN 使用指南](../guides/tun-and-dns#严格路由的保护范围)。
+
 Windows、Linux 和 macOS 的路由实现使用相同的生命周期语义，但创建 TUN、修改路由表仍需要对应平台权限。Windows 官方发布产物会携带运行 TUN 所需的 Wintun 组件；权限或驱动问题见[故障排查](/projects/core/guides/troubleshooting)。
 
 ## api
 
 `api` 中的能力彼此独立：
 
-- `control`：HTTP/IPC 控制面的监听与认证。
+- `control`：HTTP 及可选 gRPC 控制面的监听与认证；本地 IPC 独立配置。
 - `event_sinks`：零到多个事件投递目标；Webhook 地址是接收方提供的完整 URL。
 - `outbox_path`、`dead_letter_path`、`dispatcher`：可靠投递日志、死信及重试/磁盘保护策略，详见[控制面参数](../control-plane/configuration)。
-- `hooks`：事件触发的本地命令。
+- `hooks`：通过 IPC 接入的 flow 生命周期 hooks；当前类型为 `ipc`，不是任意本地命令执行器。
 
 启用某个 Cargo feature 只代表二进制包含该能力；是否运行仍由配置决定。管理节点时使用 Zero API、IPC 或 gRPC；Connector 只投递事件，不是第二套管理 API。
 

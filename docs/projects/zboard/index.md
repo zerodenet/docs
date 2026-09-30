@@ -2,30 +2,34 @@
 
 <ProjectMeta project-id="zboard" />
 
-ZBoard 是面向 Zero 代理服务的自托管基础面板，提供节点、协议、用户、订阅、基础订单和流量管理。在线支付及其他超出基础管理范围的能力通过插件按需实现。
+ZBoard 是面向自用与分享的 Zero 代理服务管理面板。你可以在一个 Web 控制台里接入自己的服务器、配置线路、为自己或其他用户分配订阅，并查看用量。节点上的 [Zero Core](https://github.com/zerodenet/core) 负责实际代理连接，面板负责配置和管理。
 
-管理员配置节点和访问权限，用户在账户中心获取订阅、查看用量和提交工单。Zero 运行在节点上，负责代理连接与流量处理。
+先让自己的一条线路可用，再按需要分享给其他人。核心保持日常管理所需的基础能力，第三方登录、支付渠道等扩展按需使用插件。
 
 ## 从这里开始
 
-| 你想做什么 | 阅读入口 |
+| 你现在要做什么 | 阅读入口 |
 | --- | --- |
-| 安装自己的面板 | [安装教程](./guides/installation) |
-| 创建管理员和站点 | [首次初始化](./guides/first-setup) |
-| 接入节点并提供订阅 | [节点管理](./guides/node-management) → [协议服务](./guides/protocol-services) → [订阅配置](./guides/subscriptions-and-traffic) |
-| 安装按需扩展 | [插件市场](./plugins/marketplace)与[登录插件](./plugins/login) |
-| 开发或改进 ZBoard | [参与项目](./contributing/) |
+| 从零搭建自己的面板 | [安装](./guides/installation) → [初始化](./guides/first-setup) |
+| 把服务器变成可用线路 | [接入节点](./guides/node-management) → [配置协议](./guides/protocol-services) |
+| 给自己或其他人开通访问 | [分配订阅](./guides/plans-and-orders) |
+| 已有账户，想导入客户端 | [获取配置与查看用量](./guides/subscriptions-and-traffic) |
+| 平时管理、停止分享或排障 | [日常使用与分享](./guides/daily-operations) · [故障排查](./guides/troubleshooting) |
+| 需要额外能力 | [插件使用](./plugins/) |
 
 ## 基础能力
 
-- **节点与协议**：管理服务器、SSH 连接、Zero 安装和配置发布，配置 VLESS、VMess、Shadowsocks、Trojan、Hysteria2 和 Mieru 服务。
-- **访问与订阅**：通过节点组关联套餐和用户权益，生成 Zero、Clash/Mihomo、sing-box 等客户端配置。
-- **网络前置**：使用转发入口访问落地服务，并按需共用节点代理池。
-- **基础订单与流量**：管理订单、订阅有效期和流量额度，查询用量和任务结果。
-- **账户与支持**：提供用户账户、公告、工单和审计记录。
+- **自己的节点**：保存服务器与 SSH 信息，安装 Zero，发布配置并查看结果。
+- **自己的线路**：配置协议、证书和端口；按需要增加转发入口或上游代理。
+- **访问分配**：用权限组选择线路，用订阅记录有效期和流量额度，向客户端交付配置。
+- **日常管理**：查看用量、任务和日志，管理账户、公告及工单。
 
-具体协议是否可用取决于节点安装的 Zero 内核。连接节点、发布配置与客户端实际连接是不同步骤，首次使用可按[用户指南](./guides/)逐项完成。
+界面仍包含商品、销售规格和订单。当前版本通过订单确认创建订阅；自用或免费分享可分配零金额订单，无需接入在线支付。具体步骤见[开通自己的第一份订阅](./guides/plans-and-orders#self-use)。这些现有功能不意味着首次使用必须搭建商业销售流程。
 
 ## 选择版本
 
-[0.0.1](https://github.com/zerodenet/zboard/releases/tag/v0.0.1) 是首个公开版本。下载入口见 [Releases](https://github.com/zerodenet/zboard/releases)。插件运行时和市场在后续开发版本中提供，对应说明会标注适用范围。
+本轮使用说明核对于 **2026-09-30**，以已发布的 [v0.0.2-rc.202609291405](https://github.com/zerodenet/zboard/releases/tag/v0.0.2-rc.202609291405) 为基线；当日 `main` 和 `develop` 均指向该版本提交。它是候选版（RC），不是正式稳定版。
+
+[v0.0.1](https://github.com/zerodenet/zboard/releases/tag/v0.0.1) 是首个正式版本，不包含后续插件及新版管理入口。部署时选择明确的 [Release](https://github.com/zerodenet/zboard/releases)，让镜像、部署文件和说明对应同一版本；已有站点先读[升级与恢复](./guides/maintenance#upgrade)。面板版本与节点 Zero 版本分别管理，不要求版本号相同。
+
+贡献者只需从[项目规范与贡献](./contributing/)开始。

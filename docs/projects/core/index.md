@@ -2,53 +2,56 @@
 
 <ProjectMeta project-id="core" />
 
-::: info 文档对应版本
-本轮使用说明按 2026-09-09 的 [main 提交 50322956](https://github.com/zerodenet/core/tree/503229562ef5854e3be6be3a9c8e7cbc5efffc61)核对。已公开 [0.0.1 正式版](https://github.com/zerodenet/core/releases/tag/v0.0.1)；源码、发布与安装验收范围见[实现与文档进度](/progress)。实际能力以所用制品及运行时响应为准。
-:::
+Zero Core 是处理代理连接、分流和 DNS 的命令行程序。你可以把它运行在自己的电脑、网关或远程服务器上，用一个 JSON 文件决定流量从哪里进入、经过哪个代理、哪些目标直连。
 
-Zero Core 是可裁剪的网络代理内核，可作为本地网关、边缘节点或服务器运行，并提供 CLI、HTTP、IPC 等控制接口。
+如果你想通过界面导入订阅、切换节点和开关系统代理，请从[项目选择](/projects/)找到 ZNet Sink。下面的指南面向直接运行 `zero` 的用户。
 
 ## 第一次使用
 
-1. [安装与构建](./guides/installation)：准备 Rust、选择 feature 并得到 `zero` 可执行文件。
-2. [启动第一个节点](./guides/quickstart)：使用一个可直接验证的本地 Mixed 入站配置启动 Zero。
-3. [配置基础](./guides/configuration-basics)：加入代理出站、路由和运行参数。
-4. [运行与观测](./guides/operations)：查看状态、流、策略、事件和日志。
+1. [安装与构建](./guides/installation)：下载适合系统的发行包，确认可执行文件能运行。
+2. [启动第一个节点](./guides/quickstart)：复制完整配置，让一次请求经过本地代理。
+3. [配置基础](./guides/configuration-basics)：填入自己的服务器和凭证，把流量交给远程节点。
+4. [运行与观测](./guides/operations)：查看当前连接、切换节点、更新配置与停止程序。
+
+完成前两步不需要服务器或管理员权限。测试配置使用直连出口，不会改变系统代理或接管所有应用。
 
 ## 我想完成……
 
 | 目标 | 从这里开始 |
 |------|------------|
-| 增加或修改 VLESS、VMess、Trojan 等节点 | [协议配置](./protocols/) |
-| 使用 HTTP/Mixed 本地代理、QUIC 域名或 URLTest | [代理入口与 URLTest](./guides/proxy-and-urltest) |
-| 不重启进程地更新凭证、监听器或路由 | [安全热更新配置](./guides/hot-reload) |
-| 用脚本或服务管理 Zero | [使用控制 API](./guides/control-api) |
-| 跨主机安全访问 HTTP/gRPC | [保护控制接口](./guides/control-security) |
-| 让节点主动把事件送到控制端 | [Connector Webhook 接入](./guides/connector-integration) |
-| 开发本地 GUI | [GUI 接入](./guides/gui-integration) |
-| 启动失败、配置不生效或事件积压 | [故障排查](./guides/troubleshooting) |
+| 使用已有的远程节点 | [协议配置](./protocols/) |
+| 让浏览器或命令行工具使用本地代理 | [HTTP / Mixed 代理入口](./guides/proxy-and-urltest) |
+| 多个节点手动切换或自动测速 | [运行模式与出站组](./configuration/modes-and-groups) |
+| 接管应用的 TCP、UDP 和普通 DNS 查询 | [运行 TUN 与 DNS](./guides/tun-and-dns) |
+| 域名分流、指定 DNS 或使用 Fake-IP | [DNS 参数与示例](./configuration/dns) |
+| 修改配置而不重启进程 | [安全热更新配置](./guides/hot-reload) |
+| 无法启动、连不上或 TUN 断网 | [故障排查](./guides/troubleshooting) |
 
-## 接口怎么选
+## DNS 与透明代理
 
-| 场景 | 推荐入口 |
-|------|----------|
-| 同机人工操作 | CLI，通过本地 IPC 自动连接 |
-| 同机 GUI | IPC 查询、命令与事件订阅 |
-| 运维脚本或控制服务 | HTTP JSON API |
-| 强类型服务端集成 | 可选 gRPC |
-| 节点主动上报事件 | 可选 Connector Webhook |
-
-HTTP、IPC 和 gRPC 调用的是同一组 Zero 查询与命令。Connector 负责事件投递。
+先用本地代理确认节点可用，再开启 TUN。TUN 需要系统权限并会修改捕获路由；按 [TUN 使用指南](./guides/tun-and-dns)逐项验证 DNS、TCP 和 UDP，再用于日常运行。Fake-IP、双栈和严格路由各有独立配置，开启其中一个不代表其他能力已生效。
 
 ## 查字段和协议
 
 - [完整配置字段](./configuration/)
-- [构建特性](./configuration/features)
+- [协议配置示例](./protocols/configuration)
+- [协议能力与限制](./reference/protocol-capabilities)
 - [CLI 命令](./control-plane/cli)
-- [HTTP API](./control-plane/http-api)
-- [事件目录](./control-plane/events)
-- [协议能力矩阵](./reference/protocol-capabilities)
+- [按需裁剪构建](./configuration/features)
 
-## DNS 与透明代理
+## 接口怎么选
 
-先按 [TUN 与 DNS 使用指南](./guides/tun-and-dns)完成启动和验证，再查阅 [DNS 参数](./configuration/dns)、[运行与 TUN 参数](./configuration/)及 [CLI 参数](./control-plane/cli)。
+只运行代理时不必阅读 API 契约。需要让脚本、GUI 或外部服务管理 Zero 时，再选择对应接口：
+
+| 场景 | 入口 |
+|------|------|
+| 同机人工操作 | CLI，通过本地 IPC 连接 |
+| 同机 GUI | [IPC 与 GUI 接入](./guides/gui-integration) |
+| 运维脚本、控制服务 | [HTTP / gRPC 控制 API](./guides/control-api) |
+| 节点主动投递事件 | [Connector Webhook](./guides/connector-integration) |
+
+跨主机访问前先阅读[控制接口安全](./guides/control-security)。完整字段、事件和格式契约保留在[控制接口参考](./control-plane/)与[技术参考](./reference/)，无需作为入门前置知识。
+
+::: info 文档对应版本
+本轮核对日期为 2026-09-30：正式发行版为 [v0.0.1](https://github.com/zerodenet/core/releases/tag/v0.0.1)，最新候选版为 [v0.0.2-rc.202609290540](https://github.com/zerodenet/core/releases/tag/v0.0.2-rc.202609290540)。使用教程以已对外发布的候选版及其 [2d75265 源码](https://github.com/zerodenet/core/tree/2d7526596e91ea1259c3692501a02672ca826cfd)为核对基线；WireGuard 单独标记为已发布开发版 [v0.0.3-dev.202609281319](https://github.com/zerodenet/core/releases/tag/v0.0.3-dev.202609281319) 的实验能力。未发布的 develop 提交不作为安装包能力。安装后以 `zero build-info` 和实际配置校验为准。
+:::

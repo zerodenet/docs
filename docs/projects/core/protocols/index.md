@@ -8,7 +8,7 @@
 |------|------|
 | 一个端口同时给浏览器和系统工具使用 | Mixed |
 | 标准 SOCKS5 客户端，包含 UDP ASSOCIATE | SOCKS5 |
-| 只需要 HTTP CONNECT | HTTP |
+| 标准 HTTP 代理和 HTTPS CONNECT | HTTP |
 
 第一次启动建议使用 Mixed，并只监听 `127.0.0.1`。示例见[启动第一个节点](/projects/core/guides/quickstart)。
 
@@ -23,6 +23,7 @@
 | Hysteria2 | QUIC 上的 TCP/UDP | password、证书、UDP 网络质量 |
 | Mieru | Mieru 客户端/服务端互通 | username、password、端口 |
 | SOCKS5 | 连接已有上游 SOCKS 服务 | server、port、可选认证 |
+| WireGuard（仅已发布 dev，实验） | 基于认证 peer 的 IP 隧道及 TCP/UDP 转换 | 显式构建 feature、密钥、allowed IP、地址和 MTU |
 
 配置片段见[协议配置示例](./configuration)。每个二进制可以通过 Cargo feature 裁剪协议，部署前运行：
 

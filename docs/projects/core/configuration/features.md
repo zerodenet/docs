@@ -1,6 +1,6 @@
 # 构建特性
 
-Cargo features 决定二进制包含哪些能力。配置引用未编译的协议时，Zero 会在启动前明确报错。
+Cargo features 决定二进制包含哪些能力。下文通用选项按已发布 `v0.0.2-rc.202609290540` 核对，WireGuard 单独标注已发布 dev 的范围。配置引用未编译的协议时，Zero 会在启动前明确报错。
 
 ## 默认构建
 
@@ -13,7 +13,7 @@ cargo build --release
 - `full`：SOCKS5、HTTP、Mixed、VLESS、Hysteria2、Shadowsocks、Trojan、VMess、Mieru 和 DNS。
 - `status-api`：运行状态与控制端点。
 
-Connector 和 gRPC 不在默认集合中。
+Connector、gRPC 和 JSONL sink 不在默认集合中；WireGuard 只在已发布 dev 中作为单独的实验 feature 提供。`full` 是一组常用能力，不表示包含仓库内每一种实验功能。
 
 ## 按需裁剪
 
@@ -27,7 +27,7 @@ cargo build --release --no-default-features \
 | Feature | 包含能力 |
 |---------|----------|
 | `socks5` | SOCKS5 |
-| `http` | HTTP CONNECT |
+| `http` | HTTP CONNECT 与标准 HTTP forward-proxy 入站 |
 | `mixed` | Mixed 入站 |
 | `vless` | VLESS |
 | `hysteria2` | Hysteria2 |
@@ -35,6 +35,7 @@ cargo build --release --no-default-features \
 | `trojan` | Trojan |
 | `vmess` | VMess |
 | `mieru` | Mieru |
+| `wireguard` | 仅已发布 `v0.0.3-dev.202609281319`，实验能力；RC 不提供，不属于 `full` |
 | `dns` | DNS、缓存、路由与 Fake IP |
 
 协议的具体入站、出站、TCP、UDP、MUX 和传输支持范围，以运行时能力矩阵为准，见[协议能力与限制](/projects/core/reference/protocol-capabilities)。
@@ -78,4 +79,4 @@ zero build-info
 zero validate config.json
 ```
 
-不要只根据源码中存在某个协议判断发行物一定包含它。
+不要只根据源码中存在某个协议判断发行物一定包含它。官方发布工作流可以额外启用 feature，源码默认构建与下载包不必完全相同。WireGuard 选项按[已发布 dev 的 Cargo.toml](https://github.com/zerodenet/core/blob/e0c078f3786e2ed60ace43613c47d3b98ae3f5c8/Cargo.toml)核对。RC 的[构建特性](https://github.com/zerodenet/core/blob/2d7526596e91ea1259c3692501a02672ca826cfd/Cargo.toml)不包含 WireGuard。

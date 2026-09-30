@@ -1,5 +1,7 @@
 # 事件目录
 
+本文以已发布的 Core `v0.0.2-rc.202609290540`（`2d752659`）为基准。示例省略部分可选或新增字段；消费者应允许未知字段与事件类型。
+
 所有事件以归一化信封格式输出，通过 SSE、IPC 流、CLI 或 Sink 投递消费。`flow.snapshot` 是实时订阅建立时生成的同步基线，不写入事件环，也不投递到 JSONL/Webhook sink；其余 flow 生命周期事件按正常事件路径投递。
 
 ## 事件信封
@@ -10,6 +12,8 @@
   "event_id": "9f20d4e11ac24cc590df30d90a47c821:flow.completed:42:1713500000000",
   "event_type": "flow.completed",
   "occurred_at_unix_ms": 1713500000000,
+  "core_instance_id": "9f20d4e11ac24cc590df30d90a47c821",
+  "config_revision": 1,
   "source_id": null,
   "sequence": 1024,
   "principal_key": "user-001",
@@ -24,8 +28,10 @@
 | `event_id` | 跨引擎启动唯一且在重放中稳定的不透明标识；消费者只能用于去重，不得解析其格式 |
 | `event_type` | 事件类型，用于过滤 |
 | `occurred_at_unix_ms` | 事件时间戳（毫秒） |
-| `source_id` | 节点标识（sink 投递时注入） |
-| `sequence` | 单调递增序号，用于 SSE 断点续传 |
+| `core_instance_id` | 引擎运行实例标识，重启后变化；不能跨实例复用 sequence 或 flow ID |
+| `config_revision` | 关联的配置代次；探测完成事件保留启动探测时的配置代次 |
+| `source_id` | 可选来源元数据，可由 sink 配置注入；不决定投递路由或认证 |
+| `sequence` | 当前引擎实例内单调递增序号，用于有界 SSE 追赶；不是持久历史游标 |
 | `principal_key` | 关联的主体标识 |
 | `payload` | 事件负载（类型相关） |
 
@@ -45,7 +51,8 @@
 | `flow.updated` | 活动 flow 流量快照 | 每 1s 检查，仅发送有变化的 flow |
 | `flow.completed` | flow 结束/被关闭/被阻断 | 每个结束的 flow |
 | `policy.selected` | selector 切换 | 按需 |
-| `policy.probe.completed` | url_test 完成一轮探测 | 按探测间隔 |
+| `policy.probe.completed` | url_test 完成一轮探测 | 启动、周期或手动触发 |
+| `policy.passive_relay_health.changed` | relay 成员被动健康状态变化 | 按需 |
 | `stats.sampled` | 统计采样 | 每 1s |
 | `ipc.connected` | IPC 客户端连接 | 按需 |
 | `ipc.disconnected` | IPC 客户端断开 | 按需 |
@@ -117,7 +124,7 @@
 }
 ```
 
-- `revision` 在同一 `flow_id` 内单调递增；消费者只应用不小于当前 revision 的记录。
+- `revision` 在同一实例、同一 `flow_id` 内单调递增；消费者只应用不小于当前 revision 的记录。`core_instance_id` 变化后清除旧活动集合和游标，再使用新快照重建。
 - `state` 为 `opening`、`active` 或 `completed`。
 - `traffic.bytes_up` / `bytes_down` 是用户方向汇总，同一个中继字节只计一次；四个边界计数用于传输诊断。
 - `result` 仅在完成记录中出现。失败时 `result.failure` 提供 `stage`、稳定 `code`、`message` 和可选 `remote`。
@@ -150,12 +157,14 @@
 | reason | 说明 |
 |--------|------|
 | `signal` | 收到 SIGINT/SIGTERM 信号 |
+| `runtime_error` | 运行任务错误导致停止 |
 
 ### config.changed
 
 ```json
 {
-  "changed_at_unix_ms": 1713501000000
+  "changed_at_unix_ms": 1713501000000,
+  "config_revision": 2
 }
 ```
 
@@ -242,7 +251,7 @@
 }
 ```
 
-`records` 中每项都是完整 `FlowRecord`。IPC 会先返回 subscribe ACK，再发送快照；SSE/CLI 实时订阅同样会收到快照。快照只用于重建当前活动态，不进入事件环、`GET /api/v1/events` 或外部 sink。
+快照 payload 还包含 `session_registry_revision` 和 `principal_flows`，用于主体活跃流数量同步；不能把这些代次与事件 `watermark` 混用。`records` 中每项都是完整 `FlowRecord`。IPC 会先返回 subscribe ACK，再发送快照；SSE/CLI 实时订阅同样会收到快照。快照只用于重建当前活动态，不进入事件环、`GET /api/v1/events` 或外部 sink。
 
 ### flow.routed
 
@@ -359,12 +368,16 @@ url_test 探测完成后发射，包含每个成员的探测结果。
 
 ```json
 {
+  "operation_id": "probe-123",
+  "core_instance_id": "instance-id",
+  "config_revision": 1,
   "policy_tag": "auto",
   "trigger": "scheduled",
   "url": "http://www.gstatic.com/generate_204",
   "started_at_unix_ms": 1710000000000,
   "completed_at_unix_ms": 1710000000320,
   "duration_ms": 320,
+  "terminal_status": "partial_failure",
   "selected": "server-b",
   "members": [
     { "target_tag": "server-a", "healthy": true, "latency_ms": 120, "error": null },
@@ -374,7 +387,9 @@ url_test 探测完成后发射，包含每个成员的探测结果。
 }
 ```
 
-`trigger` 的取值为 `startup`、`scheduled` 或 `manual`。事件 envelope 的时间戳表示发布时间；payload 中的时间戳表示完整探测周期，`duration_ms` 表示探测耗时。
+`trigger` 的取值为 `startup`、`scheduled` 或 `manual`。使用手动命令 ACK 返回的 `operation_id` 配对完成事件；重复请求可能合并，不能只凭 `policy_tag` 判断某次请求已完成。`core_instance_id`、`config_revision` 用于识别旧实例或旧配置的结果。`terminal_status` 为 `succeeded`、`failed`、`partial_failure` 或 `inconclusive`，仍需逐成员检查 `healthy`、`latency_ms`、可选 `error_code` 和 `error`。结果还可包含 `selection` 选择状态。事件 envelope 的时间戳表示发布时间；payload 中的时间戳表示完整探测周期，`duration_ms` 表示探测耗时。
+
+`policy.passive_relay_health.changed` 的 payload 为 `policy_tag`、`member_tag`、`target`、`port`、`state` 和可空的 `quarantine_duration_ms`。`state` 为 `quarantined`、`half_open` 或 `healthy`，表示成员的被动健康变化。
 
 ### stats.sampled
 
@@ -409,16 +424,18 @@ url_test 探测完成后发射，包含每个成员的探测结果。
 
 ## 事件过滤
 
-所有消费方式均支持 `event_type` 白名单过滤：
+IPC/SSE 实时订阅支持 `event_type` 白名单过滤：
 
 | 写法 | 含义 |
 |------|------|
 | `"events": ["flow.completed"]` | 仅接收 `flow.completed` |
 | `"events": ["flow.completed", "flow.started"]` | 接收两个指定类型 |
 | `"events": ["*"]` | 接收所有事件（等价于省略或传空数组） |
-| `"events": null` / 省略 | 接收所有事件 |
+| `"events": null` / 省略 | IPC 接收所有事件；SSE 省略 `types` 接收所有 |
 
 内部 `EventFilter` 的 `event_types` 为空数组时即不过滤，`*` 作为特殊值等价于空数组。
+
+配置文件中的 `event_sinks[].events` 使用更严格的校验：省略或 `[]` 表示全部；非空数组只能包含已知事件名，不接受 `"*"`、`null`、重复名或未知名。即使订阅全部，持久 sink 也不接收实时 `flow.snapshot`。
 
 ### ipc.connected
 
@@ -458,7 +475,9 @@ GUI 的 IPC/HTTP/gRPC 连接和 EventDispatcher 都消费统一的 `EventSource`
 
 | 方式 | 过滤 | 回放 | 格式 |
 |------|------|------|------|
-| SSE (`GET /api/v1/events/stream?types=...`) | event_type 白名单，`*` = 全部 | `?since=<seq>` / `Last-Event-ID`；实时阶段含 `flow.snapshot` 基线 | SSE frame: `id` + `event` + `data: <ApiEvent JSON>` |
+| SSE (`GET /api/v1/events/stream?types=...`) | event_type 白名单，`*` = 全部 | `?since=<seq>` / `Last-Event-ID`；该 RC 单次最多 256 条，受内存环容量限制；实时阶段含 `flow.snapshot` 基线 | SSE frame: `id` + `event` + `data: <ApiEvent JSON>` |
 | IPC (`{"type":"subscribe","events":[...]}`) | event_type 白名单，`*` = 全部 | 不回放历史事件；ACK 后发送 `flow.snapshot` 基线 | JSON line: `<ApiEvent JSON>\n` |
 | CLI (`zero events`) | 无 | 不支持；启动时含 `flow.snapshot` 基线 | stdout: JSON line |
 | Sink (`event_sinks[].events`) | event_type 白名单 | 持久投递生命周期增量；不接收 `flow.snapshot` | JSONL / Webhook |
+
+SSE 追赶不等于可靠历史恢复：该 RC 遇到事件淘汰只记录服务端警告，不把 replay gap 信息作为 SSE 控制帧返回。断线后用新的 `flow.snapshot` 重建活动集合；跨 `core_instance_id` 丢弃旧游标，长期完成记录使用配置了 outbox 的 sink 并按 `event_id` 幂等处理。
