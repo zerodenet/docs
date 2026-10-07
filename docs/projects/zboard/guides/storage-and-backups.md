@@ -4,24 +4,32 @@
 
 ## 准备宿主机目录 {#required-host-directories}
 
-`/var/lib/zboard/artifacts` 下的两类内容使用不同的挂载权限：
+`/var/lib/zboard/artifacts` 下的三类内容使用不同的挂载权限：
 
 - `ZBOARD_ZERO_ARTIFACT_HOST_DIR` 保存可信 Zero 程序及校验文件，以只读方式挂载。
-- `ZBOARD_MANAGED_RULE_HOST_DIR` 保存托管规则源文件和生成的规则产物，以读写方式挂载，重建容器时需要保留。
+- `ZBOARD_MANAGED_RULE_HOST_DIR` 保存托管规则源文件和生成的规则产物，以读写方式挂载。
+- `ZBOARD_KERNEL_UPLOAD_HOST_DIR`（默认 `./kernel-uploads`）保存从浏览器上传并校验的内核，以读写方式挂载。重建容器时保留这两个可写目录。
 
 首次部署前执行：
 
 ```bash
 cd deploy/docker
 sh ./prepare-host-dirs.sh
+mkdir -p ./artifacts/kernel-uploads ./kernel-uploads
+chmod 0755 ./artifacts/kernel-uploads
+chmod 0750 ./kernel-uploads
 ```
 
 自定义位置时，使用与 Compose 相同的环境变量：
 
 ```bash
-ZBOARD_ZERO_ARTIFACT_HOST_DIR=/srv/zboard/artifacts \
-ZBOARD_MANAGED_RULE_HOST_DIR=/srv/zboard/managed-rules \
+export ZBOARD_ZERO_ARTIFACT_HOST_DIR=/srv/zboard/artifacts
+export ZBOARD_MANAGED_RULE_HOST_DIR=/srv/zboard/managed-rules
+export ZBOARD_KERNEL_UPLOAD_HOST_DIR=/srv/zboard/kernel-uploads
 sh ./prepare-host-dirs.sh
+mkdir -p "$ZBOARD_ZERO_ARTIFACT_HOST_DIR/kernel-uploads" "$ZBOARD_KERNEL_UPLOAD_HOST_DIR"
+chmod 0755 "$ZBOARD_ZERO_ARTIFACT_HOST_DIR/kernel-uploads"
+chmod 0750 "$ZBOARD_KERNEL_UPLOAD_HOST_DIR"
 ```
 
 MySQL 部署只使用基础 Compose 文件，不创建或挂载 SQLite 数据目录。使用 SQLite 时，设置 `ZBOARD_DATABASE_DRIVER=sqlite`、`ZBOARD_DATA_SOURCE=/var/lib/zboard/data/zboard.db`，按需设置 `ZBOARD_DATABASE_HOST_DIR`，并同时使用 SQLite 覆盖文件：
@@ -31,6 +39,11 @@ set -a
 . ./.env.release
 set +a
 sh ./prepare-host-dirs.sh
+artifact_dir=${ZBOARD_ZERO_ARTIFACT_HOST_DIR:-./artifacts}
+upload_dir=${ZBOARD_KERNEL_UPLOAD_HOST_DIR:-./kernel-uploads}
+mkdir -p "$artifact_dir/kernel-uploads" "$upload_dir"
+chmod 0755 "$artifact_dir/kernel-uploads"
+chmod 0750 "$upload_dir"
 docker compose \
   -f docker-compose.release.yml \
   -f docker-compose.sqlite.yml \
@@ -38,28 +51,31 @@ docker compose \
   up -d
 ```
 
-准备脚本会在只读制品目录中创建空的 `rules/` 挂载点，Compose 再将独立的可写规则目录挂载到这里。
+准备脚本会创建 `rules/` 挂载点；上面的补充命令准备 `kernel-uploads/` 挂载点与独立上传目录。Compose 将两个可写目录分别挂载进去。自定义非 root 容器时，还要让实际服务用户能写入这两个目录。
 
 ## 挂载布局 {#mount-layout}
 
 ```text
 /var/lib/zboard/artifacts                 只读的可信制品目录
+├── kernel-uploads                       独立的可写上传内核目录
 └── rules                                独立的可写规则目录
     └── <tag>
         ├── source.json                  规范化规则源文件
         └── artifacts/<source-sha256>/   编译后的客户端规则
 ```
 
-不要把整个制品目录改成可写。这个路径下由应用生成的数据仅位于托管规则目录中。
+不要把整个制品目录改成可写。上传内核目录按 SHA-256 复用文件，总容量上限为 1 GiB；它不是自动过期缓存。空间不足时先确认没有待执行或待重试的任务引用旧文件，再清理不用的制品。
 
-蓝绿部署的两个实例必须挂载同一个 `ZBOARD_MANAGED_RULE_HOST_DIR`，否则切换后可能出现数据库记录与规则文件不一致。
+直接运行后端时，需把 `ZBOARD_ZERO_ARTIFACT_DIR` 配为持久目录，并确保其中的 `kernel-uploads` 可写；未配置制品目录时不能上传内核。
+
+蓝绿部署的两个实例必须共享规则和上传内核目录，否则切换后可能找不到数据库记录或安装任务引用的文件。事件队列仍按部署配置使用各自的目录，不要改成多个写入实例共用一个队列。
 
 ## 备份与恢复 {#backup-and-restore}
 
 数据库保存规则元数据和修订信息，规则源文件与编译产物保存在 `ZBOARD_MANAGED_RULE_HOST_DIR`。备份时应在同一备份窗口保存：
 
 1. 一致的 ZBoard 数据库备份。
-2. 托管规则目录的归档或快照。
+2. 托管规则目录与上传内核目录的归档或快照。
 3. 部署配置、凭据加密密钥及其他持久目录；插件目录的要求见下文。
 
 规则目录备份示例：
@@ -93,13 +109,15 @@ docker compose \
   config --quiet
 ```
 
-启动后检查制品目录只读、规则目录可写。以下命令仅创建并删除一个临时检查文件；SQLite 部署需同时加上 SQLite 覆盖文件：
+启动后检查制品目录只读，规则和上传内核目录可写。以下命令仅创建并删除一个临时检查文件；SQLite 部署需同时加上 SQLite 覆盖文件：
 
 ```bash
 docker compose -f docker-compose.release.yml --env-file .env.release exec zboard sh -c '
   test ! -w /var/lib/zboard/artifacts || exit 1
   touch /var/lib/zboard/artifacts/rules/.write-test
   rm /var/lib/zboard/artifacts/rules/.write-test
+  touch /var/lib/zboard/artifacts/kernel-uploads/.write-test
+  rm /var/lib/zboard/artifacts/kernel-uploads/.write-test
 '
 ```
 

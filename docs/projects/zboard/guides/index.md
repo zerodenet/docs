@@ -58,7 +58,12 @@ EOF
 
 docker network inspect zboard_backend >/dev/null 2>&1 || docker network create zboard_backend
 ZBOARD_DATABASE_DRIVER=sqlite sh ./prepare-host-dirs.sh
+mkdir -p ./artifacts/kernel-uploads ./kernel-uploads
+chmod 0755 ./artifacts/kernel-uploads
+chmod 0750 ./kernel-uploads
 ```
+
+`kernel-uploads` 保存从浏览器上传的 Zero 内核，使用独立的可写持久挂载；制品根目录仍保持只读。自定义目录时按[存储说明](./storage-and-backups#required-host-directories)准备。
 
 `.env.release` 包含密钥，不要公开。重启或更新时保留这些值，尤其凭据加密密钥；它用于读取已经保存的节点凭据。
 
@@ -97,7 +102,7 @@ docker compose -f docker-compose.release.yml -f docker-compose.sqlite.yml --env-
 
 1. 在后台打开“节点系统 → 服务器管理”，新建服务器。取名例如“我的节点”，填写公网地址、SSH 端口和认证信息。
 2. 保存后执行 SSH 验证，确认连接与提权权限正常。
-3. 进入这台服务器的“内核与运维”，选择可用的 Zero 发行版本并安装。
+3. 进入这台服务器的“内核与运维”，选择可用的 Zero 发行版本并安装。已在电脑上取得可信内核文件时，也可按[本地上传步骤](./node-management#local-kernel-upload)安装。
 4. 等待后台任务完成，确认 Zero 服务和控制接口健康，再检查 Connector 上报状态。
 
 节点需要能访问面板的公开 HTTPS 地址。SSH 可连但 Connector 未上线时，先检查该地址与网络；没有用户流量是正常的，不用因此重装 Zero。BBR、供应商账号和证书暂时不必配置。
