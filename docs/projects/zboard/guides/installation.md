@@ -52,6 +52,9 @@ MySQL 容器要连接同一网络，`mysql` 替换为可达的容器名、网络
 
 ```bash
 sh ./prepare-host-dirs.sh
+mkdir -p ./artifacts/kernel-uploads ./kernel-uploads
+chmod 0755 ./artifacts/kernel-uploads
+chmod 0750 ./kernel-uploads
 docker compose -f docker-compose.release.yml --env-file .env.release config --quiet
 docker compose -f docker-compose.release.yml --env-file .env.release pull
 docker compose -f docker-compose.release.yml --env-file .env.release up -d
@@ -71,7 +74,7 @@ curl --fail http://127.0.0.1:8080/readyz
 
 ## 保存部署数据
 
-数据库、`.env.release`、凭据加密密钥、规则目录、插件目录及 Zero 事件队列都要保存。具体挂载与恢复要求见[存储与备份](./storage-and-backups)。
+数据库、`.env.release`、凭据加密密钥、规则目录、上传内核目录、插件目录及 Zero 事件队列都要保存。具体挂载与恢复要求见[存储与备份](./storage-and-backups)。
 
 ## 使用 SQLite
 
@@ -84,3 +87,43 @@ ZBOARD_DATABASE_HOST_DIR=./data
 ```
 
 准备目录时传入 `ZBOARD_DATABASE_DRIVER=sqlite`；每次 Compose 操作同时使用 `docker-compose.release.yml` 与 `docker-compose.sqlite.yml`。已有数据切换驱动要执行[数据库迁移](./maintenance)，不能只换连接地址。
+
+## 使用离线镜像包 {#offline-image}
+
+面板主机无法访问镜像仓库时，在可联网的电脑上取得同一 Release 的 `zboard_<标签>_linux_amd64-image.tar.gz`、`SHA256SUMS` 和部署文件，再安全传到面板主机。Docker 镜像包含 Web 控制台。
+
+在下载文件所在目录校验、加载镜像（`ZBOARD_VERSION` 填完整发行标签）：
+
+```bash
+read -r -p '请输入选定的 Release 标签：' ZBOARD_VERSION
+image_archive="zboard_${ZBOARD_VERSION}_linux_amd64-image.tar.gz"
+awk -v archive="$image_archive" '$2 == archive { print }' SHA256SUMS |
+  sha256sum --check --strict &&
+docker load --input "$image_archive" &&
+docker image inspect "ghcr.io/zerodenet/zboard:${ZBOARD_VERSION}" >/dev/null
+```
+
+确认目标镜像包校验为 `OK`；任何校验失败都不要继续。回到部署目录，在 `.env.release` 设置相同的 `ZBOARD_IMAGE_TAG`，将 `ZBOARD_PULL_POLICY` 改为 `never`，准备配置、外部网络和持久目录后，执行本页的 `config --quiet`、`up -d` 和健康检查，**跳过 `pull`**。SQLite 仍需同时使用覆盖文件。
+
+不要把 `zboard_<标签>_linux_amd64.tar.gz` 当作镜像包：它仅含后端程序与节点清理脚本。直接运行后端还需自行准备配置、数据库与匹配的 Web 文件，并通过 `ZBOARD_WEB_DIR` 指向 Web 目录。
+
+离线导入只解决面板镜像获取；节点仍需 SSH、面板公开地址以及实际配置所需的网络。插件、规则和在线内核下载也有各自的外部依赖。
+
+## 允许浏览器上传内核 {#kernel-upload-proxy}
+
+使用[本地上传](./node-management#local-kernel-upload)前，反向代理必须允许对应接口的请求体和上传时间。Nginx 可在面板的 `server` 块中加入以下独立规则；容器化代理将上游换成同网络内的 `zboard:8080`：
+
+```nginx
+location ~ ^/api/v1/nodes/[0-9]+/kernel/upload$ {
+    client_max_body_size 129m;
+    client_body_timeout 180s;
+    proxy_request_buffering off;
+    proxy_read_timeout 190s;
+    proxy_send_timeout 190s;
+    proxy_pass http://127.0.0.1:8080;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+}
+```
+
+保存后先校验代理配置，再按自己的部署方式重新加载。应用接受的文件仍最多为 128 MiB；129 MiB 请求限制为表单封装留出空间。代理、CDN 与其他上游网关也要满足要求，不必扩大其他接口的上传限制。
